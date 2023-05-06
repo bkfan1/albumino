@@ -2,7 +2,7 @@ const Joi = require("joi");
 
 const photoSchema = Joi.object({
   author_account_id: Joi.string().required(),
-  album_id: Joi.string().optional(),
+  albums: Joi.array().optional(),
 
   filename: Joi.string().required(),
   url: Joi.string().required(),
