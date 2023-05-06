@@ -9,7 +9,7 @@ export default function Layout({ children }) {
   return (
     <Flex flexDirection={"column"} minHeight={"100vh"}>
       <Navbar />
-      <Flex flexDirection={"row"} width={"100%"} height={"100%"}>
+      <Flex flexDirection={"row"} width={"100%"} height={"100%"} gap={4} paddingY={4}>
         {pathname === "/album/[albumId]" ? "" : <Panel />}
         {children}
       </Flex>
