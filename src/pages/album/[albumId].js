@@ -19,10 +19,11 @@ import { nanoid } from "nanoid";
 import Photo from "@/database/models/photo";
 import PhotosGrid from "@/components/PhotosGrid";
 import Layout from "@/components/Layout";
+import { useRouter } from "next/router";
 
 export default function AlbumPage({ album }) {
   const {
-    id,
+    // id,
     contributors,
     name,
     description,
@@ -30,27 +31,30 @@ export default function AlbumPage({ album }) {
     created_at,
     updated_at,
   } = album;
-  console.log(photos);
+
   return (
     <>
       <Layout>
         <Flex width={"100%"} flexDirection={"column"} gap={6} paddingX={6}>
           <VStack as="header" width={"100%"}>
             <Heading width={"100%"}>{name}</Heading>
-           <VStack width={"100%"} color={"gray.600"}>
-           <HStack width={"100%"}>
-              <BsCalendar />
-              <Text width={"100%"}>
-                Created: {new Date(created_at).toUTCString()}
-              </Text>
-            </HStack>
-            <HStack width={"100%"}>
-              <BsCalendarPlus />
-              <Text width={"100%"}>
-                Last update {new Date(updated_at).toUTCString()}
-              </Text>
-            </HStack>
-           </VStack>
+            <Heading width={"100%"} size={"sm"}>
+              {description}
+            </Heading>
+            <VStack width={"100%"} color={"gray.600"}>
+              <HStack width={"100%"}>
+                <BsCalendar />
+                <Text width={"100%"}>
+                  Created: {new Date(created_at).toUTCString()}
+                </Text>
+              </HStack>
+              <HStack width={"100%"}>
+                <BsCalendarPlus />
+                <Text width={"100%"}>
+                  Last update {new Date(updated_at).toUTCString()}
+                </Text>
+              </HStack>
+            </VStack>
 
             <HStack width={"100%"}>
               <AvatarGroup size={"sm"}>
@@ -74,54 +78,29 @@ export default function AlbumPage({ album }) {
 
 export async function getServerSideProps({ req, res, params }) {
   const session = await getServerSession(req, res, authOptions);
-  if (session) {
-    try {
-      const db = await connection();
-      const { _id, contributors, name, description, created_at, updated_at } =
-        await Album.findById({ _id: params.albumId });
 
-      let albumPhotos = await Photo.find({ album_id: _id });
+  const db = await connection();
+  const { _id, name, contributors, created_at, updated_at } =
+    await Album.findById(params.albumId);
 
-      albumPhotos = albumPhotos.map((photo) => {
-        return {
-          id: `${photo._id}`,
-          url: photo.url,
-        };
-      });
+  const albumPhotos = await Photo.find({ albums: _id });
 
-      const album = {
-        id: `${_id}`,
-        contributors,
-
-        name,
-        description,
-
-        photos: albumPhotos,
-
-        created_at: `${created_at}`,
-        updated_at: `${updated_at}`,
-      };
-
-      await db.disconnect();
-      return {
-        props: {
-          album,
-        },
-      };
-    } catch (error) {
-      return {
-        redirect: {
-          destination: "/500",
-          permanent: false,
-        },
-      };
-    }
-  }
+  const album = {
+    id: _id.toString(),
+    contributors,
+    name,
+    photos: albumPhotos.map((photo) => ({
+      id: photo._id.toString(),
+      albums: photo.albums.map((albumId) => albumId.toString()),
+      url: photo.url,
+    })),
+    created_at: `${created_at}`,
+    updated_at: `${updated_at}`,
+  };
 
   return {
-    redirect: {
-      destination: "/signin",
-      permanent: false,
+    props: {
+      album,
     },
   };
 }
