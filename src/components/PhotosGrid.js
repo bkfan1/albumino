@@ -1,10 +1,9 @@
-import { Box, Grid, GridItem, Image, Modal, ModalOverlay, useDisclosure } from "@chakra-ui/react";
-import { nanoid } from "nanoid";
+import { Box, Grid } from "@chakra-ui/react";
 import PhotosGridItem from "./PhotosGridItem";
 
 export default function PhotosGrid({ photos }) {
   return (
-    <Box>
+    <Box width={"100%"}>
       <Grid templateColumns="repeat(auto-fill, minmax(200px, 1fr))" gap={4}>
         {photos.map((photo) => (
           <PhotosGridItem key={photo.id} data={photo} />
