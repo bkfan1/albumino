@@ -5,6 +5,7 @@ import {
   ButtonGroup,
   Flex,
   FormControl,
+  IconButton,
   Input,
   InputGroup,
   InputLeftElement,
@@ -21,14 +22,18 @@ import SearchForm from "./SearchForm";
 import { HiOutlinePhotograph } from "react-icons/hi";
 import Link from "next/link";
 import NavbarBrand from "./NavbarBrand";
-import UploadPhotoForm from "./UploadPhotoForm";
+import UploadPhotosForm from "./UploadPhotosForm";
 import { useRouter } from "next/router";
-import { BsThreeDots } from "react-icons/bs";
+import { BsArrowLeft, BsCheck, BsThreeDots } from "react-icons/bs";
 import axios from "axios";
+import { signOut, useSession } from "next-auth/react";
 
 export default function Navbar() {
   const router = useRouter();
   const { pathname, query } = router;
+  const {data: session, status} = useSession();
+
+
   const handleDeleteAlbum = async () => {
     const { albumId } = query;
     try {
@@ -47,24 +52,25 @@ export default function Navbar() {
         alignItems={"center"}
         paddingX={4}
         paddingY={2}
+        borderBottom={pathname === "/album/[albumId]" ? "0px" : "1px"}
+        borderBottomColor={"#edf2f7"}
       >
-        <ButtonGroup>
-          <NavbarBrand />
+        <ButtonGroup className="navbar__brandContainer">
+          {pathname === "/album/[albumId]" ? <IconButton onClick={()=>router.back()} icon={<BsArrowLeft/>} variant={"ghost"} /> : <NavbarBrand />} 
         </ButtonGroup>
 
-        <Stack>
-          <SearchForm />
+        <Stack className="navbar__formArea">
+          {pathname === "/album/[albumId]" ? "" : <SearchForm />}
         </Stack>
 
-        <ButtonGroup spacing={6}>
-          <UploadPhotoForm />
+        <ButtonGroup spacing={6} className="navbar__menuArea">
 
           <Menu>
             <MenuButton>
               {pathname === "/album/[albumId]" ? (
                 <BsThreeDots />
               ) : (
-                <Avatar size="sm" />
+                <Avatar size="sm"/>
               )}
             </MenuButton>
             <MenuList>
@@ -78,12 +84,11 @@ export default function Navbar() {
                 <>
                   <MenuGroup title="Profile">
                     <MenuItem>Settings</MenuItem>
-                    <MenuItem>Payments </MenuItem>
+                    <MenuItem>Payments</MenuItem>
                   </MenuGroup>
                   <MenuDivider />
                   <MenuGroup title="Help">
-                    <MenuItem>Docs</MenuItem>
-                    <MenuItem>FAQ</MenuItem>
+                    <MenuItem onClick={()=>signOut({callbackUrl:"/signin"})}>Log Out</MenuItem>
                   </MenuGroup>
                 </>
               )}
