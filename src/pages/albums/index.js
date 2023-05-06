@@ -3,24 +3,22 @@ import Layout from "@/components/Layout";
 import {
   Button,
   ButtonGroup,
-  Container,
   Divider,
   Flex,
+  Grid,
+  GridItem,
   Heading,
-  SimpleGrid,
   VStack,
 } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
 import { MdOutlineAddBox } from "react-icons/md";
 import { authOptions } from "../api/auth/[...nextauth]";
 import connection from "@/database/connection";
-import Account from "@/database/models/account";
 import Album from "@/database/models/album";
+import Photo from "@/database/models/photo"
 import Link from "next/link";
-// import Photo from "@/database/models/photo";
 
-
-export default function AlbumsPage({albums}) {
+export default function AlbumsPage({ albums }) {
   return (
     <>
       <Layout>
@@ -36,84 +34,57 @@ export default function AlbumsPage({albums}) {
               <Heading size={"lg"}>Albums</Heading>
 
               <ButtonGroup variant={"ghost"}>
+                <Link href={"/album/create"}>
                 <Button leftIcon={<MdOutlineAddBox />}>Create album</Button>
+
+                </Link>
               </ButtonGroup>
             </Flex>
           </VStack>
 
           <Divider />
 
-          <SimpleGrid width={"100%"} minChildWidth="230px" spacing="20px">
-            {albums.map((album)=>(
-                <AlbumCard key={album.id}  data={album}  />
+          <Grid width={"100%"} templateColumns='repeat(5, 1fr)' gap={6} className="albumsGrid">
+            {albums.map((album) => (
+              <GridItem key={album.id}>
+                <AlbumCard  data={album} />
+              </GridItem>
             ))}
-
-          </SimpleGrid>
+          </Grid>
         </Flex>
       </Layout>
     </>
   );
 }
 
-
-export async function getServerSideProps({req, res}){
-
+export async function getServerSideProps({ req, res }) {
   const session = await getServerSession(req, res, authOptions);
 
-  if(session){
+  const db = await connection();
+  const rawAlbums = await Album.find({author_account_id: session.user.accountId}).sort({updated_at: "desc"})
 
-    try {
-      const db = await connection();
-      const account = await Account.findOne({email: session.user.email})
+  const albums = [];
+  for(const rawAlbum of rawAlbums){
 
-      if(account){
-        let albums = await Album.find({author_account_id: account._id});
-        albums = albums.map((album)=>{
+    const length = await Photo.find({albums: rawAlbum._id}).count()
 
-          // const albumElements = await Photo.find({album_id: album._id})
+    albums.push({
+      id: rawAlbum._id.toString(),
+      name: rawAlbum.name,
 
-          return {
-            id: `${album._id}`,
-            name: `${album.name}`,
-            elements: 0
-          }
-        })
-        return {
-          props: {albums}
-        }
-
-
-      }
-
-      return {
-        redirect: {
-          destination: "/404",
-          permanent:false
-        }
-      }
-
-
-    } catch (error) {
-      return {
-        redirect: {
-          destination: "/500",
-          permanent:false
-        }
-      }
-      
-    }
-
-
-
+      length,
+    })
 
   }
 
   return {
-    redirect: {
-      destination: "/signin",
-      permanent: false,
+    props: {
+      albums,
     }
   }
+  
+
+
 
 
 }
