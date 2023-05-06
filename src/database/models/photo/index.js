@@ -8,11 +8,12 @@ const PhotoSchema = new Schema(
       required: true,
     },
 
-    album_id: {
-      type: Schema.ObjectId,
-      ref: "Album",
-      default:null,
-    },
+    albums: [
+      {
+        type: Schema.ObjectId,
+        ref: "Album",
+      }
+    ],
 
     filename: {
       type: String,
