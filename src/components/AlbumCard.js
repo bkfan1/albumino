@@ -6,13 +6,38 @@ import {
   MenuItem,
   MenuList,
   VStack,
+  useToast,
 } from "@chakra-ui/react";
+import axios from "axios";
 import Link from "next/link";
 
 import { BsThreeDotsVertical } from "react-icons/bs";
 
-export default function AlbumCard({data}) {
-  const {id, name, elements} = data;
+export default function AlbumCard({ data }) {
+  const { id, name, length } = data;
+  const toast = useToast();
+
+  const handleDeleteAlbum = async (albumId) => {
+    try {
+      const res = await axios.delete(`/api/album/${albumId}`);
+      toast({
+        title: "Album deleted",
+        description: "Album deleted succesfully.",
+        status: "success",
+        duration: 5000,
+        isClosable: false,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error ocurred while attempting to delete album.",
+        status: "error",
+        duration: 5000,
+        isClosable: false,
+      });
+    }
+  };
+
   return (
     <>
       <VStack position={"relative"} width={"160px"}>
@@ -22,24 +47,33 @@ export default function AlbumCard({data}) {
           </MenuButton>
           <MenuList>
             <MenuItem>Share this album</MenuItem>
-            <MenuItem>Delete this album</MenuItem>
+            <MenuItem onClick={() => handleDeleteAlbum(id)}>
+              Delete this album
+            </MenuItem>
           </MenuList>
         </Menu>
 
-        <Box
-          width={"100%"}
-          height={"160px"}
-          backgroundColor={"lightgray"}
-          borderRadius={"md"}
-        ></Box>
-        <Link href={`album/${id}`} style={{width:"100%"}}>
-        <Heading size={"sm"} width={"100%"}>
-          {name}
-        </Heading>
+        <Link href={`album/${id}`} style={{ width: "100%" }}>
+          <Box
+            width={"100%"}
+            height={"160px"}
+            backgroundColor={"lightgray"}
+            borderRadius={"md"}
+          ></Box>
         </Link>
-        <Heading size={"xs"} fontWeight={"normal"} width={"100%"}>
-          {elements} elements
-        </Heading>
+        <Link href={`album/${id}`} style={{ width: "100%" }}>
+          <Heading size={"sm"} width={"100%"}>
+            {name}
+          </Heading>
+          <Heading
+            size={"xs"}
+            fontWeight={"normal"}
+            width={"100%"}
+            marginTop={1}
+          >
+            {length} elements
+          </Heading>
+        </Link>
       </VStack>
     </>
   );
