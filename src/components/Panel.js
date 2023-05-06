@@ -35,7 +35,7 @@ export default function Panel() {
         <ButtonGroup width={"100%"} orientation="vertical" variant={"ghost"}>
           {linkButtons.map(({ id, text, href, icon }) => (
             <Link key={id} href={href}>
-              <Button leftIcon={icon}>{text}</Button>
+              <Button leftIcon={icon} width={"100%"}>{text}</Button>
             </Link>
           ))}
         </ButtonGroup>
