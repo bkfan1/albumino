@@ -14,7 +14,7 @@ export const authOptions = {
         if (account) {
           const match = await compare(credentials.password, account.password);
           if (match) {
-            return { id: account._id ,email: account.email };
+            return { accountId: account._id.toString() ,email: account.email, name: `${account.firstname} ${account.lastname}`};
           }
           return null;
         }
@@ -23,6 +23,21 @@ export const authOptions = {
       },
     }),
   ],
+
+  callbacks: {
+    async jwt({token, user}){
+      return {...token, ...user}
+    },
+    async session({session, user, token}){
+      session.user.accountId = token.accountId;
+      return session;
+    }
+  },
+
+  pages: {
+    signIn: "/signin"
+  }
+
 };
 
 export default NextAuth(authOptions);
