@@ -11,6 +11,7 @@ import {
   Input,
   Text,
   VStack,
+  useToast,
 } from "@chakra-ui/react";
 import { nanoid } from "nanoid";
 import Link from "next/link";
@@ -24,20 +25,23 @@ export default function SignInForm() {
     formState: { errors },
   } = useForm();
 
+  const toast = useToast();
+
   const onSubmit = async (data) => {
     console.log(data);
     try {
       const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
+        callbackUrl: "/photos",
       });
-      console.log("logged successfully")
     } catch (error) {
-      console.log(error)
-      
+      toast({
+        status:"error",
+        title:"Wrong credentials",
+        duration: 5000,
+      })
     }
-
-
   };
 
   const formFields = [
@@ -92,7 +96,7 @@ export default function SignInForm() {
 
         <VStack width={"100%"}>
           <Link href="/signup">
-            <Text>Create account</Text>
+            <Text> Create account</Text>
           </Link>
         </VStack>
       </Flex>
