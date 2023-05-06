@@ -8,23 +8,25 @@ export default async function handler(req, res) {
       try {
         const db = await connection();
 
-        const updatedPhotos = await Photo.updateMany({
-          album_id: null,
-        });
-
-
+        const updatedPhotos = await Photo.updateMany(
+          {
+            albums: req.query.albumId,
+          },
+          { $pull: { albums: req.query.albumId } }
+        );
         const deletedAlbum = await Album.findByIdAndDelete({
           _id: req.query.albumId,
         });
 
-        return await res.status(200).json({});
+        return res.status(200).json({});
       } catch (error) {
-        return await res.status(500).json({});
+        return res.status(500).json({});
       }
 
       break;
 
     default:
+      return res.status(405).json();
       break;
   }
 }
