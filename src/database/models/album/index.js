@@ -18,11 +18,6 @@ const AlbumSchema = new Schema(
       required: true,
     },
 
-    description: {
-      type: String,
-      required: true,
-    },
-
     updated_at: {
       type: Date,
       required: true,
