@@ -1,14 +1,8 @@
 import {
   Avatar,
-  Box,
-  Button,
   ButtonGroup,
   Flex,
-  FormControl,
   IconButton,
-  Input,
-  InputGroup,
-  InputLeftElement,
   Menu,
   MenuButton,
   MenuDivider,
@@ -17,29 +11,25 @@ import {
   MenuList,
   Stack,
 } from "@chakra-ui/react";
-import { AiOutlineSearch, AiOutlineUpload } from "react-icons/ai";
 import SearchForm from "./SearchForm";
-import { HiOutlinePhotograph } from "react-icons/hi";
-import Link from "next/link";
 import NavbarBrand from "./NavbarBrand";
 import UploadPhotosForm from "./UploadPhotosForm";
 import { useRouter } from "next/router";
-import { BsArrowLeft, BsCheck, BsThreeDots } from "react-icons/bs";
+import { BsArrowLeft, BsThreeDots } from "react-icons/bs";
 import axios from "axios";
 import { signOut, useSession } from "next-auth/react";
 
 export default function Navbar() {
   const router = useRouter();
   const { pathname, query } = router;
-  const {data: session, status} = useSession();
-
+  const { data: session, status } = useSession();
 
   const handleDeleteAlbum = async () => {
     const { albumId } = query;
     try {
       const res = await axios.delete(`/api/album/${albumId}`);
       console.log("album deleted successfully");
-      router.push("/albums/")
+      router.push("/albums/");
     } catch (error) {
       console.log("error");
     }
@@ -56,23 +46,34 @@ export default function Navbar() {
         borderBottomColor={"#edf2f7"}
       >
         <ButtonGroup className="navbar__brandContainer">
-          {pathname === "/album/[albumId]" ? <IconButton rounded={"full"} onClick={()=>router.back()} icon={<BsArrowLeft/>} variant={"ghost"} /> : <NavbarBrand />} 
+          {pathname === "/album/[albumId]" ? (
+            <IconButton
+              rounded={"full"}
+              onClick={() => router.back()}
+              icon={<BsArrowLeft />}
+              variant={"ghost"}
+            />
+          ) : (
+            <NavbarBrand />
+          )}
         </ButtonGroup>
 
         <Stack className="navbar__formArea">
           {pathname === "/album/[albumId]" ? "" : <SearchForm />}
         </Stack>
 
-        <ButtonGroup spacing={6} className="navbar__menuArea">
-
-          <UploadPhotosForm/>
+        <ButtonGroup gap={6} className="navbar__menuArea">
+          <UploadPhotosForm />
 
           <Menu>
             <MenuButton>
               {pathname === "/album/[albumId]" ? (
                 <BsThreeDots />
               ) : (
-                <Avatar size="sm" name={status === "authenticated" ? session.user.name : ""} />
+                <Avatar
+                  size="sm"
+                  name={status === "authenticated" ? session.user.name : ""}
+                />
               )}
             </MenuButton>
             <MenuList>
@@ -90,7 +91,11 @@ export default function Navbar() {
                   </MenuGroup>
                   <MenuDivider />
                   <MenuGroup title="Help">
-                    <MenuItem onClick={()=>signOut({callbackUrl:"/signin"})}>Log Out</MenuItem>
+                    <MenuItem
+                      onClick={() => signOut({ callbackUrl: "/signin" })}
+                    >
+                      Log Out
+                    </MenuItem>
                   </MenuGroup>
                 </>
               )}
