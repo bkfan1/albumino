@@ -7,14 +7,14 @@ import axios from "axios";
 
 export default function AvailableAlbumCard({ album }) {
   const {
-    photo,
+    currentPhoto,
     setShowAvailableAlbums,
     setAvailableAlbums,
   } = useContext(PhotoVisorContext);
 
   const isPhotoAlreadyOnAlbum =
-    photo.albums.includes(album.id) ||
-    album.photos.find((albumPhoto) => albumPhoto.id === photo.id)
+    currentPhoto.albums.includes(album.id) ||
+    album.photos.find((albumPhoto) => albumPhoto.id === currentPhoto.id)
       ? true
       : false;
 
@@ -22,8 +22,8 @@ export default function AvailableAlbumCard({ album }) {
 
   const handleAddToAlbum = async (albumId) => {
     try {
-      const data = { albums: [...photo.albums, { _id: albumId }] };
-      const res = await axios.put(`/api/photo/${photo.id}`, data);
+      const data = { albums: [...currentPhoto.albums, { _id: albumId }] };
+      const res = await axios.put(`/api/photo/${currentPhoto.id}`, data);
       toast({
         status: "success",
         title: "Added Photo to album.",
@@ -76,7 +76,7 @@ export default function AvailableAlbumCard({ album }) {
         </Box>
         <VStack>
           <Text width={"100%"}>{album.name}</Text>
-          {photo.albums.includes(album.id) || isPhotoAlreadyOnAlbum ? (
+          {currentPhoto.albums.includes(album.id) || isPhotoAlreadyOnAlbum ? (
             <Text fontStyle={"italic"}>Already on this album</Text>
           ) : (
             ""
