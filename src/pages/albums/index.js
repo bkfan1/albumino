@@ -5,9 +5,8 @@ import {
   ButtonGroup,
   Divider,
   Flex,
-  Grid,
-  GridItem,
   Heading,
+  SimpleGrid,
   VStack,
 } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
@@ -22,7 +21,7 @@ export default function AlbumsPage({ albums }) {
   return (
     <>
       <Layout>
-        <Flex as="main" flex={6} flexDirection={"column"}>
+        <Flex as="main" height={"100%"} flex={6} flexDirection={"column"}>
           <VStack width={"100%"}>
             <Flex
               as="header"
@@ -44,13 +43,11 @@ export default function AlbumsPage({ albums }) {
 
           <Divider />
 
-          <Grid width={"100%"} templateColumns='repeat(5, 1fr)' gap={6} className="albumsGrid">
+          <SimpleGrid columns={{sm: 2, md:3, lg: 4, xl: 5, "2xl": 8}} className="albumsGrid">
             {albums.map((album) => (
-              <GridItem key={album.id}>
-                <AlbumCard  data={album} />
-              </GridItem>
+                <AlbumCard key={album.id}  data={album} />
             ))}
-          </Grid>
+          </SimpleGrid>
         </Flex>
       </Layout>
     </>
