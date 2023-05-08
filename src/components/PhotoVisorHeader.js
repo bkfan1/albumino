@@ -15,22 +15,28 @@ import { useRouter } from "next/router";
 import { useContext, useEffect, useState } from "react";
 import { BsInfoCircle, BsThreeDots, BsTrash, BsX } from "react-icons/bs";
 
-export default function PhotoVisorHeader({ onClose }) {
+export default function PhotoVisorHeader({}) {
   const router = useRouter();
   const { pathname, query } = router;
 
-  const { photo, setShowAvailableAlbums, setAvailableAlbums } = useContext(PhotoVisorContext);
+  const {
+    onClose,
+    currentPhoto,
+    showAvailableAlbums,
+    setShowAvailableAlbums,
+    setAvailableAlbums,
+  } = useContext(PhotoVisorContext);
   const toast = useToast();
 
   const handleDeletePhoto = async () => {
     try {
-      const res = await axios.delete(`/api/photo/${photo.id}`);
+      const res = await axios.delete(`/api/photo/${currentPhoto.id}`);
       toast({
         status: "success",
         title: "Photo deleted successfully.",
         duration: 5000,
       });
-      onClose()
+      onClose();
     } catch (error) {
       toast({
         status: "error",
@@ -44,9 +50,9 @@ export default function PhotoVisorHeader({ onClose }) {
   const handleRemoveFromAlbum = async () => {
     try {
       const data = {
-        albums: photo.albums.filter((id) => id !== query.albumId),
+        albums: currentPhoto.albums.filter((id) => id !== query.albumId),
       };
-      const res = await axios.put(`/api/photo/${photo.id}`, data);
+      const res = await axios.put(`/api/photo/${currentPhoto.id}`, data);
       toast({
         status: "success",
         title: "Photo removed from album successfully.",
@@ -63,19 +69,16 @@ export default function PhotoVisorHeader({ onClose }) {
     }
   };
 
-  const handleClickAddToAlbum = async ()=>{
+  const handleClickAddToAlbum = async () => {
     try {
       const res = await axios.get(`/api/albums`);
       setShowAvailableAlbums(true);
-      setAvailableAlbums(res.data.albums)
-      console.log("success")
-
+      setAvailableAlbums(res.data.albums);
+      console.log("success");
     } catch (error) {
-      console.log("error add album")
+      console.log("error add album");
     }
-
-
-  }
+  };
 
   return (
     <>
@@ -83,11 +86,11 @@ export default function PhotoVisorHeader({ onClose }) {
         as="header"
         position="fixed"
         justifyContent={"space-between"}
-        zIndex={3}
+        zIndex={6}
         top={0}
         left={0}
         right={0}
-        paddingTop={4}
+        padding={4}
         className="photoVisor__header"
       >
         <ButtonGroup variant={"link"}>
@@ -100,7 +103,7 @@ export default function PhotoVisorHeader({ onClose }) {
           />
         </ButtonGroup>
 
-        <ButtonGroup variant={"link"}>
+        <ButtonGroup variant={"link"} spacing={4}>
           <IconButton
             icon={
               <BsInfoCircle
@@ -134,15 +137,19 @@ export default function PhotoVisorHeader({ onClose }) {
             </MenuButton>
 
             <MenuList>
-              <MenuItem onClick={()=>window.open(photo.url)} >Download</MenuItem>
-              <MenuItem onClick={handleClickAddToAlbum} >Add to album</MenuItem>
+              <MenuItem>Download</MenuItem>
+              <MenuItem onClick={handleClickAddToAlbum}>Add to album</MenuItem>
               {pathname === "/album/[albumId]" ? (
-                <MenuItem onClick={handleRemoveFromAlbum}>Remove from this album</MenuItem>
+                <MenuItem onClick={handleRemoveFromAlbum}>
+                  Remove from this album
+                </MenuItem>
               ) : (
                 ""
               )}
               {pathname === "/album/[albumId]" ? (
-                <MenuItem onClick={handleDeletePhoto}>Delete permanently</MenuItem>
+                <MenuItem onClick={handleDeletePhoto}>
+                  Delete permanently
+                </MenuItem>
               ) : (
                 ""
               )}
