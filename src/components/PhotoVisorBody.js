@@ -14,19 +14,23 @@ import {
   VStack,
   useToast,
 } from "@chakra-ui/react";
-import axios from "axios";
 import { useContext } from "react";
-import { BsX } from "react-icons/bs";
+import { BsArrowLeft, BsArrowRight, BsX } from "react-icons/bs";
 import AvailableAlbumCard from "./AvailableAlbumCard";
 
 export default function PhotoVisorBody({ children }) {
   const {
-    photo,
-    modal,
+    photos,
+    currentPhoto,
     showAvailableAlbums,
     setShowAvailableAlbums,
     availableAlbums,
+    handleSetNextPhoto,
+    handleSetPreviousPhoto,
   } = useContext(PhotoVisorContext);
+
+  const photoIndex = photos.findIndex((photo) => photo.id === currentPhoto.id);
+  const isLastPhoto = photoIndex === photos.length - 1;
 
   return (
     <>
@@ -37,14 +41,23 @@ export default function PhotoVisorBody({ children }) {
         alignItems={"center"}
         className="photoVisor__body"
       >
-        <Box position="relative">
-          <Image
-            src={photo.url}
-            alt={"photo"}
-            w="auto"
-            h="auto"
-            onClick={modal.onOpen}
+        {!(photoIndex === 0) ? (
+          <IconButton
+            onClick={handleSetPreviousPhoto}
+            icon={<BsArrowLeft />}
+            rounded={"full"}
+            position={"absolute"}
+            left={0}
+            size={"lg"}
+            zIndex={3}
+            marginLeft={4}
           />
+        ) : (
+          ""
+        )}
+
+        <Box position="relative">
+          <Image src={currentPhoto.url} alt={"photo"} w="auto" h="auto" />
         </Box>
         {showAvailableAlbums ? (
           <>
@@ -67,12 +80,26 @@ export default function PhotoVisorBody({ children }) {
                 Add to:
               </Heading>
               <VStack>
-              {availableAlbums.map((album) => (
-                <AvailableAlbumCard key={album.id} album={album} />
-              ))}
+                {availableAlbums.map((album) => (
+                  <AvailableAlbumCard key={album.id} album={album} />
+                ))}
               </VStack>
             </Box>
           </>
+        ) : (
+          ""
+        )}
+        {!isLastPhoto ? (
+          <IconButton
+            onClick={handleSetNextPhoto}
+            icon={<BsArrowRight />}
+            rounded={"full"}
+            position={"absolute"}
+            right={0}
+            size={"lg"}
+            zIndex={3}
+            marginRight={4}
+          />
         ) : (
           ""
         )}
