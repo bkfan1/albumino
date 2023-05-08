@@ -12,7 +12,7 @@ import {
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useRouter } from "next/router";
-import { useContext, useEffect, useState } from "react";
+import { useContext} from "react";
 import { BsInfoCircle, BsThreeDots, BsTrash, BsX } from "react-icons/bs";
 
 export default function PhotoVisorHeader({}) {
@@ -98,7 +98,7 @@ export default function PhotoVisorHeader({}) {
             icon={<BsX />}
             fontSize={"24px"}
             color="white"
-            borderRadius={"full"}
+            rounded={"full"}
             onClick={onClose}
           />
         </ButtonGroup>
@@ -109,7 +109,7 @@ export default function PhotoVisorHeader({}) {
               <BsInfoCircle
                 fontSize={"24px"}
                 color="white"
-                borderRadius={"full"}
+                rounded={"full"}
               />
             }
           />
@@ -120,7 +120,7 @@ export default function PhotoVisorHeader({}) {
               icon={<BsTrash />}
               fontSize={"24px"}
               color="white"
-              borderRadius={"full"}
+              rounded={"full"}
               title="Delete this photo permanently"
               onClick={handleDeletePhoto}
             />
@@ -131,7 +131,7 @@ export default function PhotoVisorHeader({}) {
               as={Button}
               fontSize={"24px"}
               color="white"
-              borderRadius={"full"}
+              rounded={"full"}
             >
               <BsThreeDots />
             </MenuButton>
