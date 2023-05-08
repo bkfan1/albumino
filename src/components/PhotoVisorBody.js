@@ -68,18 +68,22 @@ export default function PhotoVisorBody({ children }) {
               height={"300px"}
               backgroundColor={"white"}
               borderRadius={"md"}
+              overflowY={"scroll"}
             >
               <IconButton
                 onClick={() => setShowAvailableAlbums(false)}
-                icon={<BsX />}
                 position={"absolute"}
                 right={0}
-                marginRight={4}
-              ></IconButton>
-              <Heading size={"md"} marginY={2}>
-                Add to:
-              </Heading>
-              <VStack>
+                top={0}
+                margin={2}
+                icon={<BsX />}
+              />
+
+              <Flex>
+                <Heading size={"md"}>Add to:</Heading>
+              </Flex>
+
+              <VStack  marginTop={6}>
                 {availableAlbums.map((album) => (
                   <AvailableAlbumCard key={album.id} album={album} />
                 ))}
