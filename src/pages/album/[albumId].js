@@ -23,10 +23,8 @@ import { useRouter } from "next/router";
 
 export default function AlbumPage({ album }) {
   const {
-    // id,
     contributors,
     name,
-    description,
     photos,
     created_at,
     updated_at,
@@ -38,9 +36,7 @@ export default function AlbumPage({ album }) {
         <Flex width={"100%"} flexDirection={"column"} gap={6} paddingX={6}>
           <VStack as="header" width={"100%"}>
             <Heading width={"100%"}>{name}</Heading>
-            <Heading width={"100%"} size={"sm"}>
-              {description}
-            </Heading>
+
             <VStack width={"100%"} color={"gray.600"}>
               <HStack width={"100%"}>
                 <BsCalendar />
@@ -80,14 +76,30 @@ export async function getServerSideProps({ req, res, params }) {
   const session = await getServerSession(req, res, authOptions);
 
   const db = await connection();
-  const { _id, name, contributors, created_at, updated_at } =
+  const { _id, author_account_id, contributors, name, created_at, updated_at } =
     await Album.findById(params.albumId);
+
+  const isOwner = author_account_id.toString() === session.user.accountId ? true : false;
+
+  const isContributor = contributors.map((contributorId)=>contributorId.toString()).includes(session.user.accountId);
+
+  if(!isOwner){
+    if(!isContributor){
+      return {
+        redirect: {
+          destination:"/",
+          permanent:false,
+        }
+      }
+    }
+  }
+
 
   const albumPhotos = await Photo.find({ albums: _id });
 
   const album = {
     id: _id.toString(),
-    contributors,
+    contributors: contributors.map((contributorId)=>contributorId.toString()),
     name,
     photos: albumPhotos.map((photo) => ({
       id: photo._id.toString(),
