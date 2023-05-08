@@ -56,7 +56,7 @@ export default function Navbar() {
         borderBottomColor={"#edf2f7"}
       >
         <ButtonGroup className="navbar__brandContainer">
-          {pathname === "/album/[albumId]" ? <IconButton onClick={()=>router.back()} icon={<BsArrowLeft/>} variant={"ghost"} /> : <NavbarBrand />} 
+          {pathname === "/album/[albumId]" ? <IconButton rounded={"full"} onClick={()=>router.back()} icon={<BsArrowLeft/>} variant={"ghost"} /> : <NavbarBrand />} 
         </ButtonGroup>
 
         <Stack className="navbar__formArea">
@@ -65,12 +65,14 @@ export default function Navbar() {
 
         <ButtonGroup spacing={6} className="navbar__menuArea">
 
+          <UploadPhotosForm/>
+
           <Menu>
             <MenuButton>
               {pathname === "/album/[albumId]" ? (
                 <BsThreeDots />
               ) : (
-                <Avatar size="sm"/>
+                <Avatar size="sm" name={status === "authenticated" ? session.user.name : ""} />
               )}
             </MenuButton>
             <MenuList>
