@@ -26,15 +26,14 @@ import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 
 export default function PhotoVisor({ }) {
 
-  const {modal} = useContext(PhotoVisorContext);
+  const {isOpen, onClose} = useContext(PhotoVisorContext);
 
   return (
     <>
-      <Modal isOpen={modal.isOpen}>
+      <Modal isOpen={isOpen} blockScrollOnMount={true}>
         <ModalOverlay>
-          <PhotoVisorHeader onClose={modal.onClose} />
+          <PhotoVisorHeader/>
           <PhotoVisorBody/>
-            
         </ModalOverlay>
       </Modal>
     </>

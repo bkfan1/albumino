@@ -1,3 +1,4 @@
+import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 import {
   Box,
   Button,
@@ -25,29 +26,25 @@ import {
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
-import axios from "axios";
-import { nanoid } from "nanoid";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import {
-  BsInfo,
-  BsInfoCircle,
-  BsThreeDots,
-  BsTrash,
-  BsX,
-} from "react-icons/bs";
+import { useContext } from "react";
 import PhotoVisor from "./PhotoVisor";
-import { PhotoVisorProvider } from "@/contexts/PhotoVisorContext";
 
 export default function PhotosGridItem({ data }) {
-
-  const {isOpen, onOpen, onClose} = useDisclosure();
-  const {url} = data;
+  const { onOpen, setCurrentPhoto } = useContext(PhotoVisorContext);
+  const { url } = data;
 
   return (
     <>
       <GridItem>
-        <Box position="relative" overflow={"hidden"} _hover={{opacity:"90%", transition:"ease-in-out all", cursor:"pointer"}}>
+        <Box
+          position="relative"
+          overflow={"hidden"}
+          _hover={{
+            opacity: "90%",
+            transition: "ease-in-out all",
+            cursor: "pointer",
+          }}
+        >
           <Checkbox position={"absolute"} size={"md"} margin={2} />
           <Image
             src={url}
@@ -55,17 +52,14 @@ export default function PhotosGridItem({ data }) {
             w="100%"
             h="auto"
             borderRadius="md"
-            onClick={onOpen}
+            onClick={() => {
+              setCurrentPhoto(data);
+              onOpen();
+            }}
           />
         </Box>
-
-        <PhotoVisorProvider photo={data} modal={{isOpen, onClose}}>
-          <PhotoVisor />
-
-        </PhotoVisorProvider>
-
-        
       </GridItem>
+      <PhotoVisor />
     </>
   );
 }
