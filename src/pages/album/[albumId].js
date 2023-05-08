@@ -8,7 +8,6 @@ import {
   IconButton,
   HStack,
   VStack,
-  Button,
 } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
 import { BsCalendar, BsCalendarPlus, BsLink, BsPlus } from "react-icons/bs";
@@ -19,7 +18,6 @@ import { nanoid } from "nanoid";
 import Photo from "@/database/models/photo";
 import PhotosGrid from "@/components/PhotosGrid";
 import Layout from "@/components/Layout";
-import { useRouter } from "next/router";
 
 export default function AlbumPage({ album }) {
   const {
@@ -47,7 +45,7 @@ export default function AlbumPage({ album }) {
               <HStack width={"100%"}>
                 <BsCalendarPlus />
                 <Text width={"100%"}>
-                  Last update {new Date(updated_at).toUTCString()}
+                  Last update: {new Date(updated_at).toUTCString()}
                 </Text>
               </HStack>
             </VStack>
