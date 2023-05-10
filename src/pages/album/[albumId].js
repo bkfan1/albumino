@@ -20,13 +20,7 @@ import PhotosGrid from "@/components/PhotosGrid";
 import Layout from "@/components/Layout";
 
 export default function AlbumPage({ album }) {
-  const {
-    contributors,
-    name,
-    photos,
-    created_at,
-    updated_at,
-  } = album;
+  const { contributors, name, photos, created_at, updated_at } = album;
 
   return (
     <>
@@ -77,27 +71,29 @@ export async function getServerSideProps({ req, res, params }) {
   const { _id, author_account_id, contributors, name, created_at, updated_at } =
     await Album.findById(params.albumId);
 
-  const isOwner = author_account_id.toString() === session.user.accountId ? true : false;
+  const isOwner =
+    author_account_id.toString() === session.user.accountId ? true : false;
 
-  const isContributor = contributors.map((contributorId)=>contributorId.toString()).includes(session.user.accountId);
+  const isContributor = contributors
+    .map((contributorId) => contributorId.toString())
+    .includes(session.user.accountId);
 
-  if(!isOwner){
-    if(!isContributor){
+  if (!isOwner) {
+    if (!isContributor) {
       return {
         redirect: {
-          destination:"/",
-          permanent:false,
-        }
-      }
+          destination: "/",
+          permanent: false,
+        },
+      };
     }
   }
-
 
   const albumPhotos = await Photo.find({ albums: _id });
 
   const album = {
     id: _id.toString(),
-    contributors: contributors.map((contributorId)=>contributorId.toString()),
+    contributors: contributors.map((contributorId) => contributorId.toString()),
     name,
     photos: albumPhotos.map((photo) => ({
       id: photo._id.toString(),
