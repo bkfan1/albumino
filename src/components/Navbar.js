@@ -15,9 +15,11 @@ import SearchForm from "./SearchForm";
 import NavbarBrand from "./NavbarBrand";
 import UploadPhotosForm from "./UploadPhotosForm";
 import { useRouter } from "next/router";
-import { BsArrowLeft, BsThreeDots } from "react-icons/bs";
+import { BsArrowLeft, BsGearFill, BsThreeDots } from "react-icons/bs";
 import axios from "axios";
 import { signOut, useSession } from "next-auth/react";
+import Link from "next/link";
+import { MdLogout,} from "react-icons/md";
 
 export default function Navbar() {
   const router = useRouter();
@@ -44,6 +46,7 @@ export default function Navbar() {
         paddingY={2}
         borderBottom={pathname === "/album/[albumId]" ? "0px" : "1px"}
         borderBottomColor={"#edf2f7"}
+
       >
         <ButtonGroup className="navbar__brandContainer">
           {pathname === "/album/[albumId]" ? (
@@ -85,13 +88,12 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  <MenuGroup title="Profile">
-                    <MenuItem>Settings</MenuItem>
-                    <MenuItem>Payments</MenuItem>
-                  </MenuGroup>
-                  <MenuDivider />
-                  <MenuGroup title="Help">
+                  <MenuGroup>
+                    <Link href={"settings"}>
+                    <MenuItem icon={<BsGearFill/>}>Settings</MenuItem>
+                    </Link>
                     <MenuItem
+                    icon={<MdLogout/>}
                       onClick={() => signOut({ callbackUrl: "/signin" })}
                     >
                       Log Out
