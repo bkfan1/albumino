@@ -14,7 +14,7 @@ import { MdOutlineAddBox } from "react-icons/md";
 import { authOptions } from "../api/auth/[...nextauth]";
 import connection from "@/database/connection";
 import Album from "@/database/models/album";
-import Photo from "@/database/models/photo"
+import Photo from "@/database/models/photo";
 import Link from "next/link";
 
 export default function AlbumsPage({ albums }) {
@@ -34,8 +34,7 @@ export default function AlbumsPage({ albums }) {
 
               <ButtonGroup variant={"ghost"}>
                 <Link href={"/album/create"}>
-                <Button leftIcon={<MdOutlineAddBox />}>Create album</Button>
-
+                  <Button leftIcon={<MdOutlineAddBox />}>Create album</Button>
                 </Link>
               </ButtonGroup>
             </Flex>
@@ -43,9 +42,12 @@ export default function AlbumsPage({ albums }) {
 
           <Divider />
 
-          <SimpleGrid columns={{sm: 2, md:3, lg: 4, xl: 5, "2xl": 8}} className="albumsGrid">
+          <SimpleGrid
+            columns={{ sm: 2, md: 3, lg: 4, xl: 5, "2xl": 8 }}
+            className="albumsGrid"
+          >
             {albums.map((album) => (
-                <AlbumCard key={album.id}  data={album} />
+              <AlbumCard key={album.id} data={album} />
             ))}
           </SimpleGrid>
         </Flex>
@@ -58,30 +60,25 @@ export async function getServerSideProps({ req, res }) {
   const session = await getServerSession(req, res, authOptions);
 
   const db = await connection();
-  const rawAlbums = await Album.find({author_account_id: session.user.accountId}).sort({updated_at: "desc"})
+  const rawAlbums = await Album.find({
+    author_account_id: session.user.accountId,
+  }).sort({ updated_at: "desc" });
 
   const albums = [];
-  for(const rawAlbum of rawAlbums){
-
-    const length = await Photo.find({albums: rawAlbum._id}).count()
+  for (const rawAlbum of rawAlbums) {
+    const length = await Photo.find({ albums: rawAlbum._id }).count();
 
     albums.push({
       id: rawAlbum._id.toString(),
       name: rawAlbum.name,
 
       length,
-    })
-
+    });
   }
 
   return {
     props: {
       albums,
-    }
-  }
-  
-
-
-
-
+    },
+  };
 }
