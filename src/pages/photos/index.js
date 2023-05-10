@@ -10,7 +10,7 @@ export default function PhotosPage({ photos }) {
   return (
     <>
       <Layout>
-        <Flex flex={6} paddingRight={4} paddingTop={2}>
+        <Flex as={"main"} flex={6} paddingRight={4} paddingTop={2}>
           <PhotosGrid photos={photos}></PhotosGrid>
         </Flex>
       </Layout>
