@@ -1,38 +1,11 @@
 import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
-import {
-  Box,
-  Button,
-  ButtonGroup,
-  Checkbox,
-  Flex,
-  GridItem,
-  HStack,
-  IconButton,
-  Image,
-  Input,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalHeader,
-  ModalOverlay,
-  Skeleton,
-  Text,
-  VStack,
-  useDisclosure,
-  useToast,
-} from "@chakra-ui/react";
+import { Box, Checkbox, GridItem, Image, Tooltip } from "@chakra-ui/react";
 import { useContext } from "react";
 import PhotoVisor from "./PhotoVisor";
 
 export default function PhotosGridItem({ data }) {
   const { onOpen, setCurrentPhoto } = useContext(PhotoVisorContext);
   const { url } = data;
-
   return (
     <>
       <GridItem>
@@ -45,10 +18,12 @@ export default function PhotosGridItem({ data }) {
             cursor: "pointer",
           }}
         >
-          <Checkbox position={"absolute"} size={"md"} margin={2} />
+          <Tooltip label="Select this photo">
+            <Checkbox position={"absolute"} size={"md"} margin={2} />
+          </Tooltip>
           <Image
             src={url}
-            alt={"photo"}
+            alt={"Photo"}
             w="100%"
             h="auto"
             borderRadius="md"
