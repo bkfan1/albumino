@@ -8,6 +8,7 @@ import {
   IconButton,
   HStack,
   VStack,
+  Tooltip,
 } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
 import { BsCalendar, BsCalendarPlus, BsLink, BsPlus } from "react-icons/bs";
@@ -27,7 +28,9 @@ export default function AlbumPage({ album }) {
       <Layout>
         <Flex width={"100%"} flexDirection={"column"} gap={6} paddingX={6}>
           <VStack as="header" width={"100%"}>
-            <Heading width={"100%"}>{name}</Heading>
+            <Tooltip label="Album name" placement="bottom-start">
+              <Heading width={"100%"}>{name}</Heading>
+            </Tooltip>
 
             <VStack width={"100%"} color={"gray.600"}>
               <HStack width={"100%"}>
@@ -51,9 +54,13 @@ export default function AlbumPage({ album }) {
                 ))}
               </AvatarGroup>
               <ButtonGroup>
-                <IconButton icon={<BsLink />} borderRadius={"full"} />
+                <Tooltip label="Share album">
+                  <IconButton icon={<BsLink />} borderRadius={"full"} />
+                </Tooltip>
 
-                <IconButton icon={<BsPlus />} borderRadius={"full"} />
+                <Tooltip label="Add contributors">
+                  <IconButton icon={<BsPlus />} borderRadius={"full"} />
+                </Tooltip>
               </ButtonGroup>
             </HStack>
           </VStack>
