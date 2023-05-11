@@ -5,6 +5,7 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
+  Tooltip,
   VStack,
   useToast,
 } from "@chakra-ui/react";
@@ -42,9 +43,11 @@ export default function AlbumCard({ data }) {
     <>
       <VStack position={"relative"} width={"160px"}>
         <Menu>
-          <MenuButton position={"absolute"} right={3} top={5}>
-            <BsThreeDotsVertical />
-          </MenuButton>
+          <Tooltip label="More options">
+            <MenuButton position={"absolute"} right={3} top={5}>
+              <BsThreeDotsVertical />
+            </MenuButton>
+          </Tooltip>
           <MenuList>
             <MenuItem>Share this album</MenuItem>
             <MenuItem onClick={() => handleDeleteAlbum(id)}>
