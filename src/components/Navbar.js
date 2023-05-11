@@ -10,16 +10,17 @@ import {
   MenuItem,
   MenuList,
   Stack,
+  Tooltip,
 } from "@chakra-ui/react";
 import SearchForm from "./SearchForm";
 import NavbarBrand from "./NavbarBrand";
 import UploadPhotosForm from "./UploadPhotosForm";
 import { useRouter } from "next/router";
-import { BsArrowLeft, BsGearFill, BsThreeDots } from "react-icons/bs";
+import { BsArrowLeft, BsGearFill, BsThreeDots, BsTrashFill } from "react-icons/bs";
 import axios from "axios";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { MdLogout,} from "react-icons/md";
+import { MdLogout } from "react-icons/md";
 
 export default function Navbar() {
   const router = useRouter();
@@ -46,7 +47,6 @@ export default function Navbar() {
         paddingY={2}
         borderBottom={pathname === "/album/[albumId]" ? "0px" : "1px"}
         borderBottomColor={"#edf2f7"}
-
       >
         <ButtonGroup className="navbar__brandContainer">
           {pathname === "/album/[albumId]" ? (
@@ -69,6 +69,7 @@ export default function Navbar() {
           <UploadPhotosForm />
 
           <Menu>
+            <Tooltip label={pathname === "/album/[albumId]" ? "More options" : ""}>
             <MenuButton>
               {pathname === "/album/[albumId]" ? (
                 <BsThreeDots />
@@ -79,10 +80,12 @@ export default function Navbar() {
                 />
               )}
             </MenuButton>
+            </Tooltip>
             <MenuList>
               {pathname === "/album/[albumId]" ? (
                 <>
-                  <MenuItem onClick={handleDeleteAlbum}>
+                <MenuItem icon={<BsGearFill/>}>Settings</MenuItem>
+                  <MenuItem onClick={handleDeleteAlbum} icon={<BsTrashFill/>}>
                     Delete this album
                   </MenuItem>
                 </>
@@ -90,10 +93,10 @@ export default function Navbar() {
                 <>
                   <MenuGroup>
                     <Link href={"settings"}>
-                    <MenuItem icon={<BsGearFill/>}>Settings</MenuItem>
+                      <MenuItem icon={<BsGearFill />}>Settings</MenuItem>
                     </Link>
                     <MenuItem
-                    icon={<MdLogout/>}
+                      icon={<MdLogout />}
                       onClick={() => signOut({ callbackUrl: "/signin" })}
                     >
                       Log Out
