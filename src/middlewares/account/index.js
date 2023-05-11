@@ -1,5 +1,8 @@
 import connection from "@/database/connection";
 import Account from "@/database/models/account";
+import Album from "@/database/models/album";
+import Photo from "@/database/models/photo";
+
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth";
 
@@ -53,6 +56,7 @@ export const getAccountAlbums = async (req, res) => {
 
     return res.status(200).json({albums})
   } catch (error) {
+    console.log(error)
     return res.status(500).json({})
   }
 };
