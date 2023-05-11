@@ -2,17 +2,10 @@ import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 import {
   Box,
   Flex,
-  HStack,
   Heading,
   IconButton,
   Image,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalOverlay,
-  Text,
   VStack,
-  useToast,
 } from "@chakra-ui/react";
 import { useContext } from "react";
 import { BsArrowLeft, BsArrowRight, BsX } from "react-icons/bs";
@@ -83,7 +76,7 @@ export default function PhotoVisorBody({ children }) {
                 <Heading size={"md"}>Add to:</Heading>
               </Flex>
 
-              <VStack  marginTop={6}>
+              <VStack marginTop={6}>
                 {availableAlbums.map((album) => (
                   <AvailableAlbumCard key={album.id} album={album} />
                 ))}
