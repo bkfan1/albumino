@@ -1,18 +1,25 @@
 import {
+  Box,
   Button,
   ButtonGroup,
   Divider,
+  HStack,
   Heading,
+  Icon,
+  IconButton,
   Progress,
   Text,
+  Tooltip,
   VStack,
 } from "@chakra-ui/react";
 import { nanoid } from "nanoid";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { AiOutlineSearch } from "react-icons/ai";
+import { BsCloud } from "react-icons/bs";
 import { HiOutlinePhotograph } from "react-icons/hi";
-import { MdOutlinePeopleAlt, MdOutlinePhotoAlbum } from "react-icons/md";
+import {
+  MdOutlinePhotoAlbum,
+} from "react-icons/md";
 
 const linkButtons = [
   {
@@ -30,26 +37,71 @@ const linkButtons = [
 ];
 
 export default function Panel() {
-
   const router = useRouter();
-  const {pathname} = router;
+  const { pathname } = router;
 
   return (
     <>
-      <VStack flex={1} borderRight={"1px"} borderColor={"#edf1f5"}>
-        <ButtonGroup width={"100%"} orientation="vertical" variant={"ghost"} marginTop={2}>
-          {linkButtons.map(({ id, text, href, icon }) => (
-            <Link key={id} href={href}>
-              <Button leftIcon={icon} width={"100%"} color={href === pathname ? "#2178e8" : ""} backgroundColor={href === pathname ? "#e8f0fe" : ""} >{text}</Button>
-            </Link>
+      <VStack
+        flex={{ sm: 0.5, md: 1 }}
+        minHeight={"100%"}
+        borderRight={"1px"}
+        borderColor={"#edf1f5"}
+        backgroundColor={"white"}
+        className="panel"
+        gap={2}
+      >
+        <ButtonGroup
+          orientation="vertical"
+          width={{ sm: "", md: "100%" }}
+          marginTop={2}
+        >
+          {linkButtons.map(({ id, href, text, icon }) => (
+            <Tooltip key={id} label={text}>
+              <Link href={href}>
+                <Button
+                  display={{ sm: "none", md: "initial" }}
+                  width={"100%"}
+                  variant={"ghost"}
+                  leftIcon={icon}
+                >
+                  {text}
+                </Button>
+                <IconButton
+                  display={{ base: "none", sm: "flex", md: "none" }}
+                  icon={icon}
+                  rounded={"full"}
+                  variant={"ghost"}
+                  size={{ base: "lg" }}
+                />
+              </Link>
+            </Tooltip>
           ))}
         </ButtonGroup>
-
         <Divider />
 
-        <Heading size={"sm"}>Storage</Heading>
-        <Progress value={80} min={0} max={100} colorScheme="green" size="sm" />
-        <Text fontSize={"sm"}>You have used 1.1 GB of 15 GB</Text>
+        <VStack paddingX={2}>
+          <HStack>
+            <Icon as={BsCloud} />
+
+            <Heading size={"sm"} display={{ sm: "none", md: "flex" }}>
+              Storage
+            </Heading>
+          </HStack>
+
+          <Box width={"100%"}>
+            <Progress value={50} colorScheme={"blue"} rounded={"full"} display={{sm:"none", md:"flex"}} />
+            <Heading size={"xs"} display={{sm:"flex",md:"none"}}>0%</Heading>
+          </Box>
+
+          <Text
+            textAlign={"center"}
+            display={{ sm: "none", md: "initial" }}
+            fontSize={"sm"}
+          >
+            0.0 GB of 0.0 GB used
+          </Text>
+        </VStack>
       </VStack>
     </>
   );
