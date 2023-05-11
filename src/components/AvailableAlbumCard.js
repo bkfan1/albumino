@@ -8,6 +8,7 @@ import axios from "axios";
 export default function AvailableAlbumCard({ album }) {
   const {
     currentPhoto,
+    setCurrentPhoto,
     setShowAvailableAlbums,
     setAvailableAlbums,
   } = useContext(PhotoVisorContext);
@@ -30,6 +31,7 @@ export default function AvailableAlbumCard({ album }) {
         duration: 5000,
         isClosable: false,
       });
+      setCurrentPhoto({...currentPhoto, albums: [...currentPhoto.albums, {_id: albumId}]})
       setShowAvailableAlbums(false);
       setAvailableAlbums([]);
     } catch (error) {
@@ -54,7 +56,7 @@ export default function AvailableAlbumCard({ album }) {
         }
         _hover={{
           cursor: isPhotoAlreadyOnAlbum ? "" : "pointer",
-          backgroundColor: !isPhotoAlreadyOnAlbum && "whitesmoke",
+          backgroundColor: !isPhotoAlreadyOnAlbum ? "whitesmoke" : "",
         }}
         borderRadius={"md"}
         width={"100%"}
