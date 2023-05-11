@@ -56,7 +56,6 @@ export const getAccountAlbums = async (req, res) => {
 
     return res.status(200).json({albums})
   } catch (error) {
-    console.log(error)
     return res.status(500).json({})
   }
 };
