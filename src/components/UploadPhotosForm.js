@@ -1,4 +1,10 @@
-import { Button, VStack, useToast } from "@chakra-ui/react";
+import {
+  Button,
+  IconButton,
+  Tooltip,
+  VStack,
+  useToast,
+} from "@chakra-ui/react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { createRef, useState } from "react";
@@ -51,16 +57,26 @@ export default function UploadPhotosForm() {
   const isInAlbumRoute = pathname === "/album/[albumId]" ? true : false;
 
   return (
-    <>
-      <Button
-        leftIcon={isInAlbumRoute ? "" : <AiOutlineUpload />}
-        onClick={handleButtonClick}
-        colorScheme={isInAlbumRoute ? "gray" : "blue"}
-        variant={isInAlbumRoute ? "ghost" : "solid"}
-        title={isInAlbumRoute ? "Add photos to this album" : "Upload photos"}
-      >
-        {isInAlbumRoute ? "" : "Upload"}
-        {isInAlbumRoute ? <MdOutlineAddPhotoAlternate/> : ""}
+    <Tooltip
+      label={isInAlbumRoute ? "Add photos to this album" : "Upload photos"}
+    >
+      <div>
+        {isInAlbumRoute ? (
+          <IconButton
+            onClick={handleButtonClick}
+            icon={<MdOutlineAddPhotoAlternate />}
+            rounded={"full"}
+             variant={"ghost"}
+          />
+        ) : (
+          <Button
+            onClick={handleButtonClick}
+            leftIcon={<AiOutlineUpload />}
+            colorScheme={"blue"}
+          >
+            Upload
+          </Button>
+        )}
         <input
           type="file"
           accept="image/*"
@@ -69,7 +85,7 @@ export default function UploadPhotosForm() {
           onChange={(e) => handleImageOnChange(e)}
           style={{ display: "none" }}
         />
-      </Button>
-    </>
+      </div>
+    </Tooltip>
   );
 }
