@@ -9,6 +9,7 @@ import {
   MenuItem,
   MenuList,
   useToast,
+  Tooltip,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useRouter } from "next/router";
@@ -94,6 +95,7 @@ export default function PhotoVisorHeader({}) {
         className="photoVisor__header"
       >
         <ButtonGroup variant={"link"}>
+          <Tooltip label="Close Visor">
           <IconButton
             icon={<BsX />}
             fontSize={"24px"}
@@ -101,9 +103,11 @@ export default function PhotoVisorHeader({}) {
             rounded={"full"}
             onClick={onClose}
           />
+          </Tooltip>
         </ButtonGroup>
 
         <ButtonGroup variant={"link"} spacing={4}>
+          <Tooltip label="Details">
           <IconButton
             icon={
               <BsInfoCircle
@@ -113,10 +117,12 @@ export default function PhotoVisorHeader({}) {
               />
             }
           />
+          </Tooltip>
           {pathname === "/album/[albumId]" ? (
             ""
           ) : (
-            <IconButton
+            <Tooltip label="Delete this photo">
+              <IconButton
               icon={<BsTrash />}
               fontSize={"24px"}
               color="white"
@@ -124,9 +130,11 @@ export default function PhotoVisorHeader({}) {
               title="Delete this photo permanently"
               onClick={handleDeletePhoto}
             />
+            </Tooltip>
           )}
 
           <Menu>
+            <Tooltip label="More options">
             <MenuButton
               as={Button}
               fontSize={"24px"}
@@ -135,6 +143,7 @@ export default function PhotoVisorHeader({}) {
             >
               <BsThreeDots />
             </MenuButton>
+            </Tooltip>
 
             <MenuList>
               <MenuItem>Download</MenuItem>
