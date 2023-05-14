@@ -1,6 +1,6 @@
 import { regex } from "@/utils/regex";
 import {
-    Box,
+  Box,
   Button,
   Divider,
   Flex,
@@ -11,6 +11,7 @@ import {
   Input,
   Text,
   VStack,
+  useToast,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { nanoid } from "nanoid";
@@ -23,13 +24,25 @@ export default function SignUpForm() {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = async(data) => {
+  const toast = useToast();
+
+  const onSubmit = async (data) => {
     try {
       const res = await axios.post("/api/signup", data);
-      console.log("signup successfully")
+      toast({
+        status: "success",
+        title: "Success",
+        description: res.data.message,
+        duration: 5000,
+      });
     } catch (error) {
-      console.log(error)
-      
+      console.log(error);
+      toast({
+        status: "error",
+        title: "Error",
+        description: error.response.data.message,
+        duration: 5000,
+      });
     }
   };
 
@@ -91,8 +104,10 @@ export default function SignUpForm() {
         padding={2}
       >
         <VStack width={"100%"}>
-            <Heading width={"100%"}>Sign Up</Heading>
-            <Text width={"100%"}>Create an account to upload and share photos</Text>
+          <Heading width={"100%"}>Sign Up</Heading>
+          <Text width={"100%"}>
+            Create an account to upload and share photos
+          </Text>
         </VStack>
         <Divider></Divider>
 
@@ -103,7 +118,6 @@ export default function SignUpForm() {
               placeholder={field.placeholder}
               {...register(field.registerName, field.registerOptions)}
             />
-
           </FormControl>
         ))}
 
