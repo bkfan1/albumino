@@ -4,6 +4,8 @@ import Album from "@/database/models/album";
 import Photo from "@/database/models/photo";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import accountSchema from "@/utils/joi/schemas/account";
+import { hash } from "bcrypt";
 import { getServerSession } from "next-auth";
 
 export const accountExists = async (accountId) => {
@@ -16,7 +18,43 @@ export const accountExists = async (accountId) => {
     }
     return true;
   } catch (error) {
-    throw Error("");
+    throw Error("An error occurred while attempting to find the account.");
+  }
+};
+
+export const createAccount = async (req, res) => {
+  try {
+    await accountSchema.validateAsync(req.body);
+
+    const db = await connection();
+
+    const foundAccount = await Account.findOne({ email: req.body.email });
+
+    if (foundAccount) {
+      return res
+        .status(400)
+        .json({ message: "An account with this email is already in use." });
+    }
+
+    const hashedPassword = await hash(req.body.password, 10);
+
+    const createdAccount = await Account.create({
+      email: req.body.email,
+      password: hashedPassword,
+
+      firstname: req.body.firstname,
+      lastname: req.body.lastname,
+
+      created_at: new Date(),
+    });
+
+    return res.status(200).json({ message: "Account created succesfully." });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({
+        message: "An error occurred while attempting to create the account.",
+      });
   }
 };
 
@@ -54,8 +92,8 @@ export const getAccountAlbums = async (req, res) => {
       });
     }
 
-    return res.status(200).json({albums})
+    return res.status(200).json({ albums });
   } catch (error) {
-    return res.status(500).json({})
+    return res.status(500).json({});
   }
 };
