@@ -19,26 +19,35 @@ export default function PhotosPage({ photos }) {
 }
 
 export async function getServerSideProps({ req, res }) {
-  const session = await getServerSession(req, res, authOptions);
+  try {
+    const session = await getServerSession(req, res, authOptions);
 
-  const db = await connection();
+    const db = await connection();
 
-  const rawPhotos = await Photo.find({
-    author_account_id: session.user.accountId,
-  }).sort({ uploaded_at: "desc" });
+    const rawPhotos = await Photo.find({
+      author_account_id: session.user.accountId,
+    }).sort({ uploaded_at: "desc" });
 
-  const photos = [];
-  for (const rawPhoto of rawPhotos) {
-    photos.push({
-      id: rawPhoto._id.toString(),
-      albums: rawPhoto.albums.map((albumId) => albumId.toString()),
-      url: rawPhoto.url,
-    });
+    const photos = [];
+    for (const rawPhoto of rawPhotos) {
+      photos.push({
+        id: rawPhoto._id.toString(),
+        albums: rawPhoto.albums.map((albumId) => albumId.toString()),
+        url: rawPhoto.url,
+      });
+    }
+
+    return {
+      props: {
+        photos,
+      },
+    };
+  } catch (error) {
+    return {
+      redirect: {
+        destination: "/500",
+        permanent: false,
+      },
+    };
   }
-
-  return {
-    props: {
-      photos,
-    },
-  };
 }
