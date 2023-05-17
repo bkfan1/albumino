@@ -5,6 +5,7 @@ import {
   Heading,
   IconButton,
   Image,
+  Tooltip,
   VStack,
 } from "@chakra-ui/react";
 import { useContext } from "react";
@@ -35,16 +36,18 @@ export default function PhotoVisorBody({ children }) {
         className="photoVisor__body"
       >
         {!(photoIndex === 0) ? (
-          <IconButton
-            onClick={handleSetPreviousPhoto}
-            icon={<BsArrowLeft />}
-            rounded={"full"}
-            position={"absolute"}
-            left={0}
-            size={"lg"}
-            zIndex={3}
-            marginLeft={4}
-          />
+          <Tooltip label="Previous photo">
+            <IconButton
+              onClick={handleSetPreviousPhoto}
+              icon={<BsArrowLeft />}
+              rounded={"full"}
+              position={"absolute"}
+              left={0}
+              size={"lg"}
+              zIndex={3}
+              marginLeft={4}
+            />
+          </Tooltip>
         ) : (
           ""
         )}
@@ -87,7 +90,8 @@ export default function PhotoVisorBody({ children }) {
           ""
         )}
         {!isLastPhoto ? (
-          <IconButton
+          <Tooltip label="Next photo">
+            <IconButton
             onClick={handleSetNextPhoto}
             icon={<BsArrowRight />}
             rounded={"full"}
@@ -97,6 +101,7 @@ export default function PhotoVisorBody({ children }) {
             zIndex={3}
             marginRight={4}
           />
+          </Tooltip>
         ) : (
           ""
         )}
