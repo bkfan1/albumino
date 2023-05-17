@@ -2,6 +2,7 @@ import { Flex } from "@chakra-ui/react";
 import Navbar from "./Navbar";
 import Panel from "./Panel";
 import { useRouter } from "next/router";
+import Footer from "./Footer";
 
 export default function Layout({ children }) {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function Layout({ children }) {
         {pathname === "/album/[albumId]" ? "" : <Panel />}
         {children}
       </Flex>
+      <Footer/>
     </Flex>
   );
 }
