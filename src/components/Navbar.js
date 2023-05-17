@@ -9,23 +9,31 @@ import {
   MenuGroup,
   MenuItem,
   MenuList,
+  Skeleton,
   Stack,
   Tooltip,
 } from "@chakra-ui/react";
-import SearchForm from "./SearchForm";
+import SearchForm from "./forms/SearchForm";
 import NavbarBrand from "./NavbarBrand";
-import UploadPhotosForm from "./UploadPhotosForm";
+import UploadPhotosForm from "./forms/UploadPhotosForm";
 import { useRouter } from "next/router";
-import { BsArrowLeft, BsGearFill, BsThreeDots, BsTrashFill } from "react-icons/bs";
+import {
+  BsArrowLeft,
+  BsGearFill,
+  BsThreeDots,
+  BsTrashFill,
+} from "react-icons/bs";
 import axios from "axios";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { MdLogout } from "react-icons/md";
+import { useIsMounted } from "@/hooks/useIsMounted";
 
 export default function Navbar() {
   const router = useRouter();
   const { pathname, query } = router;
   const { data: session, status } = useSession();
+  const { isMounted } = useIsMounted();
 
   const handleDeleteAlbum = async () => {
     const { albumId } = query;
@@ -69,23 +77,25 @@ export default function Navbar() {
           <UploadPhotosForm />
 
           <Menu>
-            <Tooltip label={pathname === "/album/[albumId]" ? "More options" : ""}>
-            <MenuButton>
-              {pathname === "/album/[albumId]" ? (
-                <BsThreeDots />
-              ) : (
-                <Avatar
-                  size="sm"
-                  name={status === "authenticated" ? session.user.name : ""}
-                />
-              )}
-            </MenuButton>
+            <Tooltip label="More options">
+              <MenuButton>
+                <Skeleton isLoaded={isMounted} rounded={"full"}>
+                  {pathname === "/album/[albumId]" ? (
+                    <BsThreeDots />
+                  ) : (
+                    <Avatar
+                      size="sm"
+                      name={status === "authenticated" ? session.user.name : ""}
+                    />
+                  )}
+                </Skeleton>
+              </MenuButton>
             </Tooltip>
             <MenuList>
               {pathname === "/album/[albumId]" ? (
                 <>
-                <MenuItem icon={<BsGearFill/>}>Settings</MenuItem>
-                  <MenuItem onClick={handleDeleteAlbum} icon={<BsTrashFill/>}>
+                  <MenuItem icon={<BsGearFill />}>Settings</MenuItem>
+                  <MenuItem onClick={handleDeleteAlbum} icon={<BsTrashFill />}>
                     Delete this album
                   </MenuItem>
                 </>
