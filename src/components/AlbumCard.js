@@ -1,3 +1,4 @@
+import { useIsMounted } from "@/hooks/useIsMounted";
 import {
   Box,
   Heading,
@@ -5,6 +6,7 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
+  Skeleton,
   Tooltip,
   VStack,
   useToast,
@@ -16,6 +18,7 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 
 export default function AlbumCard({ data }) {
   const { id, name, length } = data;
+  const {isMounted} = useIsMounted()
   const toast = useToast();
 
   const handleDeleteAlbum = async (albumId) => {
@@ -43,10 +46,12 @@ export default function AlbumCard({ data }) {
     <>
       <VStack position={"relative"} width={"160px"}>
         <Menu>
-          <Tooltip label="More options">
+          <Tooltip label="Album options">
+            <Skeleton isLoaded={isMounted}>
             <MenuButton position={"absolute"} right={3} top={5}>
               <BsThreeDotsVertical />
             </MenuButton>
+            </Skeleton>
           </Tooltip>
           <MenuList>
             <MenuItem>Share this album</MenuItem>
@@ -57,17 +62,24 @@ export default function AlbumCard({ data }) {
         </Menu>
 
         <Link href={`album/${id}`} style={{ width: "100%" }}>
+          <Skeleton isLoaded={isMounted} rounded={"md"}>
           <Box
             width={"100%"}
             height={"160px"}
             backgroundColor={"lightgray"}
             borderRadius={"md"}
           ></Box>
+          </Skeleton>
         </Link>
         <Link href={`album/${id}`} style={{ width: "100%" }}>
+          <Tooltip label="Album name">
+          <Skeleton isLoaded={isMounted} rounded={"md"}>
           <Heading size={"sm"} width={"100%"}>
             {name}
           </Heading>
+          </Skeleton>
+          </Tooltip>
+          <Skeleton isLoaded={isMounted}>
           <Heading
             size={"xs"}
             fontWeight={"normal"}
@@ -76,6 +88,7 @@ export default function AlbumCard({ data }) {
           >
             {length} elements
           </Heading>
+          </Skeleton>
         </Link>
       </VStack>
     </>
