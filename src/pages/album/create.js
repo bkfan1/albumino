@@ -1,4 +1,4 @@
-import CreateAlbumForm from "@/components/CreateAlbumForm";
+import CreateAlbumForm from "@/components/forms/CreateAlbumForm";
 import Layout from "@/components/Layout";
 import { Flex } from "@chakra-ui/react";
 
