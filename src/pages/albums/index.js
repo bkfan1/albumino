@@ -7,6 +7,7 @@ import {
   Flex,
   Heading,
   SimpleGrid,
+  Skeleton,
   VStack,
 } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
@@ -16,8 +17,10 @@ import connection from "@/database/connection";
 import Album from "@/database/models/album";
 import Photo from "@/database/models/photo";
 import Link from "next/link";
+import { useIsMounted } from "@/hooks/useIsMounted";
 
 export default function AlbumsPage({ albums }) {
+  const { isMounted } = useIsMounted();
   return (
     <>
       <Layout>
@@ -30,11 +33,15 @@ export default function AlbumsPage({ albums }) {
               paddingY={2}
               paddingRight={4}
             >
-              <Heading size={"lg"}>Albums</Heading>
+              <Skeleton isLoaded={isMounted} rounded={"md"}>
+                <Heading size={"lg"}>Albums</Heading>
+              </Skeleton>
 
               <ButtonGroup variant={"ghost"}>
                 <Link href={"/album/create"}>
-                  <Button leftIcon={<MdOutlineAddBox />}>Create album</Button>
+                  <Skeleton isLoaded={isMounted} rounded={"md"}>
+                    <Button leftIcon={<MdOutlineAddBox />}>Create album</Button>
+                  </Skeleton>
                 </Link>
               </ButtonGroup>
             </Flex>
