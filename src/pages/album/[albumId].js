@@ -9,6 +9,12 @@ import {
   HStack,
   VStack,
   Tooltip,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalCloseButton,
+  ModalBody,
 } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
 import { BsCalendar, BsCalendarPlus, BsLink, BsPlus } from "react-icons/bs";
@@ -19,9 +25,12 @@ import { nanoid } from "nanoid";
 import Photo from "@/database/models/photo";
 import PhotosGrid from "@/components/PhotosGrid";
 import Layout from "@/components/Layout";
+import SendAlbumInvitationForm from "@/components/forms/SendAlbumInvitationForm";
 
 export default function AlbumPage({ album }) {
   const { contributors, name, photos, created_at, updated_at } = album;
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
     <>
@@ -59,12 +68,25 @@ export default function AlbumPage({ album }) {
                 </Tooltip>
 
                 <Tooltip label="Add contributors">
-                  <IconButton icon={<BsPlus />} borderRadius={"full"} />
+                  <IconButton
+                    onClick={onOpen}
+                    icon={<BsPlus />}
+                    borderRadius={"full"}
+                  />
                 </Tooltip>
               </ButtonGroup>
             </HStack>
           </VStack>
           <PhotosGrid photos={photos} />
+          <Modal isOpen={isOpen} onClose={onClose}>
+            <ModalOverlay />
+            <ModalCloseButton />
+            <ModalContent>
+              <ModalBody>
+                <SendAlbumInvitationForm />
+              </ModalBody>
+            </ModalContent>
+          </Modal>
         </Flex>
       </Layout>
     </>
