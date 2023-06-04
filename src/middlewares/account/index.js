@@ -97,3 +97,7 @@ export const getAccountAlbums = async (req, res) => {
     return res.status(500).json({});
   }
 };
+
+export const getAccountAlbumsServerSide = ()=>{
+  
+}
