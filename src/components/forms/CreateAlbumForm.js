@@ -1,4 +1,3 @@
-import UploadPhotoForm from "@/components/UploadPhotosForm";
 import {
   Box,
   Flex,
