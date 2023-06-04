@@ -8,6 +8,7 @@ import { v4 } from "uuid";
 import multer from "multer";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import Account from "@/database/models/account";
 
 export const albumExists = async (albumId) => {
   try {
@@ -34,6 +35,58 @@ export const isAlbumOwner = async (albumId, accountId) => {
     const album = await Album.findById({ _id: albumId });
 
     return album.author_account_id.toString() === accountId;
+  } catch (error) {
+    return false;
+  }
+};
+
+export const isAlbumContributor = async (albumId, accountId) => {
+  try {
+    const db = await connection();
+    const exists = await albumExists(albumId);
+
+    if (!exists) {
+      return false;
+    }
+
+    const album = await Album.findById({ _id: albumId });
+
+    return album.contributors.includes(accountId);
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+};
+
+export const getAlbum = async (albumId) => {
+  try {
+    const db = await connection();
+    const album = await Album.findById({ _id: albumId });
+
+    const albumPhotos = await Photo.find({ albums: albumId });
+    const albumContributors = await Account.find({
+      _id: { $in: album.contributors },
+    });
+
+    return {
+      id: album._id.toString(),
+      name: album.name,
+
+      contributors: albumContributors.map(({ _id, firstname, lastname }) => ({
+        id: _id.toString(),
+        firstname,
+        lastname,
+      })),
+
+      photos: albumPhotos.map(({ _id, url, uploaded_at }) => ({
+        id: _id.toString(),
+        url,
+        uploaded_at: uploaded_at.toString(),
+      })),
+
+      updated_at: album.updated_at.toString(),
+      created_at: album.created_at.toString(),
+    };
   } catch (error) {
     return false;
   }
