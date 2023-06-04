@@ -15,11 +15,10 @@ import { MdOutlineAddBox } from "react-icons/md";
 import { authOptions } from "../api/auth/[...nextauth]";
 import connection from "@/database/connection";
 import Album from "@/database/models/album";
-import Photo from "@/database/models/photo";
 import Link from "next/link";
 import { useIsMounted } from "@/hooks/useIsMounted";
 
-export default function AlbumsPage({ albums }) {
+export default function AlbumsPage({ ownAlbums, sharedAlbums }) {
   const { isMounted } = useIsMounted();
   return (
     <>
@@ -49,14 +48,18 @@ export default function AlbumsPage({ albums }) {
 
           <Divider />
 
-          <SimpleGrid
-            columns={{ sm: 2, md: 3, lg: 4, xl: 5, "2xl": 8 }}
-            className="albumsGrid"
-          >
-            {albums.map((album) => (
-              <AlbumCard key={album.id} data={album} />
-            ))}
-          </SimpleGrid>
+          <Flex as={"section"} width={"100%"} height={"100%"} flexDirection={"column"}>
+
+            <SimpleGrid
+              columns={{ sm: 2, md: 3, lg: 4, xl: 5, "2xl": 8 }}
+              className="albumsGrid"
+            >
+              {ownAlbums.map((album) => (
+                <AlbumCard key={album.id} data={album} />
+              ))}
+            </SimpleGrid>
+          </Flex>
+
         </Flex>
       </Layout>
     </>
@@ -66,26 +69,23 @@ export default function AlbumsPage({ albums }) {
 export async function getServerSideProps({ req, res }) {
   const session = await getServerSession(req, res, authOptions);
 
-  const db = await connection();
-  const rawAlbums = await Album.find({
+  const rawOwnAlbums = await Album.find({
     author_account_id: session.user.accountId,
-  }).sort({ updated_at: "desc" });
-
-  const albums = [];
-  for (const rawAlbum of rawAlbums) {
-    const length = await Photo.find({ albums: rawAlbum._id }).count();
-
-    albums.push({
-      id: rawAlbum._id.toString(),
-      name: rawAlbum.name,
-
-      length,
-    });
-  }
+  });
+  const rawSharedAlbums = await Album.find({
+    contributors: session.user.accountId,
+  });
 
   return {
     props: {
-      albums,
+      ownAlbums: rawOwnAlbums.map(({ _id, name }) => ({
+        id: _id.toString(),
+        name,
+      })),
+      sharedAlbums: rawSharedAlbums.map(({ _id, name }) => ({
+        id: _id.toString(),
+        name,
+      })),
     },
   };
 }
