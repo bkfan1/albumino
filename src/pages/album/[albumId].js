@@ -19,16 +19,14 @@ import {
 import { getServerSession } from "next-auth";
 import { BsCalendar, BsCalendarPlus, BsLink, BsPlus } from "react-icons/bs";
 import { authOptions } from "../api/auth/[...nextauth]";
-import connection from "@/database/connection";
-import Album from "@/database/models/album";
-import { nanoid } from "nanoid";
-import Photo from "@/database/models/photo";
 import PhotosGrid from "@/components/PhotosGrid";
 import Layout from "@/components/Layout";
 import SendAlbumInvitationForm from "@/components/forms/SendAlbumInvitationForm";
+import { isAlbumOwner, isAlbumContributor, getAlbum } from "@/middlewares/album";
 
 export default function AlbumPage({ album }) {
-  const { contributors, name, photos, created_at, updated_at } = album;
+  console.log(album)
+  const { contributors, name, photos, created_at, updated_at, isOwner } = album;
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -58,11 +56,11 @@ export default function AlbumPage({ album }) {
 
             <HStack width={"100%"}>
               <AvatarGroup size={"sm"}>
-                {contributors.map((avatar) => (
-                  <Avatar key={nanoid()} size="sm" />
+                {contributors.map(({id, firstname, lastname}) => (
+                  <Avatar key={id} name={`${firstname} ${lastname}`} title={`${firstname} ${lastname}`}  />
                 ))}
               </AvatarGroup>
-              <ButtonGroup>
+              {isOwner ? <ButtonGroup>
                 <Tooltip label="Share album">
                   <IconButton icon={<BsLink />} borderRadius={"full"} />
                 </Tooltip>
@@ -74,7 +72,7 @@ export default function AlbumPage({ album }) {
                     borderRadius={"full"}
                   />
                 </Tooltip>
-              </ButtonGroup>
+              </ButtonGroup> : ""}
             </HStack>
           </VStack>
           <PhotosGrid photos={photos} />
@@ -93,49 +91,31 @@ export default function AlbumPage({ album }) {
   );
 }
 
-export async function getServerSideProps({ req, res, params }) {
+export async function getServerSideProps({ req, res, query }) {
+  
   const session = await getServerSession(req, res, authOptions);
 
-  const db = await connection();
-  const { _id, author_account_id, contributors, name, created_at, updated_at } =
-    await Album.findById(params.albumId);
+  const isOwner = await isAlbumOwner(query.albumId, session.user.accountId);
 
-  const isOwner =
-    author_account_id.toString() === session.user.accountId ? true : false;
-
-  const isContributor = contributors
-    .map((contributorId) => contributorId.toString())
-    .includes(session.user.accountId);
-
-  if (!isOwner) {
-    if (!isContributor) {
+  if(!isOwner){
+    const isContributor = await isAlbumContributor(query.albumId, session.user.accountId);
+    if(!isContributor){
       return {
         redirect: {
-          destination: "/",
-          permanent: false,
-        },
-      };
+          destination:"/",
+          permanent:false,
+        }
+      }
     }
+  
   }
 
-  const albumPhotos = await Photo.find({ albums: _id });
-
-  const album = {
-    id: _id.toString(),
-    contributors: contributors.map((contributorId) => contributorId.toString()),
-    name,
-    photos: albumPhotos.map((photo) => ({
-      id: photo._id.toString(),
-      albums: photo.albums.map((albumId) => albumId.toString()),
-      url: photo.url,
-    })),
-    created_at: `${created_at}`,
-    updated_at: `${updated_at}`,
-  };
+  const album = await getAlbum(query.albumId);
+  album["isOwner"] = isOwner
 
   return {
     props: {
-      album,
+      album
     },
   };
 }
