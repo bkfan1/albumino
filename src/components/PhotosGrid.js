@@ -6,7 +6,7 @@ export default function PhotosGrid({ photos }) {
   return (
     <>
     <Box width={"100%"}>
-      <Grid templateColumns="repeat(auto-fill, minmax(200px, 1fr))" gap={4}>
+      <Grid templateColumns="repeat(auto-fill, minmax(200px, 1fr))" gap={4} paddingBottom={4}>
       
       <PhotoVisorProvider photos={photos}>
         {photos.map((photo) => (
