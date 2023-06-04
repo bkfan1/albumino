@@ -17,7 +17,7 @@ import { nanoid } from "nanoid";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
-import { BsCloud } from "react-icons/bs";
+import { BsCloud, BsPeople, BsPeopleFill } from "react-icons/bs";
 import { HiOutlinePhotograph } from "react-icons/hi";
 import { MdOutlinePhotoAlbum } from "react-icons/md";
 import { useState } from "react";
@@ -35,6 +35,12 @@ const linkButtons = [
     text: "Albums",
     href: "/albums",
     icon: <MdOutlinePhotoAlbum />,
+  },
+  {
+    id: nanoid(),
+    text: "Shared",
+    href: "/shared",
+    icon: <BsPeopleFill />,
   },
 ];
 
