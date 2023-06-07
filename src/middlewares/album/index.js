@@ -154,7 +154,7 @@ export const createAlbum = async (req, res) => {
         const photoURL = await getDownloadURL(snapshot.ref);
 
         const uploadedPhoto = await Photo.create({
-          author_account_id: account._id,
+          author_account_id: session.user.accountId,
           albums: [createdAlbum._id],
 
           filename,
