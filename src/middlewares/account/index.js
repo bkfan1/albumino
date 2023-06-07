@@ -1,12 +1,9 @@
 import connection from "@/database/connection";
-import Account from "@/database/models/account";
-import Album from "@/database/models/album";
-import Photo from "@/database/models/photo";
-
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import Account from "@/database/models/Account";
+import Album from "@/database/models/Album";
+import Photo from "@/database/models/Photo";
 import accountSchema from "@/utils/joi/schemas/account";
 import { hash } from "bcrypt";
-import { getServerSession } from "next-auth";
 
 export const accountExists = async (accountId) => {
   try {
@@ -18,7 +15,7 @@ export const accountExists = async (accountId) => {
     }
     return true;
   } catch (error) {
-    throw Error("An error occurred while attempting to find the account.");
+    return false;
   }
 };
 
@@ -31,9 +28,7 @@ export const createAccount = async (req, res) => {
     const foundAccount = await Account.findOne({ email: req.body.email });
 
     if (foundAccount) {
-      return res
-        .status(400)
-        .json({ message: "An account with this email is already in use." });
+      return false;
     }
 
     const hashedPassword = await hash(req.body.password, 10);
@@ -48,28 +43,41 @@ export const createAccount = async (req, res) => {
       created_at: new Date(),
     });
 
-    return res.status(200).json({ message: "Account created succesfully." });
+    return res.status(200).json({});
   } catch (error) {
-    return res
-      .status(500)
-      .json({
-        message: "An error occurred while attempting to create the account.",
-      });
+    return res.status(500).json({});
   }
 };
 
-export const getAccountAlbums = async (req, res) => {
+export const getAccountPhotos = async (accountId) => {
   try {
-    const session = await getServerSession(req, res, authOptions);
-    const exists = await accountExists(session.user.accountId);
+    const db = await connection();
+
+    const photos = await Photo.find({
+      author_account_id: accountId,
+    }).sort({ uploaded_at: "desc" });
+
+    return photos.map(({ _id, albums, url }) => ({
+      id: _id.toString(),
+      albums: albums.map((albumId) => albumId.toString()),
+      url,
+    }));
+  } catch (error) {
+    return false;
+  }
+};
+
+export const getAccountAlbums = async (accountId) => {
+  try {
+    const exists = await accountExists(accountId);
 
     if (!exists) {
-      return res.status(404).json({});
+      return false;
     }
 
     const db = await connection();
     const accountAlbums = await Album.find({
-      author_account_id: session.user.accountId,
+      author_account_id: accountId,
     });
 
     const albums = [];
@@ -81,23 +89,20 @@ export const getAccountAlbums = async (req, res) => {
         id: album._id.toString(),
         name: album.name,
 
-        photos: albumPhotos.map((album) => ({
-          id: album._id.toString(),
-          url: album.url,
-          uploaded_at: album.uploaded_at,
+        photos: albumPhotos.map((photo) => ({
+          id: photo._id.toString(),
+          url: photo.url,
+          uploaded_at: photo.uploaded_at.toString(),
         })),
 
-        created_at: album.created_at,
-        updated_at: album.updated_at,
+        created_at: album.created_at.toString(),
+        updated_at: album.updated_at.toString(),
       });
     }
 
-    return res.status(200).json({ albums });
+    return albums;
   } catch (error) {
-    return res.status(500).json({});
+    console.log(error);
+    return false;
   }
 };
-
-export const getAccountAlbumsServerSide = ()=>{
-  
-}
