@@ -12,9 +12,9 @@ import { useContext } from "react";
 import { BsArrowLeft, BsArrowRight, BsX } from "react-icons/bs";
 import AvailableAlbumCard from "../cards/AvailableAlbumCard";
 
-export default function PhotoVisorBody({ children }) {
+export default function PhotoVisorBody({}) {
   const {
-    photos,
+    visorPhotos,
     currentPhoto,
     showAvailableAlbums,
     setShowAvailableAlbums,
@@ -23,8 +23,10 @@ export default function PhotoVisorBody({ children }) {
     handleSetPreviousPhoto,
   } = useContext(PhotoVisorContext);
 
-  const photoIndex = photos.findIndex((photo) => photo.id === currentPhoto.id);
-  const isLastPhoto = photoIndex === photos.length - 1;
+  const photoIndex = visorPhotos.findIndex(
+    (photo) => photo.id === currentPhoto.id
+  );
+  const isLastPhoto = photoIndex === visorPhotos.length - 1;
 
   return (
     <>
@@ -92,15 +94,15 @@ export default function PhotoVisorBody({ children }) {
         {!isLastPhoto ? (
           <Tooltip label="Next photo">
             <IconButton
-            onClick={handleSetNextPhoto}
-            icon={<BsArrowRight />}
-            rounded={"full"}
-            position={"absolute"}
-            right={0}
-            size={"lg"}
-            zIndex={3}
-            marginRight={4}
-          />
+              onClick={handleSetNextPhoto}
+              icon={<BsArrowRight />}
+              rounded={"full"}
+              position={"absolute"}
+              right={0}
+              size={"lg"}
+              zIndex={3}
+              marginRight={4}
+            />
           </Tooltip>
         ) : (
           ""
