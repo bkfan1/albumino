@@ -8,33 +8,34 @@ import AlbumInvitation from "@/database/models/AlbumInvitation";
 
 import { createTransport } from "nodemailer";
 
-
-
-export const invitationExists = async (invitationId)=>{
+export const invitationExists = async (invitationId) => {
   try {
-    const foundInvitation = await AlbumInvitation.findById({_id: invitationId})
-    if(!foundInvitation){return false;}
+    const foundInvitation = await AlbumInvitation.findById({
+      _id: invitationId,
+    });
+    if (!foundInvitation) {
+      return false;
+    }
 
     return true;
-
-    
   } catch (error) {
-    return false;
+    throw Error("An error occurred while checking invitation existence.");
   }
-}
+};
 
-export const isInvitationAuthor = async (invitationId, accountId)=>{
+export const isInvitationAuthor = async (invitationId, accountId) => {
   try {
     const foundInvitation = await invitationExists(invitationId);
 
-    if(!foundInvitation){return false}
+    if (!foundInvitation) {
+      return false;
+    }
 
-    return foundInvitation.sender_id === accountId
-
+    return foundInvitation.sender_id === accountId;
   } catch (error) {
-    return false;
+    throw Error("An error occurred while checking invitation's author.");
   }
-}
+};
 
 export const updateAlbumInvitation = async (req, res) => {
   try {
@@ -44,20 +45,29 @@ export const updateAlbumInvitation = async (req, res) => {
       session.user.accountId
     );
 
+    // Only users that aren't the album owner can update the state of the invitation
     if (isOwner) {
-      return res.status(403).json({});
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     const db = await connection();
 
     const exists = await invitationExists(req.query.invitationId);
 
-    if(!exists){return res.status(404).json({})}
+    if (!exists) {
+      return res.status(404).json({ message: "Bad request" });
+    }
 
-    const invitation = await AlbumInvitation.findById({_id: req.query.invitationId});
+    const invitation = await AlbumInvitation.findById({
+      _id: req.query.invitationId,
+    });
 
-    if(invitation.status === "accepted"){return res.status(400).json({})}
+    // If the invitation was already accepted, return 400 status code
+    if (invitation.status === "accepted") {
+      return res.status(400).json({ message: "Invitation expired" });
+    }
 
+    // Otherwise, update the invitation status
     await AlbumInvitation.findByIdAndUpdate(
       { _id: req.query.invitationId },
       {
@@ -65,17 +75,20 @@ export const updateAlbumInvitation = async (req, res) => {
       }
     );
 
+    // ...And update the album related to the current invitation by adding the new contributor account ID
     await Album.findByIdAndUpdate(
       { _id: req.query.albumId },
       { $push: { contributors: session.user.accountId } }
     );
 
-    return res.status(200).json({});
-
-
+    return res.status(200).json({ message: "Invitation updated succesfully" });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({});
+    return res
+      .status(500)
+      .json({
+        message: "An error occurred while attempting to update invitation",
+      });
   }
 };
 
@@ -104,7 +117,7 @@ export const sendEmail = async (data) => {
 
     return true;
   } catch (error) {
-    throw Error("");
+    throw Error("An error occurred while attempting to send email.");
   }
 };
 
@@ -117,7 +130,7 @@ export const createAlbumInvitation = async (req, res) => {
     );
 
     if (!isOwner) {
-      return res.status(403).json({});
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     const db = await connection();
@@ -132,11 +145,27 @@ export const createAlbumInvitation = async (req, res) => {
       created_at: new Date(),
     });
 
-    const sentInvitationEmail = await sendEmail(req.body);
+    // After creating the invitation in the database, send an email with a link to the invitation
+    const sentEmail = await sendEmail(req.body);
 
-    return res.status(200).json({});
+    // If email was not sent, return 500 status code
+    if (!sentEmail) {
+      return res
+        .status(500)
+        .json({
+          message:
+            "An error occurred while attempting to send invitation email",
+        });
+    }
+
+    // Otherwise, return 200
+    return res.status(200).json({ message: "Email sent successfully" });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({});
+    return res
+      .status(500)
+      .json({
+        message: "An error occurred while attempting to create invitation",
+      });
   }
 };

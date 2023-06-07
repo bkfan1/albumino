@@ -20,7 +20,7 @@ export const albumExists = async (albumId) => {
     }
     return true;
   } catch (error) {
-    return false;
+    throw Error("An error occurred while attempting to find album.");
   }
 };
 
@@ -36,7 +36,7 @@ export const isAlbumOwner = async (albumId, accountId) => {
 
     return album.author_account_id.toString() === accountId;
   } catch (error) {
-    return false;
+    throw Error("An error occurred while checking album ownership.");
   }
 };
 
@@ -53,14 +53,19 @@ export const isAlbumContributor = async (albumId, accountId) => {
 
     return album.contributors.includes(accountId);
   } catch (error) {
-    console.log(error);
-    return false;
+    throw "An error occurred while checking album contributor.";
   }
 };
 
 export const getAlbum = async (albumId) => {
   try {
     const db = await connection();
+    const exists = await albumExists(albumId);
+
+    if (!exists) {
+      return false;
+    }
+
     const album = await Album.findById({ _id: albumId });
 
     const albumPhotos = await Photo.find({ albums: albumId });
@@ -68,7 +73,7 @@ export const getAlbum = async (albumId) => {
       _id: { $in: album.contributors },
     });
 
-    return {
+    const data = {
       id: album._id.toString(),
       name: album.name,
 
@@ -87,13 +92,26 @@ export const getAlbum = async (albumId) => {
       updated_at: album.updated_at.toString(),
       created_at: album.created_at.toString(),
     };
+
+    return data;
   } catch (error) {
-    return false;
+    throw Error("An error ocurred while getting album.");
   }
 };
 
 export const deleteAlbum = async (req, res) => {
   try {
+    const session = await getServerSession(req, res, authOptions);
+
+    const isOwner = await isAlbumOwner(
+      req.query.albumId,
+      session.user.accountId
+    );
+
+    if (!isOwner) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     const db = await connection();
 
     const updatedPhotos = await Photo.updateMany(
@@ -107,10 +125,12 @@ export const deleteAlbum = async (req, res) => {
       _id: req.query.albumId,
     });
 
-    return res.status(200).json({});
+    return res.status(200).json({ message: "Album deleted successfully" });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({});
+    return res
+      .status(500)
+      .json({ message: "An error occurred while attempting to delete photo" });
   }
 };
 
@@ -120,7 +140,9 @@ export const createAlbum = async (req, res) => {
     const upload = multer({ storage: multer.memoryStorage() });
     upload.array("files")(req, res, async (error) => {
       if (error) {
-        return res.status(500).json({});
+        return res.status(500).json({
+          message: "An error occurred while attempting to upload photos",
+        });
       }
 
       const db = await connection();
@@ -141,9 +163,13 @@ export const createAlbum = async (req, res) => {
       });
 
       for (const file of req.files) {
+        // Setting a new filename for each file in req.files
         const filename = v4();
 
-        const storageRef = ref(storage, `users/${account._id}/${filename}`);
+        const storageRef = ref(
+          storage,
+          `users/${session.user.accountId}/${filename}`
+        );
 
         const metadata = {
           contentType: file.mimetype,
@@ -165,8 +191,10 @@ export const createAlbum = async (req, res) => {
         });
       }
     });
-    return res.status(200).json({});
+    return res.status(200).json({ message: "Album created sucessfully" });
   } catch (error) {
-    return res.status(500).json({});
+    return res
+      .status(500)
+      .json({ message: "An error occurred while attempting to create album" });
   }
 };

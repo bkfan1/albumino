@@ -15,7 +15,7 @@ export const accountExists = async (accountId) => {
     }
     return true;
   } catch (error) {
-    return false;
+    throw Error("An error occurred while finding the account.");
   }
 };
 
@@ -28,7 +28,7 @@ export const createAccount = async (req, res) => {
     const foundAccount = await Account.findOne({ email: req.body.email });
 
     if (foundAccount) {
-      return false;
+      return res.status(400).json({ message: "Email taken" });
     }
 
     const hashedPassword = await hash(req.body.password, 10);
@@ -43,9 +43,13 @@ export const createAccount = async (req, res) => {
       created_at: new Date(),
     });
 
-    return res.status(200).json({});
+    return res.status(200).json({ message: "Account created successfully" });
   } catch (error) {
-    return res.status(500).json({});
+    return res
+      .status(500)
+      .json({
+        message: "An error occurred while attempting to create account",
+      });
   }
 };
 
@@ -63,7 +67,7 @@ export const getAccountPhotos = async (accountId) => {
       url,
     }));
   } catch (error) {
-    return false;
+    throw Error("An error occurred while attempting to get account photos.");
   }
 };
 
@@ -102,7 +106,6 @@ export const getAccountAlbums = async (accountId) => {
 
     return albums;
   } catch (error) {
-    console.log(error);
-    return false;
+    throw Error("An error occurred while attempting to get account albums.");
   }
 };
