@@ -1,41 +1,58 @@
 import { useDisclosure } from "@chakra-ui/react";
-import axios from "axios";
 import { createContext, useState } from "react";
 
 export const PhotoVisorContext = createContext();
 
-export const PhotoVisorProvider = ({children, photos}) => {
+export const PhotoVisorProvider = ({ children }) => {
+  // For showing or hiding the PhotoVisor component in the UI
+  const { isOpen, onClose, onOpen } = useDisclosure();
 
-  const {isOpen, onClose, onOpen} = useDisclosure();
-
+  const [visorPhotos, setVisorPhotos] = useState([]);
   const [currentPhoto, setCurrentPhoto] = useState();
 
-  const [showAvailableAlbums, setShowAvailableAlbums] = useState(false)
+  const [showAvailableAlbums, setShowAvailableAlbums] = useState(false);
   const [availableAlbums, setAvailableAlbums] = useState([]);
 
-  const handleSetNextPhoto = ()=>{
+  const handleSetNextPhoto = () => {
+    const currentPhotoIndex = visorPhotos.findIndex(
+      (photo) => photo.id === currentPhoto.id
+    );
 
-    const currentPhotoIndex = photos.findIndex((photo)=>photo.id === currentPhoto.id);
-
-    if(!(currentPhotoIndex === photos.length - 1)){
-      setCurrentPhoto(photos[currentPhotoIndex + 1])
-      return
-    }
-  }
-
-  const handleSetPreviousPhoto = ()=>{
-    const currentPhotoIndex = photos.findIndex((photo)=>photo.id === currentPhoto.id);
-    if((currentPhotoIndex > 0)){
-      setCurrentPhoto(photos[currentPhotoIndex-1]);
+    if (!(currentPhotoIndex === visorPhotos.length - 1)) {
+      setCurrentPhoto(visorPhotos[currentPhotoIndex + 1]);
       return;
     }
+  };
 
-
-  }
+  const handleSetPreviousPhoto = () => {
+    const currentPhotoIndex = visorPhotos.findIndex(
+      (photo) => photo.id === currentPhoto.id
+    );
+    if (currentPhotoIndex > 0) {
+      setCurrentPhoto(visorPhotos[currentPhotoIndex - 1]);
+      return;
+    }
+  };
 
   return (
     <>
-      <PhotoVisorContext.Provider value={{photos, isOpen, onClose, onOpen, currentPhoto, setCurrentPhoto, showAvailableAlbums, setShowAvailableAlbums, availableAlbums, setAvailableAlbums, handleSetNextPhoto, handleSetPreviousPhoto}} >
+      <PhotoVisorContext.Provider
+        value={{
+          visorPhotos,
+          setVisorPhotos,
+          isOpen,
+          onClose,
+          onOpen,
+          currentPhoto,
+          setCurrentPhoto,
+          showAvailableAlbums,
+          setShowAvailableAlbums,
+          availableAlbums,
+          setAvailableAlbums,
+          handleSetNextPhoto,
+          handleSetPreviousPhoto,
+        }}
+      >
         {children}
       </PhotoVisorContext.Provider>
     </>
