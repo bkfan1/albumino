@@ -1,5 +1,5 @@
 import connection from "@/database/connection";
-import Account from "@/database/models/account";
+import Account from "@/database/models/Account";
 import { compare } from "bcrypt";
 import NextAuth from "next-auth/next";
 import Credentials from "next-auth/providers/credentials";
