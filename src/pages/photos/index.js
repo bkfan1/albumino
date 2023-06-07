@@ -1,17 +1,16 @@
-import Layout from "@/components/Layout";
-import PhotosGrid from "@/components/PhotosGrid";
+import Layout from "@/components/ui/Layout";
+import MasonryGrid from "@/components/ui/masonry/MasonryGrid";
 import { Flex } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
-import connection from "@/database/connection";
-import Photo from "@/database/models/photo";
 import { authOptions } from "../api/auth/[...nextauth]";
+import { getAccountPhotos } from "@/middlewares/account";
 
 export default function PhotosPage({ photos }) {
   return (
     <>
       <Layout>
         <Flex as={"main"} flex={6} paddingRight={4} paddingTop={2}>
-          <PhotosGrid photos={photos}></PhotosGrid>
+          <MasonryGrid photos={photos}></MasonryGrid>
         </Flex>
       </Layout>
     </>
@@ -21,21 +20,7 @@ export default function PhotosPage({ photos }) {
 export async function getServerSideProps({ req, res }) {
   try {
     const session = await getServerSession(req, res, authOptions);
-
-    const db = await connection();
-
-    const rawPhotos = await Photo.find({
-      author_account_id: session.user.accountId,
-    }).sort({ uploaded_at: "desc" });
-
-    const photos = [];
-    for (const rawPhoto of rawPhotos) {
-      photos.push({
-        id: rawPhoto._id.toString(),
-        albums: rawPhoto.albums.map((albumId) => albumId.toString()),
-        url: rawPhoto.url,
-      });
-    }
+    const photos = await getAccountPhotos(session.user.accountId);
 
     return {
       props: {
