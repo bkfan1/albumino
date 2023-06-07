@@ -1,6 +1,6 @@
 import connection from "@/database/connection";
-import Album from "@/database/models/album";
-import Photo from "@/database/models/photo";
+import Album from "@/database/models/Album";
+import Photo from "@/database/models/Photo";
 import { accountExists } from "../account";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "@/utils/firebase-app";
@@ -8,7 +8,7 @@ import { v4 } from "uuid";
 import multer from "multer";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import Account from "@/database/models/account";
+import Account from "@/database/models/Account";
 
 export const albumExists = async (albumId) => {
   try {
