@@ -1,9 +1,9 @@
 import connection from "@/database/connection";
-import Photo from "@/database/models/photo";
+import Photo from "@/database/models/Photo";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { deleteFile, uploadFile } from "@/utils/firebase-app";
-import { getDownloadURL } from "firebase/storage";
+import { getDownloadURL } from "firebase/storage"
 import { getServerSession } from "next-auth";
 import { accountExists } from "../account";
 import multer from "multer";
