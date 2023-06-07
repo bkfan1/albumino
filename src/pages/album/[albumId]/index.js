@@ -15,6 +15,7 @@ import {
   ModalContent,
   ModalCloseButton,
   ModalBody,
+  ModalHeader,
 } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
 import { BsCalendar, BsCalendarPlus, BsLink, BsPlus } from "react-icons/bs";
@@ -28,10 +29,17 @@ import {
   getAlbum,
 } from "@/middlewares/album";
 import MasonryGrid from "@/components/ui/masonry/MasonryGrid";
+import { useContext, useEffect } from "react";
+import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 
 export default function AlbumPage({ album }) {
-  console.log(album);
+  const { setVisorPhotos } = useContext(PhotoVisorContext);
+
   const { contributors, name, photos, created_at, updated_at, isOwner } = album;
+
+  useEffect(() => {
+    setVisorPhotos(photos);
+  }, [photos, setVisorPhotos]);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -88,11 +96,16 @@ export default function AlbumPage({ album }) {
               )}
             </HStack>
           </VStack>
-          <MasonryGrid photos={photos} />
+          <MasonryGrid />
           <Modal isOpen={isOpen} onClose={onClose}>
             <ModalOverlay />
-            <ModalCloseButton />
+
             <ModalContent>
+              <ModalHeader>
+                <Tooltip label="Close modal">
+                  <ModalCloseButton />
+                </Tooltip>
+              </ModalHeader>
               <ModalBody>
                 <SendAlbumInvitationForm />
               </ModalBody>
@@ -116,7 +129,7 @@ export async function getServerSideProps({ req, res, query }) {
     );
 
     if (!isOwner) {
-      if(!isContributor){
+      if (!isContributor) {
         return {
           redirect: {
             destination: "/",
