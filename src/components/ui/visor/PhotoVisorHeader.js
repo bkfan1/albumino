@@ -1,3 +1,4 @@
+import { AlbumPageContext } from "@/contexts/AlbumPageContext";
 import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 import {
   ButtonGroup,
@@ -13,12 +14,14 @@ import {
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useRouter } from "next/router";
-import { useContext} from "react";
+import { useContext } from "react";
 import { BsInfoCircle, BsThreeDots, BsTrash, BsX } from "react-icons/bs";
 
 export default function PhotoVisorHeader({}) {
   const router = useRouter();
-  const { pathname, query } = router;
+  const { query } = router;
+
+  const { inAlbumPage, isOwner } = useContext(AlbumPageContext);
 
   const {
     visorPhotos,
@@ -40,11 +43,13 @@ export default function PhotoVisorHeader({}) {
         duration: 5000,
       });
 
-      const updatedVisorPhotos = [...visorPhotos]
-      const index = updatedVisorPhotos.findIndex((photo)=>photo.id === currentPhoto.id);
+      const updatedVisorPhotos = [...visorPhotos];
+      const index = updatedVisorPhotos.findIndex(
+        (photo) => photo.id === currentPhoto.id
+      );
       updatedVisorPhotos.splice(index, 1);
 
-      setVisorPhotos(updatedVisorPhotos)
+      setVisorPhotos(updatedVisorPhotos);
 
       onClose();
     } catch (error) {
@@ -105,69 +110,73 @@ export default function PhotoVisorHeader({}) {
       >
         <ButtonGroup variant={"link"}>
           <Tooltip label="Close Visor">
-          <IconButton
-            icon={<BsX />}
-            fontSize={"24px"}
-            color="white"
-            rounded={"full"}
-            onClick={onClose}
-          />
+            <IconButton
+              icon={<BsX />}
+              fontSize={"24px"}
+              color="white"
+              rounded={"full"}
+              onClick={onClose}
+            />
           </Tooltip>
         </ButtonGroup>
 
         <ButtonGroup variant={"link"} spacing={4}>
           <Tooltip label="Details">
-          <IconButton
-            icon={
-              <BsInfoCircle
+            <IconButton
+              icon={
+                <BsInfoCircle
+                  fontSize={"24px"}
+                  color="white"
+                  rounded={"full"}
+                />
+              }
+            />
+          </Tooltip>
+          {!inAlbumPage ? (
+            <Tooltip label="Delete this photo">
+              <IconButton
+                icon={<BsTrash />}
                 fontSize={"24px"}
                 color="white"
                 rounded={"full"}
+                title="Delete this photo permanently"
+                onClick={handleDeletePhoto}
               />
-            }
-          />
-          </Tooltip>
-          {pathname === "/album/[albumId]" ? (
-            ""
-          ) : (
-            <Tooltip label="Delete this photo">
-              <IconButton
-              icon={<BsTrash />}
-              fontSize={"24px"}
-              color="white"
-              rounded={"full"}
-              title="Delete this photo permanently"
-              onClick={handleDeletePhoto}
-            />
             </Tooltip>
+          ) : (
+            ""
           )}
 
           <Menu>
             <Tooltip label="More options">
-            <MenuButton
-              as={Button}
-              fontSize={"24px"}
-              color="white"
-              rounded={"full"}
-            >
-              <BsThreeDots />
-            </MenuButton>
+              <MenuButton
+                as={Button}
+                fontSize={"24px"}
+                color="white"
+                rounded={"full"}
+              >
+                <BsThreeDots />
+              </MenuButton>
             </Tooltip>
 
             <MenuList>
               <MenuItem>Download</MenuItem>
               <MenuItem onClick={handleClickAddToAlbum}>Add to album</MenuItem>
-              {pathname === "/album/[albumId]" ? (
-                <MenuItem onClick={handleRemoveFromAlbum}>
-                  Remove from this album
-                </MenuItem>
-              ) : (
-                ""
-              )}
-              {pathname === "/album/[albumId]" ? (
-                <MenuItem onClick={handleDeletePhoto}>
-                  Delete permanently
-                </MenuItem>
+
+              {inAlbumPage ? (
+                <>
+                  {isOwner ? (
+                    <MenuItem onClick={handleRemoveFromAlbum}>
+                      Remove from this album
+                    </MenuItem>
+                  ) : (
+                    ""
+                  )}
+
+                  <MenuItem onClick={handleDeletePhoto}>
+                    Delete permanently
+                  </MenuItem>
+                </>
               ) : (
                 ""
               )}
