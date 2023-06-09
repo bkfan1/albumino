@@ -1,3 +1,4 @@
+import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 import { useIsMounted } from "@/hooks/useIsMounted";
 import {
   Button,
@@ -9,17 +10,19 @@ import {
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useRouter } from "next/router";
-import { createRef, useState } from "react";
+import { createRef, useContext, useState } from "react";
 import { AiOutlineUpload } from "react-icons/ai";
 import { MdOutlineAddPhotoAlternate } from "react-icons/md";
 
 export default function UploadPhotosForm() {
+  const {visorPhotos, setVisorPhotos, isOpen} = useContext(PhotoVisorContext);
   const router = useRouter();
-  const { pathname } = router;
-  const toast = useToast();
   const {isMounted} = useIsMounted();
 
   const inputFileRef = createRef();
+  const toast = useToast();
+
+  const { pathname, query } = router;
 
   const handleButtonClick = () => {
     inputFileRef.current.click();
@@ -36,16 +39,25 @@ export default function UploadPhotosForm() {
 
     console.log(formData);
 
+    if(pathname === "/album/[albumId]"){
+      formData.append("albumId", query.albumId);
+    }
+
     try {
       const res = await axios.post("/api/photos", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+      console.log(res)
       toast({
         title: "Photos uploaded successfully.",
         status: "success",
         duration: 5000,
         isClosable: false,
       });
+
+      // If Photo Visor is open
+      setVisorPhotos((visorPhotos)=>[...visorPhotos, ...res.data.photos])
+
     } catch (error) {
       toast({
         title: "Error while uploading image",
@@ -82,7 +94,7 @@ export default function UploadPhotosForm() {
         )}
         <input
           type="file"
-          accept="image/*"
+          accept=".jpg, .jpeg, .png"
           ref={inputFileRef}
           multiple
           onChange={(e) => handleImageOnChange(e)}
