@@ -27,14 +27,17 @@ export const albumExists = async (albumId) => {
 export const isAlbumOwner = async (albumId, accountId) => {
   try {
     const db = await connection();
+
     const exists = await albumExists(albumId);
+
     if (!exists) {
-      return false;
+      throw Error("Album not found");
     }
 
     const album = await Album.findById({ _id: albumId });
+    const isOwner = album.author_account_id.toString() === accountId;
 
-    return album.author_account_id.toString() === accountId;
+    return isOwner;
   } catch (error) {
     throw Error("An error occurred while checking album ownership.");
   }
@@ -46,12 +49,14 @@ export const isAlbumContributor = async (albumId, accountId) => {
     const exists = await albumExists(albumId);
 
     if (!exists) {
-      return false;
+      throw Error("Album dont exists");
     }
 
     const album = await Album.findById({ _id: albumId });
 
-    return album.contributors.includes(accountId);
+    const isContributor = album.contributors.includes(accountId);
+
+    return isContributor;
   } catch (error) {
     throw "An error occurred while checking album contributor.";
   }
@@ -63,7 +68,7 @@ export const getAlbum = async (albumId) => {
     const exists = await albumExists(albumId);
 
     if (!exists) {
-      return false;
+      throw Error("Album not found");
     }
 
     const album = await Album.findById({ _id: albumId });
@@ -202,7 +207,7 @@ export const createAlbum = async (req, res) => {
 export const canUploadToAlbum = async (accountId, albumId) => {
   const exists = await Promise.all([
     accountExists(accountId),
-    albumExists(albumId)
+    albumExists(albumId),
   ]);
 
   if (!exists[0] || !exists[1]) {
@@ -211,7 +216,7 @@ export const canUploadToAlbum = async (accountId, albumId) => {
 
   const [isOwner, isContributor] = await Promise.all([
     isAlbumOwner(albumId, accountId),
-    isAlbumContributor(albumId, accountId)
+    isAlbumContributor(albumId, accountId),
   ]);
 
   return isOwner || isContributor;
