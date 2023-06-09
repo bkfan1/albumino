@@ -21,7 +21,7 @@ export const uploadFile = async (url, fileBuffer, metadata) => {
 
     return snapshot;
   } catch (error) {
-    return false;
+    throw Error("An error ocurred while attempting to upload file");
   }
 };
 
@@ -32,6 +32,6 @@ export const deleteFile = async (fileURL) => {
 
     return true;
   } catch (error) {
-    return error;
+    throw Error("An error ocurred while attempting to delete file");
   }
 };
