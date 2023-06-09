@@ -1,3 +1,4 @@
+import { AlbumPageContext } from "@/contexts/AlbumPageContext";
 import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 import { useIsMounted } from "@/hooks/useIsMounted";
 import {
@@ -10,19 +11,20 @@ import {
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useRouter } from "next/router";
-import { createRef, useContext, useState } from "react";
+import { createRef, useContext } from "react";
 import { AiOutlineUpload } from "react-icons/ai";
 import { MdOutlineAddPhotoAlternate } from "react-icons/md";
 
 export default function UploadPhotosForm() {
   const {setVisorPhotos} = useContext(PhotoVisorContext);
+  const {inAlbumPage} = useContext(AlbumPageContext);
   const router = useRouter();
   const {isMounted} = useIsMounted();
 
   const inputFileRef = createRef();
   const toast = useToast();
 
-  const { pathname, query } = router;
+  const { query } = router;
 
   const handleButtonClick = () => {
     inputFileRef.current.click();
@@ -37,9 +39,7 @@ export default function UploadPhotosForm() {
       formData.append(`files`, file);
     }
 
-    console.log(formData);
-
-    if(pathname === "/album/[albumId]"){
+    if(inAlbumPage){
       formData.append("albumId", query.albumId);
     }
 
@@ -56,7 +56,7 @@ export default function UploadPhotosForm() {
       });
 
       // If Photo Visor is open
-      setVisorPhotos((visorPhotos)=>[...visorPhotos, ...res.data.photos])
+      setVisorPhotos((visorPhotos)=>[...res.data.photos, ...visorPhotos])
 
     } catch (error) {
       toast({
@@ -68,15 +68,13 @@ export default function UploadPhotosForm() {
     }
   };
 
-  const isInAlbumRoute = pathname === "/album/[albumId]" ? true : false;
-
   return (
     <Tooltip
-      label={isInAlbumRoute ? "Add photos to this album" : "Upload photos"}
+      label={inAlbumPage ? "Add photos to this album" : "Upload photos"}
     >
       <Skeleton isLoaded={isMounted} rounded={"md"}>
       <div>
-        {isInAlbumRoute ? (
+        {inAlbumPage ? (
           <IconButton
             onClick={handleButtonClick}
             icon={<MdOutlineAddPhotoAlternate />}
