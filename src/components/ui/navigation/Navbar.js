@@ -2,6 +2,7 @@ import {
   Avatar,
   ButtonGroup,
   Flex,
+  HStack,
   IconButton,
   Menu,
   MenuButton,
@@ -11,7 +12,9 @@ import {
   MenuList,
   Skeleton,
   Stack,
+  Text,
   Tooltip,
+  VStack,
 } from "@chakra-ui/react";
 import SearchForm from "../forms/SearchForm";
 import NavbarBrand from "./NavbarBrand";
@@ -20,7 +23,10 @@ import {
   BsArrowLeft,
   BsGearFill,
   BsThreeDots,
+  BsTrash,
   BsTrashFill,
+  BsX,
+  BsXLg,
 } from "react-icons/bs";
 import axios from "axios";
 import { signOut, useSession } from "next-auth/react";
@@ -28,12 +34,20 @@ import Link from "next/link";
 import { MdLogout } from "react-icons/md";
 import { useIsMounted } from "@/hooks/useIsMounted";
 import UploadPhotosForm from "../forms/UploadPhotosForm";
+import { useContext } from "react";
+import { AlbumPageContext } from "@/contexts/AlbumPageContext";
+import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 
 export default function Navbar() {
-  const router = useRouter();
-  const { pathname, query } = router;
+
   const { data: session, status } = useSession();
+  const {inAlbumPage, isAlbumOwner} = useContext(AlbumPageContext);
+  const {selectedPhotos, setSelectedPhotos} = useContext(PhotoVisorContext);
   const { isMounted } = useIsMounted();
+
+  const router = useRouter();
+  const { query } = router;
+
 
   const handleDeleteAlbum = async () => {
     const { albumId } = query;
@@ -53,35 +67,48 @@ export default function Navbar() {
         alignItems={"center"}
         paddingX={4}
         paddingY={2}
-        borderBottom={pathname === "/album/[albumId]" ? "0px" : "1px"}
+        borderBottom={!inAlbumPage && "1px"}
         borderBottomColor={"#edf2f7"}
       >
         <ButtonGroup className="navbar__brandContainer">
-          {pathname === "/album/[albumId]" ? (
-            <IconButton
+          {inAlbumPage  ? (
+            <>
+            {selectedPhotos.length === 0 ? <IconButton
               rounded={"full"}
               onClick={() => router.back()}
               icon={<BsArrowLeft />}
               variant={"ghost"}
-            />
+            /> : (
+              <HStack>
+                <Tooltip label="Undo"><IconButton onClick={()=>setSelectedPhotos([])} icon={<BsXLg/>} variant={"ghost"} rounded={"full"} /></Tooltip>
+                <Text>{selectedPhotos.length} selected</Text>
+              </HStack>
+            )}
+            </>
           ) : (
             <NavbarBrand />
           )}
         </ButtonGroup>
 
         <Stack className="navbar__formArea">
-          {pathname === "/album/[albumId]" ? "" : <SearchForm />}
+          {!inAlbumPage &&  <SearchForm />}
         </Stack>
 
         <ButtonGroup gap={6} className="navbar__menuArea">
-          <UploadPhotosForm />
+          {inAlbumPage ? (
+            <>
+            {selectedPhotos.length > 0 && isAlbumOwner ? <Tooltip label="Delete selected photos"><IconButton icon={<BsTrash  />} rounded={"full"} variant={"ghost"} colorScheme="blue"  fontSize={"xl"} /></Tooltip> :  <UploadPhotosForm/>}
+            </>
+          ) : <UploadPhotosForm/>}
 
           <Menu>
             <Tooltip label="More options">
               <MenuButton>
                 <Skeleton isLoaded={isMounted} rounded={"full"}>
-                  {pathname === "/album/[albumId]" ? (
-                    <BsThreeDots />
+                  {inAlbumPage ? (
+                    <>
+                    {selectedPhotos.length === 0 ? <BsThreeDots /> : ""}
+                    </>
                   ) : (
                     <Avatar
                       size="sm"
@@ -92,12 +119,16 @@ export default function Navbar() {
               </MenuButton>
             </Tooltip>
             <MenuList>
-              {pathname === "/album/[albumId]" ? (
+              {inAlbumPage ? (
                 <>
+                {isAlbumOwner ? (
+                  <>
                   <MenuItem icon={<BsGearFill />}>Settings</MenuItem>
                   <MenuItem onClick={handleDeleteAlbum} icon={<BsTrashFill />}>
                     Delete this album
                   </MenuItem>
+                  </>
+                ): <MenuItem>Leave album</MenuItem>}
                 </>
               ) : (
                 <>
