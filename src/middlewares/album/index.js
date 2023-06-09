@@ -198,3 +198,21 @@ export const createAlbum = async (req, res) => {
       .json({ message: "An error occurred while attempting to create album" });
   }
 };
+
+export const canUploadToAlbum = async (accountId, albumId) => {
+  const exists = await Promise.all([
+    accountExists(accountId),
+    albumExists(albumId)
+  ]);
+
+  if (!exists[0] || !exists[1]) {
+    return false;
+  }
+
+  const [isOwner, isContributor] = await Promise.all([
+    isAlbumOwner(albumId, accountId),
+    isAlbumContributor(albumId, accountId)
+  ]);
+
+  return isOwner || isContributor;
+};
