@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { isAlbumOwner } from "../album";
+import { albumExists, isAlbumContributor, isAlbumOwner } from "../album";
 import connection from "@/database/connection";
 
 import Album from "@/database/models/Album";
@@ -13,6 +13,7 @@ export const invitationExists = async (invitationId) => {
     const foundInvitation = await AlbumInvitation.findById({
       _id: invitationId,
     });
+
     if (!foundInvitation) {
       return false;
     }
@@ -28,10 +29,12 @@ export const isInvitationAuthor = async (invitationId, accountId) => {
     const foundInvitation = await invitationExists(invitationId);
 
     if (!foundInvitation) {
-      return false;
+      throw Error("Invitation not found.");
     }
 
-    return foundInvitation.sender_id === accountId;
+    const isAuthor = foundInvitation.sender_id === accountId;
+
+    return isAuthor;
   } catch (error) {
     throw Error("An error occurred while checking invitation's author.");
   }
@@ -45,17 +48,19 @@ export const updateAlbumInvitation = async (req, res) => {
       session.user.accountId
     );
 
-    // Only users that aren't the album owner can update the state of the invitation
-    if (isOwner) {
-      return res.status(401).json({ message: "Unauthorized" });
+    const isContributor = await isAlbumContributor(session.user.accountId);
+
+    // Only users that aren't in the album can accept the invitation
+    if (isOwner || isContributor) {
+      return res.status(401).json({ message: "User is already on album" });
     }
 
     const db = await connection();
 
-    const exists = await invitationExists(req.query.invitationId);
+    let exists = await invitationExists(req.query.invitationId);
 
     if (!exists) {
-      return res.status(404).json({ message: "Bad request" });
+      return res.status(404).json({ message: "Invitation not found" });
     }
 
     const invitation = await AlbumInvitation.findById({
@@ -64,8 +69,13 @@ export const updateAlbumInvitation = async (req, res) => {
 
     // If the invitation was already accepted, return 400 status code
     if (invitation.status === "accepted") {
-      return res.status(400).json({ message: "Invitation expired" });
+      return res.status(400).json({ message: "Invitation already accepted" });
     }
+
+    exists = await albumExists(invitation.album_id)
+
+    // Verify if the album exists before updating it
+    if(!exists){return res.status(404).json({message:"Album not found"})}
 
     // Otherwise, update the invitation status
     await AlbumInvitation.findByIdAndUpdate(
