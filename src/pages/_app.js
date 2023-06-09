@@ -1,7 +1,9 @@
+import { AlbumPageProvider } from "@/contexts/AlbumPageContext";
 import { PhotoVisorProvider } from "@/contexts/PhotoVisorContext";
-import "@/styles/globals.css";
 import { ChakraProvider } from "@chakra-ui/react";
 import { SessionProvider } from "next-auth/react";
+import "@/styles/globals.css";
+
 
 export default function App({
   Component,
@@ -9,11 +11,13 @@ export default function App({
 }) {
   return (
     <SessionProvider session={session}>
-      <PhotoVisorProvider>
-        <ChakraProvider>
-          <Component {...pageProps} />
-        </ChakraProvider>
-      </PhotoVisorProvider>
+      <AlbumPageProvider>
+        <PhotoVisorProvider>
+          <ChakraProvider>
+            <Component {...pageProps} />
+          </ChakraProvider>
+        </PhotoVisorProvider>
+      </AlbumPageProvider>
     </SessionProvider>
   );
 }
