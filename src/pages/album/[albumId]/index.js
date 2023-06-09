@@ -31,14 +31,37 @@ import {
 import MasonryGrid from "@/components/ui/masonry/MasonryGrid";
 import { useContext, useEffect } from "react";
 import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
+import { AlbumPageContext } from "@/contexts/AlbumPageContext";
+import moment from "moment";
 
 export default function AlbumPage({ album }) {
+  const { setInAlbumPage, setIsAlbumOwner } = useContext(AlbumPageContext);
   const { setVisorPhotos } = useContext(PhotoVisorContext);
 
   const { contributors, name, photos, created_at, updated_at, isOwner } = album;
 
   useEffect(() => {
+    setInAlbumPage(true);
+
+    return () => {
+      setInAlbumPage(false);
+    };
+  }, [setInAlbumPage]);
+
+  useEffect(() => {
+    setIsAlbumOwner(isOwner);
+
+    return () => {
+      setIsAlbumOwner(false);
+    };
+  }, [isOwner, setIsAlbumOwner]);
+
+  useEffect(() => {
     setVisorPhotos(photos);
+
+    return () => {
+      setVisorPhotos([]);
+    };
   }, [photos, setVisorPhotos]);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -56,13 +79,15 @@ export default function AlbumPage({ album }) {
               <HStack width={"100%"}>
                 <BsCalendar />
                 <Text width={"100%"}>
-                  Created: {new Date(created_at).toUTCString()}
+                  Created:{" "}
+                  {moment(created_at).format("MMMM Do YYYY, h:mm:ss a")}
                 </Text>
               </HStack>
               <HStack width={"100%"}>
                 <BsCalendarPlus />
                 <Text width={"100%"}>
-                  Last update: {new Date(updated_at).toUTCString()}
+                  Last update:{" "}
+                  {moment(updated_at).format("MMMM Do YYYY, h:mm:ss a")}
                 </Text>
               </HStack>
             </VStack>
@@ -128,15 +153,13 @@ export async function getServerSideProps({ req, res, query }) {
       session.user.accountId
     );
 
-    if (!isOwner) {
-      if (!isContributor) {
-        return {
-          redirect: {
-            destination: "/",
-            permanent: false,
-          },
-        };
-      }
+    if (!isOwner && !isContributor) {
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        },
+      };
     }
 
     const album = await getAlbum(query.albumId);
@@ -151,6 +174,8 @@ export async function getServerSideProps({ req, res, query }) {
     }
 
     album["isOwner"] = isOwner;
+
+    console.log(album);
 
     return {
       props: {
