@@ -7,15 +7,40 @@ import {
   Skeleton,
   Tooltip,
 } from "@chakra-ui/react";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import PhotoVisor from "../visor/PhotoVisor";
 import { useIsMounted } from "@/hooks/useIsMounted";
 
 export default function MasonryGridItem({ data }) {
-  const { onOpen, setCurrentPhoto } = useContext(PhotoVisorContext);
+  const {
+    onOpen,
+    setCurrentPhoto,
+    visorPhotos,
+    selectedPhotos,
+    setSelectedPhotos,
+  } = useContext(PhotoVisorContext);
+  const { isMounted } = useIsMounted();
+
   const { url } = data;
 
-  const { isMounted } = useIsMounted();
+  const selected = selectedPhotos.find((photo) => photo.id === data.id);
+
+  const handleClickSelectPhoto = (e) => {
+    let found = selectedPhotos.find((photo) => photo.id === data.id);
+
+    if (!found) {
+      found = visorPhotos.find((photo) => photo.id === data.id);
+      setSelectedPhotos([...selectedPhotos, found]);
+      return;
+    }
+
+    const index = selectedPhotos.findIndex((photo) => photo.id === data.id);
+    const updatedSelectedPhotos = [...selectedPhotos];
+    updatedSelectedPhotos.splice(index, 1);
+
+    setSelectedPhotos(updatedSelectedPhotos);
+    return;
+  };
 
   return (
     <>
@@ -31,7 +56,13 @@ export default function MasonryGridItem({ data }) {
         >
           <Skeleton isLoaded={isMounted} rounded={"md"}>
             <Tooltip label="Select this photo">
-              <Checkbox position={"absolute"} size={"md"} margin={2} />
+              <Checkbox
+                onChange={(e) => handleClickSelectPhoto(e)}
+                isChecked={selected ? true : false}
+                position={"absolute"}
+                size={"md"}
+                margin={2}
+              />
             </Tooltip>
             <Image
               src={url}
