@@ -8,6 +8,12 @@ import { getServerSession } from "next-auth";
 import { accountExists } from "../account";
 import multer from "multer";
 import { v4 } from "uuid";
+import {
+  albumExists,
+  canUploadToAlbum,
+  isAlbumContributor,
+  isAlbumOwner,
+} from "../album";
 
 export const photoExists = async (photoId) => {
   try {
@@ -43,12 +49,16 @@ export const deletePhoto = async (req, res) => {
   try {
     const session = await getServerSession(req, res, authOptions);
 
+    const exists = await photoExists(req.query.photoId);
+
+    if(!exists){return res.status(404).json({message:"Photo not found"})}
+
     const isOwner = await isPhotoOwner(
       req.query.photoId,
       session.user.accountId
     );
     if (!isOwner) {
-      return res.status(401).json({});
+      return res.status(401).json({message:"Unauthorized"});
     }
 
     const db = await connection();
@@ -62,9 +72,9 @@ export const deletePhoto = async (req, res) => {
 
     await db.disconnect();
 
-    return res.status(200).json({});
+    return res.status(200).json({message:"Photo deleted successfully"});
   } catch (error) {
-    return res.status(500).json({});
+    return res.status(500).json({message:"An error occurred while attempting to delete photo"});
   }
 };
 
@@ -111,39 +121,37 @@ export const uploadPhotos = async (req, res) => {
         });
       }
 
-      const exists = await accountExists(session.user.accountId);
-
-      if (!exists) {
+      const albumId = req.body.albumId;
+      if (albumId && !(await canUploadToAlbum(session.user.accountId, albumId))) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const db = await connection();
-      for (const file of req.files) {
-        const filename = v4();
-        const fileURL = `users/${session.user.accountId}/${filename}`;
+      const uploadedPhotos = await Promise.all(
+        req.files.map(async (file) => {
+          const filename = v4();
+          const fileURL = `users/${session.user.accountId}/${filename}`;
 
-        const metadata = {
-          contentType: file.mimetype,
-        };
+          const metadata = {
+            contentType: file.mimetype,
+          };
 
-        const snapshot = await uploadFile(fileURL, file.buffer, metadata);
+          const snapshot = await uploadFile(fileURL, file.buffer, metadata);
+          const photoURL = await getDownloadURL(snapshot.ref);
 
-        const photoURL = await getDownloadURL(snapshot.ref);
+          return {
+            author_account_id: session.user.accountId,
+            albums: albumId ? [albumId] : [],
+            filename,
+            url: photoURL,
+            uploaded_at: new Date(),
+          };
+        })
+      );
 
-        const uploadedPhoto = await Photo.create({
-          author_account_id: session.user.accountId,
-          albums: [],
+      await Photo.create(uploadedPhotos);
 
-          filename,
-
-          url: photoURL,
-
-          uploaded_at: new Date(),
-        });
-      }
+      return res.status(200).json({ photos: uploadedPhotos });
     });
-
-    return res.status(200).json({ message: "Photos uploaded succesfully" });
   } catch (error) {
     return res
       .status(500)
