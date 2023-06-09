@@ -21,6 +21,8 @@ export default function PhotoVisorHeader({}) {
   const { pathname, query } = router;
 
   const {
+    visorPhotos,
+    setVisorPhotos,
     onClose,
     currentPhoto,
     showAvailableAlbums,
@@ -37,6 +39,13 @@ export default function PhotoVisorHeader({}) {
         title: "Photo deleted successfully.",
         duration: 5000,
       });
+
+      const updatedVisorPhotos = [...visorPhotos]
+      const index = updatedVisorPhotos.findIndex((photo)=>photo.id === currentPhoto.id);
+      updatedVisorPhotos.splice(index, 1);
+
+      setVisorPhotos(updatedVisorPhotos)
+
       onClose();
     } catch (error) {
       toast({
