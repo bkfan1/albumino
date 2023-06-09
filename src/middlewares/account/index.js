@@ -57,6 +57,10 @@ export const getAccountPhotos = async (accountId) => {
   try {
     const db = await connection();
 
+    const exists = await accountExists(accountId);
+
+    if(!exists){return false;}
+
     const photos = await Photo.find({
       author_account_id: accountId,
     }).sort({ uploaded_at: "desc" });
