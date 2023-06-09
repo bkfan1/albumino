@@ -15,7 +15,7 @@ import { AiOutlineUpload } from "react-icons/ai";
 import { MdOutlineAddPhotoAlternate } from "react-icons/md";
 
 export default function UploadPhotosForm() {
-  const {visorPhotos, setVisorPhotos, isOpen} = useContext(PhotoVisorContext);
+  const {setVisorPhotos} = useContext(PhotoVisorContext);
   const router = useRouter();
   const {isMounted} = useIsMounted();
 
