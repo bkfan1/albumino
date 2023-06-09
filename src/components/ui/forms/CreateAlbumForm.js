@@ -6,12 +6,14 @@ import {
   Input,
   Text,
   VStack,
+  useToast,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 
 export default function CreateAlbumForm() {
   const { register, handleSubmit } = useForm();
+  const toast = useToast();
 
   const onSubmit = async (data) => {
     const formData = new FormData();
@@ -21,14 +23,21 @@ export default function CreateAlbumForm() {
       formData.append("files", file);
     }
 
-    console.log(formData);
     try {
       const res = await axios.post("/api/albums", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      console.log("upload success");
+      toast({
+        status:"success",
+        title:"Success",
+        description:"Album created successfully"
+      })
     } catch (error) {
-      console.warn(error);
+      toast({
+        status:"error",
+        title:"Error",
+        description:"Something went wrong while attempting to create album"
+      })
     }
   };
   return (
@@ -46,7 +55,7 @@ export default function CreateAlbumForm() {
 
         <VStack paddingTop={4}>
           <Heading size={"sm"}>Album is empty</Heading>
-          <input type="file" multiple {...register("files")} />
+          <input type="file" multiple {...register("files")} accept=".jpg, .jpeg, .png" />
         </VStack>
         <Input type="submit" hidden />
       </Box>
