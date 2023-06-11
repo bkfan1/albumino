@@ -1,12 +1,12 @@
 import { AlbumPageContext } from "@/contexts/AlbumPageContext";
 import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 import { useIsMounted } from "@/hooks/useIsMounted";
+import { allowedPhotosFileTypes, hasInvalidFileType } from "@/utils/validation";
 import {
   Button,
   IconButton,
   Skeleton,
   Tooltip,
-  VStack,
   useToast,
 } from "@chakra-ui/react";
 import axios from "axios";
@@ -26,12 +26,28 @@ export default function UploadPhotosForm() {
 
   const { query } = router;
 
+  // To toggle file manager
   const handleButtonClick = () => {
     inputFileRef.current.click();
   };
 
   const handleImageOnChange = async (e) => {
-    const files = e.target.files;
+    let files = [...e.target.files];
+
+    console.log(files)
+
+    const hasInvalidFiles = hasInvalidFileType(files, allowedPhotosFileTypes)
+
+    if(hasInvalidFiles){
+      toast({
+        status:"warning",
+        title:"Unsupported formats",
+        description:"Uploading only files with supported formats (JPEG, JPG, PNG)"
+      })
+      const filteredFiles = files.filter((file)=>allowedPhotosFileTypes.includes(file.type));
+
+      files = filteredFiles;
+    }
 
     const formData = new FormData();
 
@@ -42,6 +58,11 @@ export default function UploadPhotosForm() {
     if(inAlbumPage){
       formData.append("albumId", query.albumId);
     }
+
+    toast({
+      status:"loading",
+      title:"Uploading photos..."
+    })
 
     try {
       const res = await axios.post("/api/photos", formData, {
