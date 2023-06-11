@@ -15,6 +15,7 @@ import {
   isAlbumOwner,
 } from "../album";
 import Album from "@/database/models/Album";
+import { allowedPhotosFileTypes, hasInvalidFileType } from "@/utils/validation";
 
 export const photoExists = async (photoId) => {
   try {
@@ -116,10 +117,6 @@ export const updatePhotoAlbums = async (req, res) => {
   }
 };
 
-export const hasInvalidFileType = (arr) => {
-  const allowedFileTypes = ["image/jpg", "image/jpeg", "image/png"];
-  return arr.some((obj) => !allowedFileTypes.includes(obj.mimetype));
-};
 
 export const uploadPhotos = async (req, res) => {
   try {
@@ -140,15 +137,14 @@ export const uploadPhotos = async (req, res) => {
       }
 
       let filesToUpload = [...req.files];
-
-      const allowedFileTypes = ["image/jpg", "image/jpeg", "image/png"];
-      const hasInvalidFiles = hasInvalidFileType(req.files);
+      
+      const hasInvalidFiles = hasInvalidFileType(req.files, allowedPhotosFileTypes);
 
       // If req.files has at least 1 not allowed file type
       if (hasInvalidFiles) {
         // Filter the ones who actually haves allowed file types
         const filteredFiles = req.files.filter((file) =>
-          allowedFileTypes.includes(file.mimetype)
+          allowedPhotosFileTypes.includes(file.mimetype)
         );
         filesToUpload = filteredFiles;
       }
@@ -168,9 +164,7 @@ export const uploadPhotos = async (req, res) => {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const db = await connection();
-
-      const uploadedPhotos = await Promise.all(
+      let uploadedPhotos = await Promise.all(
         filesToUpload.map(async (file) => {
           const filename = v4();
           const fileURL = `users/${session.user.accountId}/${filename}`;
@@ -192,7 +186,8 @@ export const uploadPhotos = async (req, res) => {
         })
       );
 
-      await Photo.create(uploadedPhotos);
+      const db = await connection();
+      uploadedPhotos = await Photo.create(uploadedPhotos);
 
       if (albumId) {
         await Album.findByIdAndUpdate(
@@ -201,7 +196,7 @@ export const uploadPhotos = async (req, res) => {
         );
       }
 
-      return res.status(200).json({ photos: uploadedPhotos });
+      return res.status(200).json({ photos: uploadedPhotos.map(({_id, author_account_id, albums, filename, url, uploaded_at})=>({id: _id.toString(), author_account_id, albums, filename, url, uploaded_at})) });
     });
   } catch (error) {
     return res
