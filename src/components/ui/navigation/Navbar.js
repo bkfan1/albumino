@@ -15,6 +15,7 @@ import {
   Text,
   Tooltip,
   VStack,
+  useToast,
 } from "@chakra-ui/react";
 import SearchForm from "../forms/SearchForm";
 import NavbarBrand from "./NavbarBrand";
@@ -25,7 +26,6 @@ import {
   BsThreeDots,
   BsTrash,
   BsTrashFill,
-  BsX,
   BsXLg,
 } from "react-icons/bs";
 import axios from "axios";
@@ -42,23 +42,70 @@ export default function Navbar() {
 
   const { data: session, status } = useSession();
   const {inAlbumPage, isAlbumOwner} = useContext(AlbumPageContext);
-  const {selectedPhotos, setSelectedPhotos} = useContext(PhotoVisorContext);
+  const {visorPhotos, setVisorPhotos, selectedPhotos, setSelectedPhotos} = useContext(PhotoVisorContext);
   const { isMounted } = useIsMounted();
 
   const router = useRouter();
   const { query } = router;
+  const toast = useToast()
 
 
   const handleDeleteAlbum = async () => {
     const { albumId } = query;
     try {
-      const res = await axios.delete(`/api/album/${albumId}`);
-      console.log("album deleted successfully");
+      toast.promise(await axios.delete(`/api/album/${albumId}`),
+      {
+        loading: "Deleting album...",
+        success:"Album deleted successfully",
+        error:"An error occurred while trying to delete album"
+
+      })
       router.push("/albums/");
     } catch (error) {
-      console.log("error");
+      toast({
+        status:"error",
+        title:"Error",
+        description:"An error occurred while trying to delete album"
+      })
     }
   };
+
+  const handleDeleteSelectedPhotos = async () => {
+    try {
+      const promises = selectedPhotos.map(async (selectedPhoto) => {
+        return axios.delete(`/api/photo/${selectedPhoto.id}`);
+      });
+  
+      toast({
+        status: "loading",
+        title: "Deleting Photos",
+      });
+  
+      await Promise.all(promises);
+  
+      toast({
+        status: "success",
+        title: "Success",
+        description: "Photos deleted successfully",
+      });
+  
+      const updatedVisorPhotos = visorPhotos.filter(
+        (photo) => !selectedPhotos.includes(photo)
+      );
+  
+      setVisorPhotos(updatedVisorPhotos);
+      setSelectedPhotos([]);
+    } catch (error) {
+      toast({
+        status: "error",
+        title: "Error",
+        description: "An error occurred while trying to delete photos",
+      });
+    }
+  };
+  
+  
+  
   return (
     <>
       <Flex
@@ -95,11 +142,12 @@ export default function Navbar() {
         </Stack>
 
         <ButtonGroup gap={6} className="navbar__menuArea">
-          {inAlbumPage ? (
-            <>
-            {selectedPhotos.length > 0 && isAlbumOwner ? <Tooltip label="Delete selected photos"><IconButton icon={<BsTrash  />} rounded={"full"} variant={"ghost"} colorScheme="blue"  fontSize={"xl"} /></Tooltip> :  <UploadPhotosForm/>}
-            </>
+
+          {selectedPhotos.length > 0 ? (
+            <Tooltip label="Delete selected photos"><IconButton onClick={handleDeleteSelectedPhotos} icon={<BsTrash  />} rounded={"full"} variant={"ghost"} colorScheme="blue"  fontSize={"xl"} /></Tooltip>
           ) : <UploadPhotosForm/>}
+          
+
 
           <Menu>
             <Tooltip label="More options">
