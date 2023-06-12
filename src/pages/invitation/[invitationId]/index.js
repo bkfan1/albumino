@@ -1,16 +1,16 @@
 import connection from "@/database/connection";
 import AlbumInvitation from "@/database/models/AlbumInvitation";
 import Account from "@/database/models/Account";
-import Album from "@/database/models/Album";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { Flex, Heading } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
 
 import { invitationExists, isInvitationAuthor } from "@/middlewares/invitation";
-import { isAlbumContributor } from "@/middlewares/album";
+import { getAlbum, isAlbumContributor } from "@/middlewares/album";
 import AlbumInvitationForm from "@/components/ui/forms/AlbumInvitationForm";
 
 export default function InvitationPage({ details }) {
+  const {invitation} = details;
   return (
     <>
       <Flex
@@ -55,8 +55,10 @@ export async function getServerSideProps({ req, res, query }) {
       session.user.accountId
     );
 
+    const albumDetails = await getAlbum(foundInvitation.album_id);
+
     const isContributor = await isAlbumContributor(
-      albumDetails._id.toString(),
+      albumDetails.id,
       session.user.accountId
     );
 
@@ -69,30 +71,33 @@ export async function getServerSideProps({ req, res, query }) {
       };
     }
 
-    const albumDetails = await Album.findById(foundInvitation.album_id);
-
     const author = await Account.findById(albumDetails.author_account_id);
+
+    const details = {
+      author: {
+        name: `${author.firstname} ${author.lastname}`,
+      },
+
+      album: {
+        id: albumDetails.id,
+        name: albumDetails.name,
+        cover: albumDetails.cover,
+      },
+
+      invitation: {
+        id: foundInvitation._id.toString(),
+        status: foundInvitation.status,
+      },
+    }
 
     return {
       props: {
-        details: {
-          author: {
-            name: `${author.firstname} ${author.lastname}`,
-          },
-
-          album: {
-            id: albumDetails._id.toString(),
-            name: albumDetails.name,
-          },
-
-          invitation: {
-            id: foundInvitation._id.toString(),
-            status: foundInvitation.status,
-          },
-        },
+        details
+        
       },
     };
   } catch (error) {
+    console.log(error)
     return {
       redirect: {
         destination: "/500",
