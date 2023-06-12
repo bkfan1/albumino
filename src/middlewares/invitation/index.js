@@ -24,6 +24,7 @@ export const invitationExists = async (invitationId) => {
   }
 };
 
+
 export const isInvitationAuthor = async (invitationId, accountId) => {
   try {
     const foundInvitation = await invitationExists(invitationId);
@@ -43,44 +44,51 @@ export const isInvitationAuthor = async (invitationId, accountId) => {
 export const updateAlbumInvitation = async (req, res) => {
   try {
     const session = await getServerSession(req, res, authOptions);
-    const isOwner = await isAlbumOwner(
-      req.query.albumId,
-      session.user.accountId
-    );
-
-    const isContributor = await isAlbumContributor(session.user.accountId);
-
-    // Only users that aren't in the album can accept the invitation
-    if (isOwner || isContributor) {
-      return res.status(401).json({ message: "User is already on album" });
-    }
 
     const db = await connection();
 
-    let exists = await invitationExists(req.query.invitationId);
+    const exists = await invitationExists(req.query.invitationId);
 
     if (!exists) {
       return res.status(404).json({ message: "Invitation not found" });
     }
 
-    const invitation = await AlbumInvitation.findById({
-      _id: req.query.invitationId,
-    });
+    const isAuthor = await isInvitationAuthor(req.query.invitationId, session.user.accountId);
+
+    if(isAuthor){
+      return res.status(400).json({message:"Only users that aren't in the album can accept the invitation"});
+    }
+
+    const isContributor = await isAlbumContributor(req.query.albumId, session.user.accountId);
+
+    // Only users that aren't in the album can accept the invitation
+    if (isContributor) {
+      return res.status(401).json({ message: "User is already on album" });
+    }
+
+    const invitation = await AlbumInvitation.findById(req.query.invitationId);
 
     // If the invitation was already accepted, return 400 status code
     if (invitation.status === "accepted") {
       return res.status(400).json({ message: "Invitation already accepted" });
     }
 
-    exists = await albumExists(invitation.album_id)
-
     // Verify if the album exists before updating it
-    if(!exists){return res.status(404).json({message:"Album not found"})}
+    const existsAlbum = await albumExists(req.query.albumId)
+
+    if(!existsAlbum){
+      return res.status(404).json({message:"Album not found"})
+    }
+
+    const isValidData = req.body.status === "accepted"
+
+    if(!isValidData){return res.status(400).json({message: ""})}
 
     // Otherwise, update the invitation status
     await AlbumInvitation.findByIdAndUpdate(
-      { _id: req.query.invitationId },
+      req.query.invitationId,
       {
+        // Use the value sent in req.body status
         status: req.body.status,
       }
     );
