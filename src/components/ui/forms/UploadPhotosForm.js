@@ -16,10 +16,10 @@ import { AiOutlineUpload } from "react-icons/ai";
 import { MdOutlineAddPhotoAlternate } from "react-icons/md";
 
 export default function UploadPhotosForm() {
-  const {setVisorPhotos} = useContext(PhotoVisorContext);
-  const {inAlbumPage} = useContext(AlbumPageContext);
+  const { setVisorPhotos } = useContext(PhotoVisorContext);
+  const { inAlbumPage } = useContext(AlbumPageContext);
   const router = useRouter();
-  const {isMounted} = useIsMounted();
+  const { isMounted } = useIsMounted();
 
   const inputFileRef = createRef();
   const toast = useToast();
@@ -34,17 +34,20 @@ export default function UploadPhotosForm() {
   const handleImageOnChange = async (e) => {
     let files = [...e.target.files];
 
-    console.log(files)
+    console.log(files);
 
-    const hasInvalidFiles = hasInvalidFileType(files, allowedPhotosFileTypes)
+    const hasInvalidFiles = hasInvalidFileType(files, allowedPhotosFileTypes);
 
-    if(hasInvalidFiles){
+    if (hasInvalidFiles) {
       toast({
-        status:"warning",
-        title:"Unsupported formats",
-        description:"Uploading only files with supported formats (JPEG, JPG, PNG)"
-      })
-      const filteredFiles = files.filter((file)=>allowedPhotosFileTypes.includes(file.type));
+        status: "warning",
+        title: "Unsupported formats",
+        description:
+          "Uploading only files with supported formats (JPEG, JPG, PNG)",
+      });
+      const filteredFiles = files.filter((file) =>
+        allowedPhotosFileTypes.includes(file.type)
+      );
 
       files = filteredFiles;
     }
@@ -55,33 +58,30 @@ export default function UploadPhotosForm() {
       formData.append(`files`, file);
     }
 
-    if(inAlbumPage){
+    if (inAlbumPage) {
       formData.append("albumId", query.albumId);
     }
 
-    toast({
-      status:"loading",
-      title:"Uploading photos..."
-    })
-
     try {
-      const res = await axios.post("/api/photos", formData, {
+      const config = {
         headers: { "Content-Type": "multipart/form-data" },
-      });
-      console.log(res)
-      toast({
-        title: "Photos uploaded successfully.",
-        status: "success",
-        duration: 5000,
-        isClosable: false,
+      }
+
+      const uploadPromise = axios.post("/api/photos", formData, config);
+
+      toast.promise(uploadPromise, {
+        loading: { title: "Uploading photos..." },
+        success: { title: "Photos uploaded successfully" },
+        error: { title: "Error while uploading photos" },
       });
 
-      // If Photo Visor is open
-      setVisorPhotos((visorPhotos)=>[...res.data.photos, ...visorPhotos])
+      const res = await uploadPromise; // Capture Promise result
 
+      // If Photo Visor is open, add the uploaded photos to visorPhotos
+      setVisorPhotos((visorPhotos) => [...res.data.photos, ...visorPhotos]);
     } catch (error) {
       toast({
-        title: "Error while uploading image",
+        title: "Error while uploading photos",
         status: "error",
         duration: 5000,
         isClosable: false,
@@ -90,36 +90,34 @@ export default function UploadPhotosForm() {
   };
 
   return (
-    <Tooltip
-      label={inAlbumPage ? "Add photos to this album" : "Upload photos"}
-    >
+    <Tooltip label={inAlbumPage ? "Add photos to this album" : "Upload photos"}>
       <Skeleton isLoaded={isMounted} rounded={"md"}>
-      <div>
-        {inAlbumPage ? (
-          <IconButton
-            onClick={handleButtonClick}
-            icon={<MdOutlineAddPhotoAlternate />}
-            rounded={"full"}
-             variant={"ghost"}
+        <div>
+          {inAlbumPage ? (
+            <IconButton
+              onClick={handleButtonClick}
+              icon={<MdOutlineAddPhotoAlternate />}
+              rounded={"full"}
+              variant={"ghost"}
+            />
+          ) : (
+            <Button
+              onClick={handleButtonClick}
+              leftIcon={<AiOutlineUpload />}
+              colorScheme={"blue"}
+            >
+              Upload
+            </Button>
+          )}
+          <input
+            type="file"
+            accept=".jpg, .jpeg, .png"
+            ref={inputFileRef}
+            multiple
+            onChange={(e) => handleImageOnChange(e)}
+            style={{ display: "none" }}
           />
-        ) : (
-          <Button
-            onClick={handleButtonClick}
-            leftIcon={<AiOutlineUpload />}
-            colorScheme={"blue"}
-          >
-            Upload
-          </Button>
-        )}
-        <input
-          type="file"
-          accept=".jpg, .jpeg, .png"
-          ref={inputFileRef}
-          multiple
-          onChange={(e) => handleImageOnChange(e)}
-          style={{ display: "none" }}
-        />
-      </div>
+        </div>
       </Skeleton>
     </Tooltip>
   );
