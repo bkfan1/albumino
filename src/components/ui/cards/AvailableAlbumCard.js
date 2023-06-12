@@ -23,15 +23,17 @@ export default function AvailableAlbumCard({ album }) {
 
   const handleAddToAlbum = async (albumId) => {
     try {
-      const data = { albums: [...currentPhoto.albums, { _id: albumId }] };
-      const res = await axios.put(`/api/photo/${currentPhoto.id}`, data);
-      toast({
-        status: "success",
-        title: "Added Photo to album.",
-        duration: 5000,
-        isClosable: false,
-      });
-      setCurrentPhoto({...currentPhoto, albums: [...currentPhoto.albums, {_id: albumId}]})
+      const addPromise = axios.put(`/api/album/${albumId}/photos/${currentPhoto.id}`);
+
+      toast.promise(addPromise, {
+        loading: {title:"Adding photo to album..."},
+        success: {title:"Photo added to album succesfully"},
+        error:{title:"Error while trying to add photo to album"}
+      })
+
+      await addPromise;
+
+      setCurrentPhoto({...currentPhoto, albums: [...currentPhoto.albums, {id: albumId}]})
       setShowAvailableAlbums(false);
       setAvailableAlbums([]);
     } catch (error) {
@@ -40,7 +42,7 @@ export default function AvailableAlbumCard({ album }) {
         status: "error",
         title: "Error",
         description:
-          "An error occurred while attempting to add photo to album.",
+          "An error occurred while trying to add photo to album.",
         duration: 5000,
         isClosable: false,
       });
