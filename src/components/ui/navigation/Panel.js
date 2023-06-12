@@ -16,11 +16,9 @@ import {
 import { nanoid } from "nanoid";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
-import { BsCloud, BsPeople, BsPeopleFill } from "react-icons/bs";
+import { BsCloud } from "react-icons/bs";
 import { HiOutlinePhotograph } from "react-icons/hi";
 import { MdOutlinePhotoAlbum } from "react-icons/md";
-import { useState } from "react";
 import { useIsMounted } from "@/hooks/useIsMounted";
 
 const linkButtons = [
@@ -46,7 +44,7 @@ export default function Panel() {
   return (
     <>
       <VStack
-        flex={{ sm: 0.5, md: 1 }}
+        flex={{ base: 0.5, sm: 0.5, md: 1 }}
         minHeight={"100%"}
         borderRight={"1px"}
         borderColor={"#edf1f5"}
@@ -65,7 +63,7 @@ export default function Panel() {
               <Tooltip label={text}>
                 <Link href={href}>
                   <Button
-                    display={{ sm: "none", md: "initial" }}
+                    display={{ base:"none", sm: "none", md: "initial" }}
                     width={"100%"}
                     variant={"ghost"}
                     leftIcon={icon}
@@ -73,7 +71,7 @@ export default function Panel() {
                     {text}
                   </Button>
                   <IconButton
-                    display={{ base: "none", sm: "flex", md: "none" }}
+                    display={{ base: "flex", sm: "flex", md: "none" }}
                     icon={icon}
                     rounded={"full"}
                     variant={"ghost"}
