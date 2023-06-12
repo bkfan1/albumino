@@ -1,12 +1,20 @@
-import { Button, Heading, VStack, useToast } from "@chakra-ui/react";
+import {
+  Button,
+  Heading,
+  Image,
+  Skeleton,
+  VStack,
+  useToast,
+} from "@chakra-ui/react";
 import { useRouter } from "next/router";
-import { useForm } from "react-hook-form";
+import axios from "axios";
+import { useIsMounted } from "@/hooks/useIsMounted";
 
-export default function AlbumInvitationForm({details}) {
-    const { invitation, author, album } = details;
-
-  const { handleSubmit } = useForm();
+export default function AlbumInvitationForm({ details }) {
   const router = useRouter();
+  const { invitation, author, album } = details;
+
+  const { isMounted } = useIsMounted();
   const toast = useToast();
 
   const onSubmit = async () => {
@@ -14,15 +22,22 @@ export default function AlbumInvitationForm({details}) {
       const data = {
         status: "accepted",
       };
-      const res = await axios.put(
+
+      const submitPromise = axios.put(
         `/api/album/${album.id}/invitation/${invitation.id}`,
         data
       );
-      toast({
-        status: "success",
-        title: "Joined to album",
-        description: "You have successfully joined the album.",
+
+      toast.promise(submitPromise, {
+        loading: { title: "Joining to album..." },
+        success: { title: "Joined to album successfully" },
+        error: {
+          title: "An error occurred while trying to accept the invitation",
+        },
       });
+
+      await submitPromise;
+
       router.push(`/album/${album.id}`);
     } catch (error) {
       toast({
@@ -35,23 +50,38 @@ export default function AlbumInvitationForm({details}) {
   };
   return (
     <>
-      <VStack
-        as={"form"}
-        maxWidth={"sm"}
-        onSubmit={handleSubmit(onSubmit)}
-        border={"1px"}
-        borderColor={"lightgray"}
-        padding={2}
-      >
-        <VStack>
+      <Skeleton isLoaded={isMounted}>
+        <VStack
+          as={"form"}
+          maxWidth={"sm"}
+          onSubmit={onSubmit}
+          borderColor={"lightgray"}
+          padding={2}
+          gap={1}
+        >
           <Heading size={"lg"} textAlign={"center"}>
-            {author.name} invited you to {album.name}
+            {author.name} invited you to:
           </Heading>
+          <VStack>
+            {album.cover ? (
+              <Image
+                src={album.cover}
+                width={"100%"}
+                height={"auto"}
+                alt="Album cover"
+              />
+            ) : (
+              ""
+            )}
+            <Heading size={"lg"} textAlign={"center"}>
+              {album.name}
+            </Heading>
+          </VStack>
+          <Button type="submit" width={"100%"} colorScheme="green">
+            Accept invitation
+          </Button>
         </VStack>
-        <Button type="submit" width={"100%"} colorScheme="green">
-          Accept invitation
-        </Button>
-      </VStack>
+      </Skeleton>
     </>
   );
 }
