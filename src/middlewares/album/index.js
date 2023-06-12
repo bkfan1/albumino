@@ -9,6 +9,7 @@ import multer from "multer";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import Account from "@/database/models/Account";
+import { getFirstPhotoInAlbum } from "../photo";
 
 export const albumExists = async (albumId) => {
   try {
@@ -58,7 +59,8 @@ export const isAlbumContributor = async (albumId, accountId) => {
 
     return isContributor;
   } catch (error) {
-    throw "An error occurred while checking album contributor.";
+    console.log(error)
+    throw Error("An error occurred while checking album contributor.")
   }
 };
 
@@ -78,9 +80,15 @@ export const getAlbum = async (albumId) => {
       _id: { $in: album.contributors },
     });
 
+    const cover = await getFirstPhotoInAlbum(albumId)
+
     const data = {
       id: album._id.toString(),
+      author_account_id: album.author_account_id.toString(),
+      
       name: album.name,
+
+      cover: cover ? cover.url : "",
 
       contributors: albumContributors.map(({ _id, firstname, lastname }) => ({
         id: _id.toString(),
@@ -88,11 +96,15 @@ export const getAlbum = async (albumId) => {
         lastname,
       })),
 
-      photos: albumPhotos.map(({ _id, url, uploaded_at }) => ({
-        id: _id.toString(),
-        url,
-        uploaded_at: uploaded_at.toString(),
-      })),
+      photos: albumPhotos.map(
+        ({ _id, author_account_id, albums, url, uploaded_at }) => ({
+          id: _id.toString(),
+          author_account_id: author_account_id.toString(),
+          albums: albums.map((albumId)=>albumId.toString()),
+          url,
+          uploaded_at: uploaded_at.toString(),
+        })
+      ),
 
       updated_at: album.updated_at.toString(),
       created_at: album.created_at.toString(),
@@ -100,6 +112,7 @@ export const getAlbum = async (albumId) => {
 
     return data;
   } catch (error) {
+    console.log(error)
     throw Error("An error ocurred while getting album.");
   }
 };
@@ -205,19 +218,58 @@ export const createAlbum = async (req, res) => {
 };
 
 export const canUploadToAlbum = async (accountId, albumId) => {
-  const exists = await Promise.all([
-    accountExists(accountId),
-    albumExists(albumId),
-  ]);
-
-  if (!exists[0] || !exists[1]) {
-    return false;
+  try {
+    const exists = await Promise.all([
+      accountExists(accountId),
+      albumExists(albumId),
+    ]);
+  
+    if (!exists[0] || !exists[1]) {
+      throw Error("Error while checking album permissions.");
+    }
+  
+    const [isOwner, isContributor] = await Promise.all([
+      isAlbumOwner(albumId, accountId),
+      isAlbumContributor(albumId, accountId),
+    ]);
+  
+    return isOwner || isContributor;
+  } catch (error) {
+    throw Error("Error while checking album permissions.");    
   }
+};
 
-  const [isOwner, isContributor] = await Promise.all([
-    isAlbumOwner(albumId, accountId),
-    isAlbumContributor(albumId, accountId),
-  ]);
+export const removeAlbumContributor = async (req, res) => {
+  try {
+    const session = await getServerSession(req, res, authOptions);
 
-  return isOwner || isContributor;
+    // Checking if the user who sent the request is the album owner
+    const isOwner = await isAlbumOwner(
+      req.query.albumId,
+      session.user.accountId
+    );
+
+    // Checking if the contributorId from req.query is a contributor in this album
+    const isContributor = await isAlbumContributor(
+      req.query.albumId,
+      req.query.contributorId
+    );
+
+    const isTheSameContributor = session.user.accountId === req.query.contributorId;
+
+    if (!(isOwner || (isContributor && isTheSameContributor))) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const updatedAlbum = await Album.findByIdAndUpdate(
+      { _id: req.query.albumId },
+      {
+        $pull: { contributors: req.query.contributorId },
+      }
+    );
+
+    return res.status(200).json({ message: "Album contributor removed successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "An error occurred while attempting to remove album contributor" });
+  }
 };
