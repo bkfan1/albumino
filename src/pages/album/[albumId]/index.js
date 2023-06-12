@@ -33,8 +33,11 @@ import { useContext, useEffect } from "react";
 import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 import { AlbumPageContext } from "@/contexts/AlbumPageContext";
 import moment from "moment";
+import { useSession } from "next-auth/react";
 
 export default function AlbumPage({ album }) {
+  const { data: session, status } = useSession();
+
   const { setInAlbumPage, setIsAlbumOwner } = useContext(AlbumPageContext);
   const { setVisorPhotos } = useContext(PhotoVisorContext);
 
@@ -98,16 +101,12 @@ export default function AlbumPage({ album }) {
                   <Avatar
                     key={id}
                     name={`${firstname} ${lastname}`}
-                    title={`${firstname} ${lastname}`}
+                    title={`${firstname} ${lastname} ${status === "authenticated" ? (id === session.user.accountId ? "(You)" : "") : ""}`}
                   />
                 ))}
               </AvatarGroup>
               {isOwner ? (
                 <ButtonGroup>
-                  <Tooltip label="Share album">
-                    <IconButton icon={<BsLink />} borderRadius={"full"} />
-                  </Tooltip>
-
                   <Tooltip label="Add contributors">
                     <IconButton
                       onClick={onOpen}
@@ -175,14 +174,13 @@ export async function getServerSideProps({ req, res, query }) {
 
     album["isOwner"] = isOwner;
 
-    console.log(album);
-
     return {
       props: {
         album,
       },
     };
   } catch (error) {
+    console.log(error)
     return {
       redirect: {
         destination: "/500",
