@@ -5,6 +5,7 @@ import {
   Heading,
   IconButton,
   Image,
+  ModalContent,
   Tooltip,
   VStack,
 } from "@chakra-ui/react";
@@ -59,38 +60,40 @@ export default function PhotoVisorBody({}) {
         </Box>
         {showAvailableAlbums ? (
           <>
-            <Box
-              position={"absolute"}
-              padding={4}
-              width={"300px"}
-              height={"300px"}
-              backgroundColor={"white"}
-              borderRadius={"md"}
-              overflowY={"scroll"}
-            >
-              <IconButton
-                onClick={() => setShowAvailableAlbums(false)}
-                position={"absolute"}
-                right={0}
-                top={0}
-                margin={2}
-                icon={<BsX />}
-              />
+            <ModalContent>
+              <Box
+                padding={4}
+                width={"100%"}
+                height={"300px"}
+                backgroundColor={"white"}
+                borderRadius={"md"}
+                overflowY={"scroll"}
+              >
+                <IconButton
+                  onClick={() => setShowAvailableAlbums(false)}
+                  position={"absolute"}
+                  right={0}
+                  top={0}
+                  margin={2}
+                  icon={<BsX />}
+                />
 
-              <Flex>
-                <Heading size={"md"}>Add to:</Heading>
-              </Flex>
+                <Flex>
+                  <Heading size={"md"}>Add to:</Heading>
+                </Flex>
 
-              <VStack marginTop={6}>
-                {availableAlbums.map((album) => (
-                  <AvailableAlbumCard key={album.id} album={album} />
-                ))}
-              </VStack>
-            </Box>
+                <VStack marginTop={6}>
+                  {availableAlbums.map((album) => (
+                    <AvailableAlbumCard key={album.id} album={album} />
+                  ))}
+                </VStack>
+              </Box>
+            </ModalContent>
           </>
         ) : (
           ""
         )}
+
         {!isLastPhoto ? (
           <Tooltip label="Next photo">
             <IconButton
