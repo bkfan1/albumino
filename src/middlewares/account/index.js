@@ -65,8 +65,9 @@ export const getAccountPhotos = async (accountId) => {
       author_account_id: accountId,
     }).sort({ uploaded_at: "desc" });
 
-    return photos.map(({ _id, albums, url }) => ({
+    return photos.map(({ _id, author_account_id, albums, url }) => ({
       id: _id.toString(),
+      author_account_id: author_account_id.toString(),
       albums: albums.map((albumId) => albumId.toString()),
       url,
     }));
@@ -80,10 +81,11 @@ export const getAccountAlbums = async (accountId) => {
     const exists = await accountExists(accountId);
 
     if (!exists) {
-      return false;
+      throw Error("Account not exists.");
     }
 
     const db = await connection();
+
     const accountAlbums = await Album.find({
       author_account_id: accountId,
     });
@@ -92,10 +94,12 @@ export const getAccountAlbums = async (accountId) => {
 
     for (const album of accountAlbums) {
       const albumPhotos = await Photo.find({ albums: album._id });
+      const cover = await Photo.findOne({ albums: album._id }).sort({created_at:1});
 
       albums.push({
         id: album._id.toString(),
         name: album.name,
+        cover: cover ? cover.url : "" ,
 
         photos: albumPhotos.map((photo) => ({
           id: photo._id.toString(),
