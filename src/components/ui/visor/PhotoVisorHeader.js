@@ -13,44 +13,54 @@ import {
   Tooltip,
 } from "@chakra-ui/react";
 import axios from "axios";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useContext } from "react";
 import { BsInfoCircle, BsThreeDots, BsTrash, BsX } from "react-icons/bs";
 
 export default function PhotoVisorHeader({}) {
-  const router = useRouter();
-  const { query } = router;
+  const { data: session, status } = useSession();
 
-  const { inAlbumPage, isOwner } = useContext(AlbumPageContext);
+  const { inAlbumPage, isAlbumOwner } = useContext(AlbumPageContext);
 
   const {
     visorPhotos,
     setVisorPhotos,
     onClose,
     currentPhoto,
+    setCurrentPhoto,
     showAvailableAlbums,
     setShowAvailableAlbums,
     setAvailableAlbums,
   } = useContext(PhotoVisorContext);
+
+  const router = useRouter();
+  const { query } = router;
+  const { albumId } = query;
+
   const toast = useToast();
 
   const handleDeletePhoto = async () => {
     try {
-      const res = await axios.delete(`/api/photo/${currentPhoto.id}`);
-      toast({
-        status: "success",
-        title: "Photo deleted successfully.",
-        duration: 5000,
+      const deletePromise = axios.delete(`/api/photo/${currentPhoto.id}`);
+      toast.promise(deletePromise, {
+        loading: {
+          title: "Deleting Photo...",
+        },
+        success: {
+          title: "Photo deleted successfully",
+        },
+        error: {
+          title: "Error while deleting Photo",
+        },
       });
 
-      const updatedVisorPhotos = [...visorPhotos];
-      const index = updatedVisorPhotos.findIndex(
-        (photo) => photo.id === currentPhoto.id
+      await deletePromise;
+
+      const updatedVisorPhotos = visorPhotos.filter(
+        (photo) => photo.id !== currentPhoto.id
       );
-      updatedVisorPhotos.splice(index, 1);
-
       setVisorPhotos(updatedVisorPhotos);
-
       onClose();
     } catch (error) {
       toast({
@@ -64,22 +74,28 @@ export default function PhotoVisorHeader({}) {
 
   const handleRemoveFromAlbum = async () => {
     try {
-      const data = {
-        albums: currentPhoto.albums.filter((id) => id !== query.albumId),
-      };
-      const res = await axios.put(`/api/photo/${currentPhoto.id}`, data);
-      toast({
-        status: "success",
-        title: "Photo removed from album successfully.",
-        duration: 5000,
+      const removePromise = axios.delete(
+        `/api/album/${albumId}/photos/${currentPhoto.id}`
+      );
+
+      toast.promise(removePromise, {
+        loading: { title: "Removing photo from album..." },
+        success: { title: "Photo removed from album successfully" },
+        error: { title: "Error while removing photo from album" },
       });
+
+      await removePromise;
+
+      const updatedVisorPhotos = [
+        ...visorPhotos.filter((photo) => photo.id !== currentPhoto.id),
+      ];
+      setVisorPhotos(updatedVisorPhotos);
+      onClose();
     } catch (error) {
+      console.log(error);
       toast({
         status: "error",
-        title: "Error",
-        description:
-          "An error occurred while attempting to remove photo from album.",
-        duration: 5000,
+        title: "Error while removing photo from album",
       });
     }
   };
@@ -87,13 +103,19 @@ export default function PhotoVisorHeader({}) {
   const handleClickAddToAlbum = async () => {
     try {
       const res = await axios.get(`/api/albums`);
+
       setShowAvailableAlbums(true);
       setAvailableAlbums(res.data.albums);
-      console.log("success");
     } catch (error) {
-      console.log("error add album");
+      toast({
+        status: "error",
+        title: "Error while fetching available albums.",
+      });
     }
   };
+
+  const isCurrentPhotoOwner =
+    currentPhoto.author_account_id === session.user.accountId;
 
   return (
     <>
@@ -161,21 +183,30 @@ export default function PhotoVisorHeader({}) {
 
             <MenuList>
               <MenuItem>Download</MenuItem>
-              <MenuItem onClick={handleClickAddToAlbum}>Add to album</MenuItem>
 
-              {inAlbumPage ? (
+              {isCurrentPhotoOwner ? (
                 <>
-                  {isOwner ? (
-                    <MenuItem onClick={handleRemoveFromAlbum}>
-                      Remove from this album
-                    </MenuItem>
-                  ) : (
-                    ""
-                  )}
+                  <MenuItem onClick={handleClickAddToAlbum}>
+                    Add to album
+                  </MenuItem>
 
                   <MenuItem onClick={handleDeletePhoto}>
                     Delete permanently
                   </MenuItem>
+                </>
+              ) : (
+                ""
+              )}
+
+              {inAlbumPage ? (
+                <>
+                  {isAlbumOwner || isCurrentPhotoOwner ? (
+                    <MenuItem onClick={handleRemoveFromAlbum}>
+                      Remove from album
+                    </MenuItem>
+                  ) : (
+                    ""
+                  )}
                 </>
               ) : (
                 ""
