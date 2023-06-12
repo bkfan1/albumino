@@ -16,9 +16,16 @@ import { useIsMounted } from "@/hooks/useIsMounted";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../api/auth/[...nextauth]";
 import { getAccountAlbums } from "@/middlewares/account";
+import { useEffect, useState } from "react";
 
 export default function AlbumsPage({ albums }) {
   const { isMounted } = useIsMounted();
+
+  const [userAlbums, setUserAlbums] = useState([])
+
+  useEffect(()=>{
+    setUserAlbums(albums)
+  }, [albums])
   return (
     <>
       <Layout>
@@ -57,7 +64,7 @@ export default function AlbumsPage({ albums }) {
               columns={{ sm: 2, md: 3, lg: 4, xl: 5, "2xl": 8 }}
               className="albumsGrid"
             >
-              {albums.map((album) => (
+              {userAlbums.map((album) => (
                 <AlbumCard key={album.id} data={album} />
               ))}
             </SimpleGrid>
