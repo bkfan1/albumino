@@ -1,4 +1,4 @@
-import { Box, Button, FormControl, Heading, Input, VStack } from "@chakra-ui/react";
+import { Box, Button, FormControl, Heading, Input, Text, VStack } from "@chakra-ui/react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
@@ -27,7 +27,10 @@ const {albumId} = query;
   return (
     <>
       <VStack as={"form"} onSubmit={handleSubmit(onSubmit)}>
-        <Heading width={"100%"}>Invite contributor</Heading>
+        <VStack width={"100%"}> 
+        <Heading width={"100%"} size={"md"}>Send email</Heading>
+        <Text width={"100%"}>Send an email with an invitation link</Text>
+        </VStack>
         <FormControl>
           <Input type="email" {...register("email")} placeholder="Email" />
         </FormControl>
@@ -36,7 +39,7 @@ const {albumId} = query;
           <Input type="text" {...register("subject")} placeholder="Subject" />
         </FormControl>
 
-        <Button width={"100%"} colorScheme="blue" type="submit">Invite</Button>
+        <Button width={"100%"} colorScheme="green" type="submit">Send</Button>
       </VStack>
     </>
   );
