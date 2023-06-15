@@ -3,6 +3,7 @@ import {
   Box,
   Flex,
   Heading,
+  Icon,
   Image,
   Menu,
   MenuButton,
@@ -18,10 +19,13 @@ import axios from "axios";
 import Link from "next/link";
 
 import { BsThreeDotsVertical } from "react-icons/bs";
+import { MdOutlinePhotoAlbum } from "react-icons/md";
 
 export default function AlbumCard({ data }) {
+
   const { id, name, photos, cover } = data;
   const { isMounted } = useIsMounted();
+
   const toast = useToast();
 
   const handleDeleteAlbum = async (albumId) => {
@@ -46,13 +50,20 @@ export default function AlbumCard({ data }) {
     <>
       <VStack position={"relative"} width={"160px"}>
         <Menu>
-          <Tooltip label="Album options">
-            <Skeleton isLoaded={isMounted}>
-            <MenuButton position={"absolute"} right={3} top={5} color={"white"}>
-              <BsThreeDotsVertical />
-            </MenuButton>
-            </Skeleton>
-          </Tooltip>
+          <Skeleton isLoaded={isMounted}>
+            <Tooltip label="Album options">
+              <MenuButton
+                position={"absolute"}
+                right={3}
+                top={5}
+                color={cover ? "white" : "black"}
+                
+              >
+                <BsThreeDotsVertical />
+              </MenuButton>
+            </Tooltip>
+          </Skeleton>
+
           <MenuList>
             <MenuItem onClick={() => handleDeleteAlbum(id)}>
               Delete this album
@@ -62,31 +73,46 @@ export default function AlbumCard({ data }) {
 
         <Link href={`album/${id}`} style={{ width: "100%" }}>
           <Skeleton isLoaded={isMounted} rounded={"md"}>
-          {cover !== "" ? <Image src={cover} alt="Album cover" rounded={"md"}/> : <Box
-            width={"100%"}
-            height={"160px"}
-            backgroundColor={"lightgray"}
-            borderRadius={"md"}
-          ></Box>}
+            <Flex
+              width={"100%"}
+              height={"160px"}
+              backgroundColor={"lightgray"}
+              borderRadius={"md"}
+              alignItems={"center"}
+              justifyContent={"center"}
+            >
+              {cover ? (
+                <Image
+                  src={cover}
+                  alt={""}
+                  rounded={"md"}
+                  width={"100%"}
+                  height={"100%"}
+                  objectFit={"cover"}
+                />
+              ) : (
+                <Icon as={MdOutlinePhotoAlbum} boxSize={6}/>
+              )}
+            </Flex>
           </Skeleton>
         </Link>
         <Link href={`album/${id}`} style={{ width: "100%" }}>
           <Tooltip label="Album name">
-          <Skeleton isLoaded={isMounted} rounded={"md"}>
-          <Heading size={"sm"} width={"100%"}>
-            {name}
-          </Heading>
-          </Skeleton>
+            <Skeleton isLoaded={isMounted} rounded={"md"}>
+              <Heading size={"sm"} width={"100%"}>
+                {name}
+              </Heading>
+            </Skeleton>
           </Tooltip>
           <Skeleton isLoaded={isMounted}>
-          <Heading
-            size={"xs"}
-            fontWeight={"normal"}
-            width={"100%"}
-            marginTop={1}
-          >
-            {photos.length} elements
-          </Heading>
+            <Heading
+              size={"xs"}
+              fontWeight={"normal"}
+              width={"100%"}
+              marginTop={1}
+            >
+              {photos.length} elements
+            </Heading>
           </Skeleton>
         </Link>
       </VStack>
