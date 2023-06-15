@@ -1,5 +1,5 @@
 import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
-import { Box, HStack, Icon, Text, VStack } from "@chakra-ui/react";
+import { Box, HStack, Icon, Image, Text, VStack } from "@chakra-ui/react";
 import { useContext } from "react";
 import { MdOutlinePhotoAlbum } from "react-icons/md";
 import { useToast } from "@chakra-ui/react";
@@ -23,26 +23,30 @@ export default function AvailableAlbumCard({ album }) {
 
   const handleAddToAlbum = async (albumId) => {
     try {
-      const addPromise = axios.put(`/api/album/${albumId}/photos/${currentPhoto.id}`);
+      const addPromise = axios.put(
+        `/api/album/${albumId}/photos/${currentPhoto.id}`
+      );
 
       toast.promise(addPromise, {
-        loading: {title:"Adding photo to album..."},
-        success: {title:"Photo added to album succesfully"},
-        error:{title:"Error while trying to add photo to album"}
-      })
+        loading: { title: "Adding photo to album..." },
+        success: { title: "Photo added to album succesfully" },
+        error: { title: "Error while trying to add photo to album" },
+      });
 
       await addPromise;
 
-      setCurrentPhoto({...currentPhoto, albums: [...currentPhoto.albums, {id: albumId}]})
+      setCurrentPhoto({
+        ...currentPhoto,
+        albums: [...currentPhoto.albums, { id: albumId }],
+      });
       setShowAvailableAlbums(false);
       setAvailableAlbums([]);
     } catch (error) {
-      console.log(error)
+      console.log(error);
       toast({
         status: "error",
         title: "Error",
-        description:
-          "An error occurred while trying to add photo to album.",
+        description: "An error occurred while trying to add photo to album.",
         duration: 5000,
         isClosable: false,
       });
@@ -69,14 +73,25 @@ export default function AvailableAlbumCard({ album }) {
           width={"80px"}
           height={"80px"}
           backgroundColor={"lightgray"}
-          borderRadius={"md"}
+          rounded={"md"}
           as="figure"
           display={"flex"}
           flexDirection={"column"}
           alignItems={"center"}
           justifyContent={"center"}
         >
-          <MdOutlinePhotoAlbum />
+          {album.cover ? (
+            <Image
+              src={album.cover}
+              width={"100%"}
+              height={"100%"}
+              objectFit={"cover"}
+              rounded={"md"}
+              alt="Album cover"
+            />
+          ) : (
+            <Icon as={MdOutlinePhotoAlbum} boxSize={4}></Icon>
+          )}
         </Box>
         <VStack>
           <Text width={"100%"}>{album.name}</Text>
