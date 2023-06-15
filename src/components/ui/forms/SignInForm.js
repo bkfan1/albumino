@@ -36,11 +36,11 @@ export default function SignInForm() {
       });
     } catch (error) {
       toast({
-        status:"error",
-        title:"Error",
-        description:"An error occurred while attempting to log in.",
+        status: "error",
+        title: "Error",
+        description: "An error occurred while trying to sign in",
         duration: 5000,
-      })
+      });
     }
   };
 
@@ -76,17 +76,24 @@ export default function SignInForm() {
         as="form"
         onSubmit={handleSubmit(onSubmit)}
         flexDirection={"column"}
-        maxWidth={"360px"}
+        width={"xs"}
         gap={2}
         padding={2}
       >
         {formFields.map((field) => (
-          <FormControl key={field.id} isRequired>
+          <FormControl
+            key={field.id}
+            isRequired
+            isInvalid={errors[field.registerName]}
+          >
             <Input
               type={field.type}
               placeholder={field.placeholder}
               {...register(field.registerName, field.registerOptions)}
             />
+            <FormErrorMessage>
+              {errors[field.registerName] && errors[field.registerName].message}
+            </FormErrorMessage>
           </FormControl>
         ))}
 
@@ -95,8 +102,8 @@ export default function SignInForm() {
         </Button>
 
         <VStack width={"100%"}>
-          <Link href="/signup">
-            <Text> Create account</Text>
+          <Link href="/signup" style={{ width: "100%" }}>
+            <Text color="#3182ce"> Create account</Text>
           </Link>
         </VStack>
       </Flex>
