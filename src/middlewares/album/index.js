@@ -88,7 +88,7 @@ export const getAlbum = async (albumId) => {
       
       name: album.name,
 
-      cover: cover ? cover.url : "",
+      cover: cover ? cover.url : false,
 
       contributors: albumContributors.map(({ _id, firstname, lastname }) => ({
         id: _id.toString(),

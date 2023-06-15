@@ -99,7 +99,7 @@ export const getAccountAlbums = async (accountId) => {
       albums.push({
         id: album._id.toString(),
         name: album.name,
-        cover: cover ? cover.url : "" ,
+        cover: cover ? cover.url : false ,
 
         photos: albumPhotos.map((photo) => ({
           id: photo._id.toString(),
