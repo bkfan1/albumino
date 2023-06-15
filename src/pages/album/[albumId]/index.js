@@ -16,9 +16,21 @@ import {
   ModalCloseButton,
   ModalBody,
   ModalHeader,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel,
+  Icon,
 } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
-import { BsCalendar, BsCalendarPlus, BsLink, BsPlus } from "react-icons/bs";
+import {
+  BsCalendar,
+  BsCalendarPlus,
+  BsEnvelope,
+  BsLink45Deg,
+  BsPlus,
+} from "react-icons/bs";
 import { authOptions } from "../../api/auth/[...nextauth]";
 import Layout from "@/components/ui/Layout";
 
@@ -29,11 +41,12 @@ import {
   getAlbum,
 } from "@/middlewares/album";
 import MasonryGrid from "@/components/ui/masonry/MasonryGrid";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 import { AlbumPageContext } from "@/contexts/AlbumPageContext";
 import moment from "moment";
 import { useSession } from "next-auth/react";
+import GenerateInvitationLinkForm from "@/components/ui/forms/GenerateInvitationLinkForm";
 
 export default function AlbumPage({ album }) {
   const { data: session, status } = useSession();
@@ -101,7 +114,13 @@ export default function AlbumPage({ album }) {
                   <Avatar
                     key={id}
                     name={`${firstname} ${lastname}`}
-                    title={`${firstname} ${lastname} ${status === "authenticated" ? (id === session.user.accountId ? "(You)" : "") : ""}`}
+                    title={`${firstname} ${lastname} ${
+                      status === "authenticated"
+                        ? id === session.user.accountId
+                          ? "(You)"
+                          : ""
+                        : ""
+                    }`}
                   />
                 ))}
               </AvatarGroup>
@@ -131,7 +150,27 @@ export default function AlbumPage({ album }) {
                 </Tooltip>
               </ModalHeader>
               <ModalBody>
-                <SendAlbumInvitationForm />
+                <Tabs>
+                  <TabList>
+                    <Tab>
+                      {" "}
+                      <Icon as={BsLink45Deg} marginRight={1}></Icon> Link
+                    </Tab>
+                    <Tab>
+                      {" "}
+                      <Icon as={BsEnvelope} marginRight={1}></Icon> Email
+                    </Tab>
+                  </TabList>
+
+                  <TabPanels>
+                    <TabPanel>
+                      <GenerateInvitationLinkForm />
+                    </TabPanel>
+                    <TabPanel>
+                      <SendAlbumInvitationForm />
+                    </TabPanel>
+                  </TabPanels>
+                </Tabs>
               </ModalBody>
             </ModalContent>
           </Modal>
@@ -180,7 +219,7 @@ export async function getServerSideProps({ req, res, query }) {
       },
     };
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return {
       redirect: {
         destination: "/500",
