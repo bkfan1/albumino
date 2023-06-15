@@ -28,19 +28,22 @@ export default function SignUpForm() {
 
   const onSubmit = async (data) => {
     try {
-      const res = await axios.post("/api/signup", data);
-      toast({
-        status: "success",
-        title: "Success",
-        description: res.data.message,
-        duration: 5000,
-      });
+      const responsePromise = axios.post("/api/signup", data);
+
+      toast.promise(responsePromise, {
+        loading:{title:"Signin up..."},
+        success: {title:"Account created succesfully"},
+        error: {title:"An error occurred while attempting to sign up"}
+      })
+
+      await responsePromise;
+      
     } catch (error) {
       console.log(error);
       toast({
         status: "error",
         title: "Error",
-        description: error.response.data.message,
+        description: "An error occurred while attempting to sign up",
         duration: 5000,
       });
     }
@@ -53,7 +56,7 @@ export default function SignUpForm() {
       registerName: "firstname",
       registerOptions: {
         required: { value: true, message: "This field is required" },
-        pattern: { value: regex.firstname, message: "Type a valid first name" },
+        pattern: { value: regex.firstname, message: "Type a valid firstname" },
       },
       placeholder: "First name",
     },
@@ -64,7 +67,7 @@ export default function SignUpForm() {
       registerName: "lastname",
       registerOptions: {
         required: { value: true, message: "This field is required" },
-        pattern: { value: regex.firstname, message: "Type a valid first name" },
+        pattern: { value: regex.firstname, message: "Type a valid lastname" },
       },
       placeholder: "Last name",
     },
@@ -104,7 +107,7 @@ export default function SignUpForm() {
         padding={2}
       >
         <VStack width={"100%"}>
-          <Heading width={"100%"}>Sign Up</Heading>
+          <Heading width={"100%"} size={"lg"}>Sign Up</Heading>
           <Text width={"100%"}>
             Create an account to upload and share photos
           </Text>
@@ -112,12 +115,19 @@ export default function SignUpForm() {
         <Divider></Divider>
 
         {formFields.map((field) => (
-          <FormControl key={field.id} isRequired>
+          <FormControl
+            key={field.id}
+            isRequired
+            isInvalid={errors[field.registerName]}
+          >
             <Input
               type={field.type}
               placeholder={field.placeholder}
               {...register(field.registerName, field.registerOptions)}
             />
+            <FormErrorMessage>
+              {errors[field.registerName] && errors[field.registerName].message}
+            </FormErrorMessage>
           </FormControl>
         ))}
 
