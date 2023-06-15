@@ -5,12 +5,21 @@ import {
   Heading,
   IconButton,
   Image,
+  ModalBody,
   ModalContent,
+  ModalHeader,
+  Text,
   Tooltip,
   VStack,
 } from "@chakra-ui/react";
 import { useContext } from "react";
-import { BsArrowLeft, BsArrowRight, BsX } from "react-icons/bs";
+import {
+  BsArrowLeft,
+  BsArrowRight,
+  BsChevronLeft,
+  BsChevronRight,
+  BsX,
+} from "react-icons/bs";
 import AvailableAlbumCard from "../cards/AvailableAlbumCard";
 
 export default function PhotoVisorBody({}) {
@@ -42,13 +51,15 @@ export default function PhotoVisorBody({}) {
           <Tooltip label="Previous photo">
             <IconButton
               onClick={handleSetPreviousPhoto}
-              icon={<BsArrowLeft />}
+              icon={<BsChevronLeft />}
               rounded={"full"}
               position={"absolute"}
               left={0}
               size={"lg"}
               zIndex={3}
               marginLeft={4}
+              variant={"link"}
+              color={"white"}
             />
           </Tooltip>
         ) : (
@@ -61,14 +72,7 @@ export default function PhotoVisorBody({}) {
         {showAvailableAlbums ? (
           <>
             <ModalContent>
-              <Box
-                padding={4}
-                width={"100%"}
-                height={"300px"}
-                backgroundColor={"white"}
-                borderRadius={"md"}
-                overflowY={"scroll"}
-              >
+              <ModalHeader>
                 <IconButton
                   onClick={() => setShowAvailableAlbums(false)}
                   position={"absolute"}
@@ -78,16 +82,19 @@ export default function PhotoVisorBody({}) {
                   icon={<BsX />}
                 />
 
-                <Flex>
-                  <Heading size={"md"}>Add to:</Heading>
-                </Flex>
+                <Heading size={"md"}>Add photo to</Heading>
+              </ModalHeader>
 
-                <VStack marginTop={6}>
+              <ModalBody>
+                <VStack width={"100%"}>
+                <Text width={"100%"}>Available albums:</Text>
+                <VStack marginTop={6} height={"72"} overflowY={"scroll"} width={"100%"}>
                   {availableAlbums.map((album) => (
                     <AvailableAlbumCard key={album.id} album={album} />
                   ))}
                 </VStack>
-              </Box>
+                </VStack>
+              </ModalBody>
             </ModalContent>
           </>
         ) : (
@@ -98,13 +105,15 @@ export default function PhotoVisorBody({}) {
           <Tooltip label="Next photo">
             <IconButton
               onClick={handleSetNextPhoto}
-              icon={<BsArrowRight />}
+              icon={<BsChevronRight />}
               rounded={"full"}
               position={"absolute"}
               right={0}
               size={"lg"}
               zIndex={3}
               marginRight={4}
+              variant={"link"}
+              color={"white"}
             />
           </Tooltip>
         ) : (
