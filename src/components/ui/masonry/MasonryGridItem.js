@@ -49,13 +49,14 @@ export default function MasonryGridItem({ data }) {
           position="relative"
           overflow={"hidden"}
           _hover={{
-            opacity: "90%",
+            opacity: !selected ? "90%" : "",
             transition: "100ms ease-in-out",
             cursor: "pointer",
           }}
+          opacity={selected ? "80%" : ""}
         >
           <Skeleton isLoaded={isMounted} rounded={"md"}>
-            <Tooltip label="Select this photo">
+            <Tooltip label={selected ? "Unselect this photo" : "Select this photo"}>
               <Checkbox
                 onChange={(e) => handleClickSelectPhoto(e)}
                 isChecked={selected ? true : false}
