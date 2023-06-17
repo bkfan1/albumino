@@ -34,7 +34,6 @@ import {
 import { authOptions } from "../../api/auth/[...nextauth]";
 import Layout from "@/components/ui/Layout";
 
-import SendAlbumInvitationForm from "@/components/ui/forms/SendAlbumInvitationForm";
 import {
   isAlbumOwner,
   isAlbumContributor,
@@ -47,6 +46,7 @@ import { AlbumPageContext } from "@/contexts/AlbumPageContext";
 import moment from "moment";
 import { useSession } from "next-auth/react";
 import GenerateInvitationLinkForm from "@/components/ui/forms/GenerateInvitationLinkForm";
+import SendAlbumInvitationEmailForm from "@/components/ui/forms/SendAlbumInvitationEmailForm";
 
 export default function AlbumPage({ album }) {
   const { data: session, status } = useSession();
@@ -167,7 +167,7 @@ export default function AlbumPage({ album }) {
                       <GenerateInvitationLinkForm />
                     </TabPanel>
                     <TabPanel>
-                      <SendAlbumInvitationForm />
+                      <SendAlbumInvitationEmailForm />
                     </TabPanel>
                   </TabPanels>
                 </Tabs>
@@ -219,7 +219,6 @@ export async function getServerSideProps({ req, res, query }) {
       },
     };
   } catch (error) {
-    console.log(error);
     return {
       redirect: {
         destination: "/500",
