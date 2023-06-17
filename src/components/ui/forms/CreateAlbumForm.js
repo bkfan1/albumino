@@ -16,28 +16,36 @@ export default function CreateAlbumForm() {
   const toast = useToast();
 
   const onSubmit = async (data) => {
-    const formData = new FormData();
-    formData.append("name", data.name);
-
-    for (const file of data.files) {
-      formData.append("files", file);
-    }
-
     try {
-      const res = await axios.post("/api/albums", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const formData = new FormData();
+
+      for (const file of data.files) {
+        formData.append("files", file);
+      }
+
+      const res = await axios.post("/api/albums", { name: data.name });
+      const albumId = res.data.albumId;
+
+      formData.append("albumId", albumId);
+
+      if (data.files.length > 0) {
+        const config = {
+          headers: { "Content-Type": "multipart/form-data" },
+        };
+
+        const res2 = await axios.post(`/api/photos`, formData, config);
+      }
+
       toast({
-        status:"success",
-        title:"Success",
-        description:"Album created successfully"
-      })
+        status: "success",
+        title: "Album created successfully",
+      });
     } catch (error) {
       toast({
-        status:"error",
-        title:"Error",
-        description:"Something went wrong while attempting to create album"
-      })
+        status: "error",
+        title: "Error",
+        description: "Something went wrong while attempting to create album",
+      });
     }
   };
   return (
@@ -55,7 +63,12 @@ export default function CreateAlbumForm() {
 
         <VStack paddingTop={4}>
           <Heading size={"sm"}>Album is empty</Heading>
-          <input type="file" multiple {...register("files")} accept=".jpg, .jpeg, .png" />
+          <input
+            type="file"
+            multiple
+            {...register("files")}
+            accept=".jpg, .jpeg, .png"
+          />
         </VStack>
         <Input type="submit" hidden />
       </Box>
