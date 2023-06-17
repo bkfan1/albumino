@@ -37,6 +37,7 @@ export default function PhotoVisorBody({}) {
     (photo) => photo.id === currentPhoto.id
   );
   const isLastPhoto = photoIndex === visorPhotos.length - 1;
+  
 
   return (
     <>
