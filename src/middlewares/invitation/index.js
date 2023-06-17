@@ -7,33 +7,38 @@ import Album from "@/database/models/Album";
 import AlbumInvitation from "@/database/models/AlbumInvitation";
 
 import { createTransport } from "nodemailer";
+import Account from "@/database/models/Account";
+import { domain, generateInvitationHTMLString, generateInvitationLink } from "@/utils/strings";
+import { accountExists } from "../account";
 
 export const invitationExists = async (invitationId) => {
   try {
-    const foundInvitation = await AlbumInvitation.findById({
-      _id: invitationId,
-    });
+    const foundInvitation = await AlbumInvitation.findById(invitationId);
 
-    if (!foundInvitation) {
-      return false;
-    }
+    return foundInvitation ? true : false;
 
-    return true;
   } catch (error) {
-    throw Error("An error occurred while checking invitation existence.");
+    throw Error("An error occurred while checking invitation existence");
   }
 };
 
-
 export const isInvitationAuthor = async (invitationId, accountId) => {
   try {
-    const foundInvitation = await invitationExists(invitationId);
+    const existsInvitation = await invitationExists(invitationId);
 
-    if (!foundInvitation) {
-      throw Error("Invitation not found.");
+    if (!existsInvitation) {
+      throw Error("Invitation not found");
     }
 
-    const isAuthor = foundInvitation.sender_id === accountId;
+    const existsAccount = await accountExists(accountId);
+
+    if(!existsAccount){
+      throw Error("Account not found")
+    }
+
+    const foundInvitation = await AlbumInvitation.findById(invitationId);
+
+    const isAuthor = foundInvitation.sender_id.toString() === accountId;
 
     return isAuthor;
   } catch (error) {
@@ -53,13 +58,22 @@ export const updateAlbumInvitation = async (req, res) => {
       return res.status(404).json({ message: "Invitation not found" });
     }
 
-    const isAuthor = await isInvitationAuthor(req.query.invitationId, session.user.accountId);
+    const isAuthor = await isInvitationAuthor(
+      req.query.invitationId,
+      session.user.accountId
+    );
 
-    if(isAuthor){
-      return res.status(400).json({message:"Only users that aren't in the album can accept the invitation"});
+    if (isAuthor) {
+      return res.status(400).json({
+        message:
+          "Only users that are not in the album can accept the invitation",
+      });
     }
 
-    const isContributor = await isAlbumContributor(req.query.albumId, session.user.accountId);
+    const isContributor = await isAlbumContributor(
+      req.query.albumId,
+      session.user.accountId
+    );
 
     // Only users that aren't in the album can accept the invitation
     if (isContributor) {
@@ -70,28 +84,27 @@ export const updateAlbumInvitation = async (req, res) => {
 
     // If the invitation was already accepted, return 400 status code
     if (invitation.status === "accepted") {
-      return res.status(400).json({ message: "Invitation already accepted" });
+      return res.status(400).json({ message: "Invitation expired" });
     }
 
     // Verify if the album exists before updating it
-    const existsAlbum = await albumExists(req.query.albumId)
+    const existsAlbum = await albumExists(req.query.albumId);
 
-    if(!existsAlbum){
-      return res.status(404).json({message:"Album not found"})
+    if (!existsAlbum) {
+      return res.status(404).json({ message: "Album not found" });
     }
 
-    const isValidData = req.body.status === "accepted"
+    const isValidData = req.body.status === "accepted";
 
-    if(!isValidData){return res.status(400).json({message: ""})}
+    if (!isValidData) {
+      return res.status(400).json({ message: "Bad request" });
+    }
 
     // Otherwise, update the invitation status
-    await AlbumInvitation.findByIdAndUpdate(
-      req.query.invitationId,
-      {
-        // Use the value sent in req.body status
-        status: req.body.status,
-      }
-    );
+    await AlbumInvitation.findByIdAndUpdate(req.query.invitationId, {
+      // Use the value sent in req.body status
+      status: req.body.status,
+    });
 
     // ...And update the album related to the current invitation by adding the new contributor account ID
     await Album.findByIdAndUpdate(
@@ -102,11 +115,9 @@ export const updateAlbumInvitation = async (req, res) => {
     return res.status(200).json({ message: "Invitation updated succesfully" });
   } catch (error) {
     console.log(error);
-    return res
-      .status(500)
-      .json({
-        message: "An error occurred while attempting to update invitation",
-      });
+    return res.status(500).json({
+      message: "An error occurred while attempting to update invitation",
+    });
   }
 };
 
@@ -131,6 +142,7 @@ export const sendEmail = async (data) => {
       subject: data.subject,
 
       text: data.text,
+      html: generateInvitationHTMLString(data),
     });
 
     return true;
@@ -163,27 +175,41 @@ export const createAlbumInvitation = async (req, res) => {
       created_at: new Date(),
     });
 
-    // After creating the invitation in the database, send an email with a link to the invitation
-    const sentEmail = await sendEmail(req.body);
+    const invitationLink = generateInvitationLink(domain, createdInvitation._id.toString());
 
-    // If email was not sent, return 500 status code
-    if (!sentEmail) {
-      return res
-        .status(500)
-        .json({
+    // Send an email with a link to the invitation if is required
+    if (req.body.sendEmail === true) {
+      const author = await Account.findById(session.user.accountId);
+      const album = await Album.findById(req.query.albumId);
+
+      const data = {
+        ...req.body,
+        subject: "Invitation to album",
+        author: {
+          fullname: `${author.firstname} ${author.lastname}`,
+        },
+        album: {
+          name: album.name,
+        },
+        link: invitationLink,
+      };
+
+      const sentEmail = await sendEmail(data);
+
+      // If email was not sent, return 500 status code
+      if (!sentEmail) {
+        return res.status(500).json({
           message:
             "An error occurred while attempting to send invitation email",
         });
+      }
     }
 
-    // Otherwise, return 200
-    return res.status(200).json({ message: "Email sent successfully" });
+    return res.status(200).json({ invitationLink });
   } catch (error) {
     console.log(error);
-    return res
-      .status(500)
-      .json({
-        message: "An error occurred while attempting to create invitation",
-      });
+    return res.status(500).json({
+      message: "An error occurred while attempting to create invitation",
+    });
   }
 };
