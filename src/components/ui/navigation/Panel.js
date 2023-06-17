@@ -86,7 +86,7 @@ export default function Panel() {
 
         <Skeleton isLoaded={isMounted} rounded={"md"}>
           <VStack paddingX={2}>
-            <Tooltip label="Storaged used" display={{ sm: "flex", md: "none" }}>
+            <Tooltip label="Storage used" display={{ sm: "flex", md: "none" }}>
               <VStack>
                 <HStack>
                   <Icon as={BsCloud} />
