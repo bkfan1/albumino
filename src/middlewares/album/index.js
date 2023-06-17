@@ -2,10 +2,6 @@ import connection from "@/database/connection";
 import Album from "@/database/models/Album";
 import Photo from "@/database/models/Photo";
 import { accountExists } from "../account";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { storage } from "@/utils/firebase-app";
-import { v4 } from "uuid";
-import multer from "multer";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import Account from "@/database/models/Account";
@@ -16,12 +12,9 @@ export const albumExists = async (albumId) => {
     const db = await connection();
     const foundAlbum = await Album.findById({ _id: albumId });
 
-    if (!foundAlbum) {
-      return false;
-    }
-    return true;
+    return foundAlbum ? true : false;
   } catch (error) {
-    throw Error("An error occurred while attempting to find album.");
+    throw Error("An error occurred while attempting to find album");
   }
 };
 
@@ -33,6 +26,12 @@ export const isAlbumOwner = async (albumId, accountId) => {
 
     if (!exists) {
       throw Error("Album not found");
+    }
+
+    const existsAccount = await accountExists(accountId);
+
+    if (!existsAccount) {
+      throw Error("Account not found");
     }
 
     const album = await Album.findById({ _id: albumId });
@@ -47,20 +46,26 @@ export const isAlbumOwner = async (albumId, accountId) => {
 export const isAlbumContributor = async (albumId, accountId) => {
   try {
     const db = await connection();
-    const exists = await albumExists(albumId);
+    const existsAlbum = await albumExists(albumId);
 
-    if (!exists) {
-      throw Error("Album dont exists");
+    if (!existsAlbum) {
+      throw Error("Album not found");
     }
 
-    const album = await Album.findById({ _id: albumId });
+    const existsAccount = await accountExists(accountId);
+
+    if (!existsAccount) {
+      throw Error("Account not found");
+    }
+
+    const album = await Album.findById(albumId);
 
     const isContributor = album.contributors.includes(accountId);
 
     return isContributor;
   } catch (error) {
-    console.log(error)
-    throw Error("An error occurred while checking album contributor.")
+    console.log(error);
+    throw Error("An error occurred while checking album contributor.");
   }
 };
 
@@ -73,19 +78,19 @@ export const getAlbum = async (albumId) => {
       throw Error("Album not found");
     }
 
-    const album = await Album.findById({ _id: albumId });
+    const album = await Album.findById(albumId);
 
     const albumPhotos = await Photo.find({ albums: albumId });
     const albumContributors = await Account.find({
       _id: { $in: album.contributors },
     });
 
-    const cover = await getFirstPhotoInAlbum(albumId)
+    const cover = await getFirstPhotoInAlbum(albumId);
 
     const data = {
       id: album._id.toString(),
       author_account_id: album.author_account_id.toString(),
-      
+
       name: album.name,
 
       cover: cover ? cover.url : false,
@@ -100,7 +105,7 @@ export const getAlbum = async (albumId) => {
         ({ _id, author_account_id, albums, url, uploaded_at }) => ({
           id: _id.toString(),
           author_account_id: author_account_id.toString(),
-          albums: albums.map((albumId)=>albumId.toString()),
+          albums: albums.map((albumId) => albumId.toString()),
           url,
           uploaded_at: uploaded_at.toString(),
         })
@@ -112,7 +117,7 @@ export const getAlbum = async (albumId) => {
 
     return data;
   } catch (error) {
-    console.log(error)
+    console.log(error);
     throw Error("An error ocurred while getting album.");
   }
 };
@@ -139,9 +144,7 @@ export const deleteAlbum = async (req, res) => {
       { $pull: { albums: req.query.albumId } }
     );
 
-    const deletedAlbum = await Album.findByIdAndDelete({
-      _id: req.query.albumId,
-    });
+    const deletedAlbum = await Album.findByIdAndDelete(req.query.albumId);
 
     return res.status(200).json({ message: "Album deleted successfully" });
   } catch (error) {
@@ -155,62 +158,29 @@ export const deleteAlbum = async (req, res) => {
 export const createAlbum = async (req, res) => {
   try {
     const session = await getServerSession(req, res, authOptions);
-    const upload = multer({ storage: multer.memoryStorage() });
-    upload.array("files")(req, res, async (error) => {
-      if (error) {
-        return res.status(500).json({
-          message: "An error occurred while attempting to upload photos",
-        });
-      }
 
-      const db = await connection();
-      const exists = await accountExists(session.user.accountId);
+    const db = await connection();
+    const existsAccount = await accountExists(session.user.accountId);
 
-      if (!exists) {
-        return res.status(404).json({});
-      }
+    if (!existsAccount) {
+      return res.status(404).json({ message: "Account not found" });
+    }
 
-      const createdAlbum = await Album.create({
-        author_account_id: session.user.accountId,
-        contributors: [],
+    const createdAlbum = await Album.create({
+      author_account_id: session.user.accountId,
+      contributors: [],
 
-        name: req.body.name,
+      name: req.body.name,
 
-        created_at: new Date(),
-        updated_at: new Date(),
-      });
-
-      for (const file of req.files) {
-        // Setting a new filename for each file in req.files
-        const filename = v4();
-
-        const storageRef = ref(
-          storage,
-          `users/${session.user.accountId}/${filename}`
-        );
-
-        const metadata = {
-          contentType: file.mimetype,
-        };
-
-        const snapshot = await uploadBytes(storageRef, file.buffer, metadata);
-
-        const photoURL = await getDownloadURL(snapshot.ref);
-
-        const uploadedPhoto = await Photo.create({
-          author_account_id: session.user.accountId,
-          albums: [createdAlbum._id],
-
-          filename,
-
-          url: photoURL,
-
-          uploaded_at: new Date(),
-        });
-      }
+      created_at: new Date(),
+      updated_at: new Date(),
     });
-    return res.status(200).json({ message: "Album created sucessfully" });
+
+    const albumId = createdAlbum._id.toString();
+
+    return res.status(200).json({ albumId });
   } catch (error) {
+    console.log(error);
     return res
       .status(500)
       .json({ message: "An error occurred while attempting to create album" });
@@ -223,19 +193,19 @@ export const canUploadToAlbum = async (accountId, albumId) => {
       accountExists(accountId),
       albumExists(albumId),
     ]);
-  
+
     if (!exists[0] || !exists[1]) {
       throw Error("Error while checking album permissions.");
     }
-  
+
     const [isOwner, isContributor] = await Promise.all([
       isAlbumOwner(albumId, accountId),
       isAlbumContributor(albumId, accountId),
     ]);
-  
+
     return isOwner || isContributor;
   } catch (error) {
-    throw Error("Error while checking album permissions.");    
+    throw Error("Error while checking album permissions.");
   }
 };
 
@@ -255,7 +225,8 @@ export const removeAlbumContributor = async (req, res) => {
       req.query.contributorId
     );
 
-    const isTheSameContributor = session.user.accountId === req.query.contributorId;
+    const isTheSameContributor =
+      session.user.accountId === req.query.contributorId;
 
     if (!(isOwner || (isContributor && isTheSameContributor))) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -268,8 +239,15 @@ export const removeAlbumContributor = async (req, res) => {
       }
     );
 
-    return res.status(200).json({ message: "Album contributor removed successfully" });
+    return res
+      .status(200)
+      .json({ message: "Album contributor removed successfully" });
   } catch (error) {
-    return res.status(500).json({ message: "An error occurred while attempting to remove album contributor" });
+    return res
+      .status(500)
+      .json({
+        message:
+          "An error occurred while attempting to remove album contributor",
+      });
   }
 };
