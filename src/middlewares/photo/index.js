@@ -22,10 +22,8 @@ export const photoExists = async (photoId) => {
     const db = await connection();
     const photo = await Photo.findById({ _id: photoId });
 
-    if (!photo) {
-      return false;
-    }
-    return true;
+    return photo ? true : false;
+
   } catch (error) {
     throw Error("An error occurred while attempting to find the photo.");
   }
@@ -59,12 +57,18 @@ export const isPhotoInAlbum = async(photoId, albumId)=>{
 export const isPhotoOwner = async (photoId, accountId) => {
   try {
     const db = await connection();
-    const exists = await photoExists(photoId);
-    if (!exists) {
-      throw Error("Photo not found.");
+    const existsPhoto = await photoExists(photoId);
+    if (!existsPhoto) {
+      throw Error("Photo not found");
     }
 
-    const photo = await Photo.findById({ _id: photoId });
+    const existsAccount = await accountExists(accountId);
+
+    if(!existsAccount){
+      throw Error("Account not found")
+    }
+
+    const photo = await Photo.findById(photoId);
 
     const isOwner = photo.author_account_id.toString() === accountId;
 
@@ -78,9 +82,9 @@ export const deletePhoto = async (req, res) => {
   try {
     const session = await getServerSession(req, res, authOptions);
 
-    const exists = await photoExists(req.query.photoId);
+    const existsPhoto = await photoExists(req.query.photoId);
 
-    if (!exists) {
+    if (!existsPhoto) {
       return res.status(404).json({ message: "Photo not found" });
     }
 
