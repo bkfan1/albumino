@@ -18,7 +18,15 @@ export default function NavbarBrand() {
           <HStack fontWeight={"bold"}>
             <Icon as={SiGooglephotos} boxSize={6}></Icon>
 
-            <Text fontSize={inSignPage ? "2xl" : ""}>Albumino</Text>
+            <Text
+              fontSize={
+                inSignPage || pathname === "/invitation/[invitationId]"
+                  ? "2xl"
+                  : ""
+              }
+            >
+              Albumino
+            </Text>
           </HStack>
         </Skeleton>
       </Link>
