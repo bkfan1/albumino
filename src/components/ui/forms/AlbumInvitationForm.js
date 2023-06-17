@@ -9,8 +9,11 @@ import {
 import { useRouter } from "next/router";
 import axios from "axios";
 import { useIsMounted } from "@/hooks/useIsMounted";
+import { useSession } from "next-auth/react";
 
 export default function AlbumInvitationForm({ details }) {
+  const { data: session, status } = useSession();
+
   const router = useRouter();
   const { invitation, author, album } = details;
 
@@ -18,6 +21,10 @@ export default function AlbumInvitationForm({ details }) {
   const toast = useToast();
 
   const onSubmit = async () => {
+    if (status === "unauthenticated") {
+      return router.push("/signin");
+    }
+
     try {
       const data = {
         status: "accepted",
@@ -38,7 +45,7 @@ export default function AlbumInvitationForm({ details }) {
 
       await submitPromise;
 
-      router.push(`/album/${album.id}`);
+      return router.push(`/album/${album.id}`);
     } catch (error) {
       toast({
         status: "error",
@@ -77,7 +84,12 @@ export default function AlbumInvitationForm({ details }) {
               {album.name}
             </Heading>
           </VStack>
-          <Button type="submit" width={"100%"} colorScheme="green">
+          <Button
+            type="submit"
+            width={"100%"}
+            colorScheme="green"
+            isDisabled={status === "loading" ? true : false}
+          >
             Accept invitation
           </Button>
         </VStack>
