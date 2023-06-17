@@ -1,7 +1,6 @@
 import { authOptions } from "../api/auth/[...nextauth]";
 import { getServerSession } from "next-auth";
 
-
 import SignUpForm from "@/components/ui/forms/SignUpForm";
 import { Flex } from "@chakra-ui/react";
 import NavbarBrand from "@/components/ui/navigation/NavbarBrand";
