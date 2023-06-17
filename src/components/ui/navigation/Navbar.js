@@ -88,20 +88,25 @@ export default function Navbar() {
 
       toast({
         status: "loading",
-        title: "Deleting photos...",
+        title: `Deleting selected photo${
+          selectedPhotos.length > 1 ? "s" : ""
+        }...`,
       });
 
-      await Promise.all(promises).then(()=>{
-        toast({
-          status: "success",
-          title: "Photos deleted successfully",
+      await Promise.all(promises)
+        .then(() => {
+          toast({
+            status: "success",
+            title: "Photos deleted successfully",
+          });
+        })
+        .catch(() => {
+          toast({
+            status: "error",
+            title:
+              "An error occurred while trying to delete the selected photos",
+          });
         });
-      }).catch(()=>{
-        toast({
-          status: "error",
-          title: "An error occurred while trying to delete photos",
-        });
-      });
 
       const updatedVisorPhotos = visorPhotos.filter(
         (photo) => !selectedPhotos.includes(photo)
@@ -109,7 +114,7 @@ export default function Navbar() {
 
       setVisorPhotos(updatedVisorPhotos);
 
-      setSelectedPhotos([])
+      setSelectedPhotos([]);
 
       onClose();
     } catch (error) {
@@ -190,31 +195,30 @@ export default function Navbar() {
         <ButtonGroup gap={6} className="navbar__menuArea">
           {selectedPhotos.length > 0 ? (
             <>
-            <ButtonGroup gap={2} variant={"ghost"} colorScheme="blue" >
-              {selectedPhotos.every(
-                (photo) => photo.author_account_id === session.user.accountId
-              ) ? (
-                <>
-                  <Tooltip label="Add selected photos to...">
-                    <IconButton icon={<BsPlusLg />} rounded={"full"}/>
-                  </Tooltip>
-                  <Tooltip label="Delete selected photos">
-                    <IconButton
-                      icon={<BsTrash />}
-                      onClick={handleDeleteSelectedPhotos}
-                      rounded={"full"}
-                    />
-                  </Tooltip>
-                </>
-              ) : (
-                ""
-              )}
-              <Tooltip label="Download selected photos">
-                <IconButton icon={<BsDownload />} rounded={"full"} />
-              </Tooltip>
+              <ButtonGroup gap={2} variant={"ghost"} colorScheme="blue">
+                {selectedPhotos.every(
+                  (photo) => photo.author_account_id === session.user.accountId
+                ) ? (
+                  <>
+                    <Tooltip label="Add selected photos to...">
+                      <IconButton icon={<BsPlusLg />} rounded={"full"} />
+                    </Tooltip>
+                    <Tooltip label="Delete selected photos">
+                      <IconButton
+                        icon={<BsTrash />}
+                        onClick={handleDeleteSelectedPhotos}
+                        rounded={"full"}
+                      />
+                    </Tooltip>
+                  </>
+                ) : (
+                  ""
+                )}
+                <Tooltip label="Download selected photos">
+                  <IconButton icon={<BsDownload />} rounded={"full"} />
+                </Tooltip>
               </ButtonGroup>
             </>
-            
           ) : (
             <UploadPhotosForm />
           )}
