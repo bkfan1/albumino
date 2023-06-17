@@ -34,6 +34,9 @@ export default function PhotoVisorHeader({}) {
     setAvailableAlbums,
   } = useContext(PhotoVisorContext);
 
+  const isCurrentPhotoOwner =
+    currentPhoto.author_account_id === session.user.accountId;
+
   const router = useRouter();
   const { query } = router;
   const { albumId } = query;
@@ -114,8 +117,7 @@ export default function PhotoVisorHeader({}) {
     }
   };
 
-  const isCurrentPhotoOwner =
-    currentPhoto.author_account_id === session.user.accountId;
+  const handleDownloadPhoto = () => {};
 
   return (
     <>
@@ -182,7 +184,7 @@ export default function PhotoVisorHeader({}) {
             </Tooltip>
 
             <MenuList>
-              <MenuItem>Download</MenuItem>
+              <MenuItem onClick={handleDownloadPhoto}>Download</MenuItem>
 
               {isCurrentPhotoOwner ? (
                 <>
