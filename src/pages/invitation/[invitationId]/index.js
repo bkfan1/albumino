@@ -8,17 +8,21 @@ import { getServerSession } from "next-auth";
 import { invitationExists, isInvitationAuthor } from "@/middlewares/invitation";
 import { getAlbum, isAlbumContributor } from "@/middlewares/album";
 import AlbumInvitationForm from "@/components/ui/forms/AlbumInvitationForm";
+import NavbarBrand from "@/components/ui/navigation/NavbarBrand";
+import Footer from "@/components/ui/Footer";
 
 export default function InvitationPage({ details }) {
-  const {invitation} = details;
+  const { invitation } = details;
   return (
     <>
       <Flex
         as="main"
         minHeight={"100vh"}
+        flexDirection={"column"}
         justifyContent={"center"}
         alignItems={"center"}
       >
+        <NavbarBrand />
         {invitation.status === "pending" && (
           <AlbumInvitationForm details={details} />
         )}
@@ -26,6 +30,7 @@ export default function InvitationPage({ details }) {
           <Heading>Invitation expired</Heading>
         )}
       </Flex>
+      <Footer />
     </>
   );
 }
@@ -46,30 +51,30 @@ export async function getServerSideProps({ req, res, query }) {
       };
     }
 
-    const foundInvitation = await AlbumInvitation.findById({
-      _id: query.invitationId,
-    });
+    const foundInvitation = await AlbumInvitation.findById(query.invitationId);
 
-    const isAuthor = await isInvitationAuthor(
-      query.invitationId,
-      session.user.accountId
-    );
+    if (session) {
+      const isAuthor = await isInvitationAuthor(
+        query.invitationId,
+        session.user.accountId
+      );
+
+      const isContributor = await isAlbumContributor(
+        albumDetails.id,
+        session.user.accountId
+      );
+
+      if (isAuthor || isContributor) {
+        return {
+          redirect: {
+            destination: "/photos",
+            permanent: false,
+          },
+        };
+      }
+    }
 
     const albumDetails = await getAlbum(foundInvitation.album_id);
-
-    const isContributor = await isAlbumContributor(
-      albumDetails.id,
-      session.user.accountId
-    );
-
-    if (isAuthor || isContributor) {
-      return {
-        redirect: {
-          destination: "/",
-          permanent: false,
-        },
-      };
-    }
 
     const author = await Account.findById(albumDetails.author_account_id);
 
@@ -88,16 +93,15 @@ export async function getServerSideProps({ req, res, query }) {
         id: foundInvitation._id.toString(),
         status: foundInvitation.status,
       },
-    }
+    };
 
     return {
       props: {
-        details
-        
+        details,
       },
     };
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return {
       redirect: {
         destination: "/500",
