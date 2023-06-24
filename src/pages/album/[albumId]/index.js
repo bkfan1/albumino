@@ -22,6 +22,7 @@ import {
   TabPanels,
   TabPanel,
   Icon,
+  useToast,
 } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
 import {
@@ -47,14 +48,20 @@ import moment from "moment";
 import { useSession } from "next-auth/react";
 import GenerateInvitationLinkForm from "@/components/ui/forms/GenerateInvitationLinkForm";
 import SendAlbumInvitationEmailForm from "@/components/ui/forms/SendAlbumInvitationEmailForm";
+import axios from "axios";
 
 export default function AlbumPage({ album }) {
   const { data: session, status } = useSession();
 
-  const { setInAlbumPage, setIsAlbumOwner } = useContext(AlbumPageContext);
+  const { setInAlbumPage, setIsAlbumOwner, showAlbumSettings } =
+    useContext(AlbumPageContext);
   const { setVisorPhotos } = useContext(PhotoVisorContext);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const { contributors, name, photos, created_at, updated_at, isOwner } = album;
+  const toast = useToast();
+
+  const { id, contributors, name, photos, created_at, updated_at, isOwner } =
+    album;
 
   useEffect(() => {
     setInAlbumPage(true);
@@ -80,7 +87,30 @@ export default function AlbumPage({ album }) {
     };
   }, [photos, setVisorPhotos]);
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const handleRemoveContributorFromAlbum = async (albumId, contributorId) => {
+    try {
+      const res = axios.delete(
+        `/api/album/${albumId}/contributors/${contributorId}`
+      );
+
+      toast.promise(res, {
+        loading: { title: "Removing contributor from album..." },
+        success: { title: "Contributor from album removed successfully" },
+        error: {
+          title:
+            "An error occurred while trying to removing contributor from album",
+        },
+      });
+
+      await res;
+    } catch (error) {
+      toast({
+        status: "error",
+        title:
+          "An error occurred while trying to removing contributor from album",
+      });
+    }
+  };
 
   return (
     <>
@@ -140,25 +170,20 @@ export default function AlbumPage({ album }) {
             </HStack>
           </VStack>
           <MasonryGrid />
+
           <Modal isOpen={isOpen} onClose={onClose}>
             <ModalOverlay />
-
             <ModalContent>
-              <ModalHeader>
-                <Tooltip label="Close modal">
-                  <ModalCloseButton />
-                </Tooltip>
-              </ModalHeader>
+              <ModalHeader>Add contributor</ModalHeader>
+              <ModalCloseButton />
               <ModalBody>
                 <Tabs>
                   <TabList>
                     <Tab>
-                      {" "}
-                      <Icon as={BsLink45Deg} marginRight={1}></Icon> Link
+                      <Icon as={BsLink45Deg} mr={1} /> Link
                     </Tab>
                     <Tab>
-                      {" "}
-                      <Icon as={BsEnvelope} marginRight={1}></Icon> Email
+                      <Icon as={BsEnvelope} mr={1} /> Email
                     </Tab>
                   </TabList>
 
@@ -166,6 +191,7 @@ export default function AlbumPage({ album }) {
                     <TabPanel>
                       <GenerateInvitationLinkForm />
                     </TabPanel>
+
                     <TabPanel>
                       <SendAlbumInvitationEmailForm />
                     </TabPanel>

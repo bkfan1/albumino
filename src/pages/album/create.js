@@ -5,11 +5,11 @@ import { Flex } from "@chakra-ui/react";
 export default function CreateAlbumPage() {
   return (
     <>
-      <Layout>
-        <Flex flex={8} paddingRight={4}>
+        <Layout>
+        <Flex minHeight={"100vh"} flex={8} padding={4}>
           <CreateAlbumForm />
         </Flex>
-      </Layout>
+        </Layout>
     </>
   );
 }
