@@ -7,7 +7,7 @@ export default function ServerErrorPage() {
       <Flex minHeight={"100vh"} justifyContent={"center"} alignItems={"center"}>
         <ErrorFigure
           description={
-            "A server internal error has occurred. We apologize for the inconvenience. Our technical team has been notified about this issue and is working to resolve it as soon as possible. Please try again later."
+            "A server internal error has occurred. Please try again later or contact the developer."
           }
         />
       </Flex>

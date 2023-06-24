@@ -5,7 +5,7 @@ export default function NotFoundErrorPage() {
   return (
     <>
       <Flex minHeight={"100vh"} justifyContent={"center"} alignItems={"center"}>
-        <ErrorFigure description={"Resource not found"} />
+        <ErrorFigure description={"we could not find the requested resource"} />
       </Flex>
     </>
   );
