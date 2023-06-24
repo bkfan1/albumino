@@ -1,12 +1,8 @@
-import { deletePhoto, updatePhotoAlbums } from "@/middlewares/photo";
+import { deletePhoto} from "@/middlewares/photo";
 
 export default async function handler(req, res) {
 
   switch (req.method) {
-    case "PUT":
-      return await updatePhotoAlbums(req, res);
-      break;
-
     case "DELETE":
       return await deletePhoto(req, res);
 
