@@ -6,11 +6,12 @@ export const AlbumPageContext = createContext();
 export const AlbumPageProvider = ({ children }) => {
   const [inAlbumPage, setInAlbumPage] = useState(false);
   const [isAlbumOwner, setIsAlbumOwner] = useState(false);
+  const [showAlbumSettings, setShowAlbumSettings] = useState(false);
 
   return (
     <>
       <AlbumPageContext.Provider
-        value={{ inAlbumPage, setInAlbumPage, isAlbumOwner, setIsAlbumOwner }}
+        value={{ inAlbumPage, setInAlbumPage, isAlbumOwner, setIsAlbumOwner, showAlbumSettings, setShowAlbumSettings }}
       >
         {children}
       </AlbumPageContext.Provider>
