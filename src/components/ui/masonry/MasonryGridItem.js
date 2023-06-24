@@ -3,6 +3,7 @@ import {
   Box,
   Checkbox,
   GridItem,
+  IconButton,
   Image,
   Skeleton,
   Tooltip,
@@ -10,16 +11,21 @@ import {
 import { useContext, useState } from "react";
 import PhotoVisor from "../visor/PhotoVisor";
 import { useIsMounted } from "@/hooks/useIsMounted";
+import { useRouter } from "next/router";
+import { BsXLg } from "react-icons/bs";
 
 export default function MasonryGridItem({ data }) {
   const {
     onOpen,
     setCurrentPhoto,
     visorPhotos,
+    setVisorPhotos,
     selectedPhotos,
     setSelectedPhotos,
   } = useContext(PhotoVisorContext);
   const { isMounted } = useIsMounted();
+  const router = useRouter();
+  const { pathname } = router;
 
   const { url } = data;
 
@@ -42,6 +48,18 @@ export default function MasonryGridItem({ data }) {
     return;
   };
 
+  const handleRemovePhotoToUpload = () => {
+    const updatedVisorPhotos = [...visorPhotos];
+
+    const index = updatedVisorPhotos.findIndex((photo) => photo.id === data.id);
+
+    updatedVisorPhotos.splice(index, 1);
+
+    setVisorPhotos(updatedVisorPhotos);
+  };
+
+  const hideCheckBox = pathname === "/album/create";
+
   return (
     <>
       <GridItem>
@@ -56,14 +74,27 @@ export default function MasonryGridItem({ data }) {
           opacity={selected ? "80%" : ""}
         >
           <Skeleton isLoaded={isMounted} rounded={"md"}>
-            <Tooltip label={selected ? "Unselect this photo" : "Select this photo"}>
-              <Checkbox
-                onChange={(e) => handleClickSelectPhoto(e)}
-                isChecked={selected ? true : false}
-                position={"absolute"}
-                size={"md"}
-                margin={2}
-              />
+            <Tooltip
+              label={selected ? "Unselect this photo" : "Select this photo"}
+            >
+              {hideCheckBox ? (
+                <IconButton
+                  onClick={handleRemovePhotoToUpload}
+                  icon={<BsXLg />}
+                  position={"absolute"}
+                  variant={"ghost"}
+                  rounded={"full"}
+                  margin={2}
+                />
+              ) : (
+                <Checkbox
+                  onChange={(e) => handleClickSelectPhoto(e)}
+                  isChecked={selected ? true : false}
+                  position={"absolute"}
+                  size={"md"}
+                  margin={2}
+                />
+              )}
             </Tooltip>
             <Image
               src={url}
