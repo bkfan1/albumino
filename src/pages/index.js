@@ -6,21 +6,27 @@ export default function Home() {
 }
 
 export async function getServerSideProps({ req, res }) {
-  const session = await getServerSession(req, res, authOptions);
+  try {
+    const session = await getServerSession(req, res, authOptions);
 
-  if (session) {
+    if (session) {
+      return {
+        redirect: {
+          destination: "/photos",
+          permanent: false,
+        },
+      };
+    }
+
+    return {
+      props: {},
+    };
+  } catch (error) {
     return {
       redirect: {
-        destination: "/photos",
+        destination: "/500",
         permanent: false,
       },
     };
   }
-
-  return {
-    redirect: {
-      destination: "/signin",
-      permanent: false,
-    },
-  };
 }
