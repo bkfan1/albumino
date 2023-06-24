@@ -52,9 +52,9 @@ export const updateAlbumInvitation = async (req, res) => {
 
     const db = await connection();
 
-    const exists = await invitationExists(req.query.invitationId);
+    const existsInvitation = await invitationExists(req.query.invitationId);
 
-    if (!exists) {
+    if (!existsInvitation) {
       return res.status(404).json({ message: "Invitation not found" });
     }
 
@@ -63,21 +63,18 @@ export const updateAlbumInvitation = async (req, res) => {
       session.user.accountId
     );
 
-    if (isAuthor) {
-      return res.status(400).json({
-        message:
-          "Only users that are not in the album can accept the invitation",
-      });
-    }
-
     const isContributor = await isAlbumContributor(
       req.query.albumId,
       session.user.accountId
     );
 
-    // Only users that aren't in the album can accept the invitation
-    if (isContributor) {
-      return res.status(401).json({ message: "User is already on album" });
+    // Only users that are not in the album can accept the invitation
+
+    if(isAuthor || isContributor){
+      return res.status(400).json({
+        message:
+          "Only users that are not in the album can accept the invitation",
+      });
     }
 
     const invitation = await AlbumInvitation.findById(req.query.invitationId);
@@ -108,7 +105,7 @@ export const updateAlbumInvitation = async (req, res) => {
 
     // ...And update the album related to the current invitation by adding the new contributor account ID
     await Album.findByIdAndUpdate(
-      { _id: req.query.albumId },
+      req.query.albumId,
       { $push: { contributors: session.user.accountId } }
     );
 
@@ -177,7 +174,7 @@ export const createAlbumInvitation = async (req, res) => {
 
     const invitationLink = generateInvitationLink(domain, createdInvitation._id.toString());
 
-    // Send an email with a link to the invitation if is required
+    // Send an email with a link to the invitation if it is required
     if (req.body.sendEmail === true) {
       const author = await Account.findById(session.user.accountId);
       const album = await Album.findById(req.query.albumId);
