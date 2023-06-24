@@ -1,5 +1,12 @@
 import { initializeApp } from "firebase/app";
-import { deleteObject, getStorage, ref, uploadBytes } from "firebase/storage";
+import {
+  deleteObject,
+  getStorage,
+  ref,
+  uploadBytes,
+  listAll,
+  getMetadata,
+} from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
@@ -33,5 +40,27 @@ export const deleteFile = async (fileURL) => {
     return true;
   } catch (error) {
     throw Error("An error ocurred while attempting to delete file");
+  }
+};
+
+export const calculateFolderSize = async (folderPath) => {
+  try {
+    const folderRef = ref(storage, folderPath);
+
+    const files = await listAll(folderRef);
+
+    let totalFolderSize = 0;
+
+    await Promise.all(
+      files.items.map(async (file) => {
+        const metadata = await getMetadata(file);
+
+        totalFolderSize += metadata.size;
+      })
+    );
+
+    return totalFolderSize;
+  } catch (error) {
+    throw Error("An error occurred while trying to calculate folder size");
   }
 };
