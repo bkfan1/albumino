@@ -1,5 +1,5 @@
 import { useIsMounted } from "@/hooks/useIsMounted";
-import { HStack, Icon, Skeleton, Text } from "@chakra-ui/react";
+import { HStack, Icon, Image, Skeleton, Text } from "@chakra-ui/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { SiGooglephotos } from "react-icons/si";
@@ -16,7 +16,8 @@ export default function NavbarBrand() {
       <Link href="/">
         <Skeleton isLoaded={isMounted} paddingY={2} rounded={"md"}>
           <HStack fontWeight={"bold"}>
-            <Icon as={SiGooglephotos} boxSize={6}></Icon>
+            {/* <Icon as={SiGooglephotos} boxSize={6}></Icon> */}
+            <Image src="/google_photos_logo.svg" height={"8"} alt="" />
 
             <Text
               fontSize={
