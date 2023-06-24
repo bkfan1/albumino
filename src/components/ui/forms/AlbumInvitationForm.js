@@ -47,6 +47,7 @@ export default function AlbumInvitationForm({ details }) {
 
       return router.push(`/album/${album.id}`);
     } catch (error) {
+      console.log(error)
       toast({
         status: "error",
         title: "Error",
@@ -76,6 +77,7 @@ export default function AlbumInvitationForm({ details }) {
                 width={"100%"}
                 height={"auto"}
                 alt="Album cover"
+                rounded={"md"}
               />
             ) : (
               ""
