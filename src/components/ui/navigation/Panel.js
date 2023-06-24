@@ -16,10 +16,13 @@ import {
 import { nanoid } from "nanoid";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { BsCloud } from "react-icons/bs";
+import { BsCloud, BsFillPeopleFill, BsPeople } from "react-icons/bs";
 import { HiOutlinePhotograph } from "react-icons/hi";
 import { MdOutlinePhotoAlbum } from "react-icons/md";
 import { useIsMounted } from "@/hooks/useIsMounted";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import axios from "axios";
 
 const linkButtons = [
   {
@@ -34,16 +37,46 @@ const linkButtons = [
     href: "/albums",
     icon: <MdOutlinePhotoAlbum />,
   },
+  {
+    id: nanoid(),
+    text: "Shared",
+    href: "/shared",
+    icon: <BsFillPeopleFill />,
+  },
 ];
 
 export default function Panel() {
   const router = useRouter();
-  const { pathname } = router;
   const { isMounted } = useIsMounted();
+  // const {data: session, status} = useSession();
+
+  const [storage, setStorage] = useState({
+    used: {
+      bytes: 0,
+      mb: 0,
+      percent: 0,
+    },
+  });
+
+  useEffect(() => {
+    const fetchStorageValue = () => {
+      const req = axios.get(`/api/account/storage`);
+      req
+        .then((res) => {
+          setStorage(res.data.storage);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    };
+
+    fetchStorageValue();
+  }, [router]);
 
   return (
     <>
       <VStack
+        as={"aside"}
         flex={{ base: 0.5, sm: 0.5, md: 1 }}
         minHeight={"100%"}
         borderRight={"1px"}
@@ -63,7 +96,7 @@ export default function Panel() {
               <Tooltip label={text}>
                 <Link href={href}>
                   <Button
-                    display={{ base:"none", sm: "none", md: "initial" }}
+                    display={{ base: "none", sm: "none", md: "initial" }}
                     width={"100%"}
                     variant={"ghost"}
                     leftIcon={icon}
@@ -97,16 +130,21 @@ export default function Panel() {
                 </HStack>
 
                 <Box width={"100%"}>
-                  <Tooltip label="Storage used">
+                  <Tooltip label={`${storage.used.percent.toFixed(1)}% used`}>
                     <Progress
-                      value={50}
+                      value={storage.used.percent}
                       colorScheme={"blue"}
                       rounded={"full"}
                       display={{ sm: "none", md: "flex" }}
                     />
                   </Tooltip>
-                  <Heading size={"xs"} display={{ sm: "flex", md: "none" }}>
-                    0%
+                  <Heading
+                    size={"xs"}
+                    width={"100%"}
+                    display={{ sm: "flex", md: "none" }}
+                    textAlign={"center"}
+                  >
+                    {storage.used.percent.toFixed(1)}%
                   </Heading>
                 </Box>
               </VStack>
@@ -117,7 +155,7 @@ export default function Panel() {
               display={{ sm: "none", md: "initial" }}
               fontSize={"sm"}
             >
-              0.0 GB of 0.0 GB used
+              {storage.used.mb.toFixed(1)} MB of 100 MB used
             </Text>
           </VStack>
         </Skeleton>
