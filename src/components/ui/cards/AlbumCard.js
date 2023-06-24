@@ -16,15 +16,24 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import axios from "axios";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { MdOutlinePhotoAlbum } from "react-icons/md";
 
 export default function AlbumCard({ data }) {
 
+  const {data: session, status}= useSession();
+
   const { id, name, photos, cover } = data;
   const { isMounted } = useIsMounted();
+
+  const router = useRouter();
+  const { pathname } = router;
+
+  const inSharedAlbumsPage = pathname === "/shared";
 
   const toast = useToast();
 
@@ -46,6 +55,32 @@ export default function AlbumCard({ data }) {
     }
   };
 
+  const handleLeaveAlbum = async (albumId, accountId) => {
+    try {
+      const leavePromise = axios.delete(
+        `/api/album/${albumId}/contributors/${accountId}`
+      );
+
+      toast.promise(leavePromise, {
+        loading: { title: "Leaving album..." },
+        success: { title: "You left the album successfully" },
+        error: { title: "An error occurred while trying to leave the album" },
+      });
+
+      await leavePromise;
+
+      if(pathname === "/album/[albumId]"){
+        router.push("/");
+      }
+
+    } catch (error) {
+      toast({
+        status: "error",
+        title: "An error occurred while trying to leave the album",
+      });
+    }
+  };
+
   return (
     <>
       <VStack position={"relative"} width={"160px"}>
@@ -57,7 +92,6 @@ export default function AlbumCard({ data }) {
                 right={3}
                 top={5}
                 color={cover ? "white" : "black"}
-                
               >
                 <BsThreeDotsVertical />
               </MenuButton>
@@ -65,9 +99,13 @@ export default function AlbumCard({ data }) {
           </Skeleton>
 
           <MenuList>
-            <MenuItem onClick={() => handleDeleteAlbum(id)}>
-              Delete this album
-            </MenuItem>
+            {inSharedAlbumsPage ? (
+              <MenuItem onClick={()=>handleLeaveAlbum(data.id, session.user.accountId)}>Leave album</MenuItem>
+            ) : (
+              <MenuItem onClick={() => handleDeleteAlbum(id)}>
+                Delete this album
+              </MenuItem>
+            )}
           </MenuList>
         </Menu>
 
@@ -91,7 +129,7 @@ export default function AlbumCard({ data }) {
                   objectFit={"cover"}
                 />
               ) : (
-                <Icon as={MdOutlinePhotoAlbum} boxSize={6}/>
+                <Icon as={MdOutlinePhotoAlbum} boxSize={6} />
               )}
             </Flex>
           </Skeleton>
