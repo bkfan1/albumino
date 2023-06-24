@@ -2,7 +2,11 @@ import connection from "@/database/connection";
 import Photo from "@/database/models/Photo";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { deleteFile, uploadFile } from "@/utils/firebase-app";
+import {
+  calculateFolderSize,
+  deleteFile,
+  uploadFile,
+} from "@/utils/firebase-app";
 import { getDownloadURL } from "firebase/storage";
 import { getServerSession } from "next-auth";
 import { accountExists } from "../account";
@@ -11,10 +15,9 @@ import { v4 } from "uuid";
 import {
   albumExists,
   canUploadToAlbum,
-  isAlbumContributor,
   isAlbumOwner,
+  updateAlbumLastModification,
 } from "../album";
-import Album from "@/database/models/Album";
 import { allowedPhotosFileTypes, hasInvalidFileType } from "@/utils/validation";
 
 export const photoExists = async (photoId) => {
@@ -23,36 +26,38 @@ export const photoExists = async (photoId) => {
     const photo = await Photo.findById({ _id: photoId });
 
     return photo ? true : false;
-
   } catch (error) {
     throw Error("An error occurred while attempting to find the photo.");
   }
 };
 
-export const isPhotoInAlbum = async(photoId, albumId)=>{
+export const isPhotoInAlbum = async (photoId, albumId) => {
   try {
-    let existsPhoto = await photoExists(photoId);
+    const existsPhoto = await photoExists(photoId);
 
-    if(!existsPhoto){throw Error("Photo not found")}
+    if (!existsPhoto) {
+      throw Error("Photo not found");
+    }
 
     const existsAlbum = await albumExists(albumId);
 
-    if(!existsAlbum){throw Error("Album not found")}
+    if (!existsAlbum) {
+      throw Error("Album not found");
+    }
 
     const db = await connection();
 
     const foundPhoto = await Photo.findById(photoId);
 
-    const isInAlbum = foundPhoto.albums.some((photoAlbumId)=> photoAlbumId.toString() === albumId);
+    const isInAlbum = foundPhoto.albums.some(
+      (photoAlbumId) => photoAlbumId.toString() === albumId
+    );
 
     return isInAlbum;
-
-    
   } catch (error) {
-    throw Error("Error while checking if photo in album")
+    throw Error("Error while checking if photo in album");
   }
-
-}
+};
 
 export const isPhotoOwner = async (photoId, accountId) => {
   try {
@@ -64,8 +69,8 @@ export const isPhotoOwner = async (photoId, accountId) => {
 
     const existsAccount = await accountExists(accountId);
 
-    if(!existsAccount){
-      throw Error("Account not found")
+    if (!existsAccount) {
+      throw Error("Account not found");
     }
 
     const photo = await Photo.findById(photoId);
@@ -143,7 +148,7 @@ export const uploadPhotos = async (req, res) => {
 
       // If req.files has at least 1 not allowed file type
       if (hasInvalidFiles) {
-        // Filter the ones who actually haves allowed file types
+        // Filter the ones who actually have allowed file types
         const filteredFiles = req.files.filter((file) =>
           allowedPhotosFileTypes.includes(file.mimetype)
         );
@@ -163,11 +168,30 @@ export const uploadPhotos = async (req, res) => {
         !(await canUploadToAlbum(session.user.accountId, albumId))
       ) {
         return res.status(401).json({ message: "Unauthorized" });
-      }
-      else if(!albumId){
-        const exists = await accountExists(session.user.accountId)
+      } else if (!albumId) {
+        const exists = await accountExists(session.user.accountId);
 
-        if(!exists){return res.status(404).json({message:"Account not found"})}
+        if (!exists) {
+          return res.status(404).json({ message: "Account not found" });
+        }
+      }
+
+      let uploadSize = 0;
+
+      for (const file of filesToUpload) {
+        uploadSize += file.size;
+      }
+
+      const totalSpace = 1e8; // 100 MB in Bytes
+
+      const consumedSpace = await calculateFolderSize(
+        `/users/${session.user.accountId}`
+      );
+
+      const availableSpace = totalSpace - consumedSpace;
+
+      if (!(uploadSize <= availableSpace)) {
+        return res.status(400).json({ message: "Full" });
       }
 
       let uploadedPhotos = await Promise.all(
@@ -196,33 +220,23 @@ export const uploadPhotos = async (req, res) => {
       uploadedPhotos = await Photo.create(uploadedPhotos);
 
       if (albumId) {
-        await Album.findByIdAndUpdate(
-          { _id: albumId },
-          { updated_at: new Date() }
-        );
+        await updateAlbumLastModification(albumId, new Date());
       }
 
-      return res
-        .status(200)
-        .json({
-          photos: uploadedPhotos.map(
-            ({
-              _id,
-              author_account_id,
-              albums,
-              filename,
-              url,
-              uploaded_at,
-            }) => ({
-              id: _id.toString(),
-              author_account_id,
-              albums,
-              filename,
-              url,
-              uploaded_at,
-            })
-          ),
-        });
+      const photos = uploadedPhotos.map(
+        ({ _id, author_account_id, albums, filename, url, uploaded_at }) => ({
+          id: _id.toString(),
+          author_account_id,
+          albums,
+          filename,
+          url,
+          uploaded_at,
+        })
+      );
+
+      return res.status(200).json({
+        photos,
+      });
     });
   } catch (error) {
     return res
@@ -231,49 +245,62 @@ export const uploadPhotos = async (req, res) => {
   }
 };
 
-export const addExistentPhotoToAlbum = async(req, res)=>{
-
+export const addExistentPhotoToAlbum = async (req, res) => {
   try {
     const session = await getServerSession(req, res, authOptions);
-    const isInAlbum = await isPhotoInAlbum(req.query.photoId, req.query.albumId);
+    const isInAlbum = await isPhotoInAlbum(
+      req.query.photoId,
+      req.query.albumId
+    );
 
-    if(isInAlbum){
-      return res.status(400).json({message:"Photo is already on album"})
+    if (isInAlbum) {
+      return res.status(400).json({ message: "Photo is already on album" });
     }
 
-    const ownsPhoto = await isPhotoOwner(req.query.photoId, session.user.accountId);
+    const ownsPhoto = await isPhotoOwner(
+      req.query.photoId,
+      session.user.accountId
+    );
 
-    if(!ownsPhoto){
-      return res.status(403).json({message:"You are not the owner of the photo"})
+    if (!ownsPhoto) {
+      return res
+        .status(403)
+        .json({ message: "You are not the owner of the photo" });
     }
 
-    const canUpload = await canUploadToAlbum(session.user.accountId, req.query.albumId);
+    const canUpload = await canUploadToAlbum(
+      session.user.accountId,
+      req.query.albumId
+    );
 
-    if(!canUpload){
-      return res.status(403).json({message:"You are not the owner or a contributor of the photo"})
+    if (!canUpload) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const updatedPhoto = await Photo.findByIdAndUpdate({_id: req.query.photoId}, {
-      $push:{albums: req.query.albumId}
+    const updatedPhoto = await Photo.findByIdAndUpdate(req.query.photoId, {
+      $push: { albums: req.query.albumId },
     });
 
+    await updateAlbumLastModification(req.query.albumId, new Date());
 
-    return res.status(200).json({photo: updatedPhoto})
-    
+    return res.status(200).json({ photo: updatedPhoto });
   } catch (error) {
-    return res.status(500).json({message:"An error occurred while attempting to add photo to album"})
-    
+    return res.status(500).json({
+      message: "An error occurred while attempting to add photo to album",
+    });
   }
-
-}
+};
 
 export const removePhotoFromAlbum = async (req, res) => {
   try {
     const session = await getServerSession(req, res, authOptions);
-    const isInAlbum = await isPhotoInAlbum(req.query.photoId, req.query.albumId);
+    const isInAlbum = await isPhotoInAlbum(
+      req.query.photoId,
+      req.query.albumId
+    );
 
-    if(!isInAlbum){
-      return res.status(404).json({message:"Photo not found in album"})
+    if (!isInAlbum) {
+      return res.status(404).json({ message: "Photo not found in album" });
     }
 
     const ownsAlbum = await isAlbumOwner(
@@ -285,30 +312,35 @@ export const removePhotoFromAlbum = async (req, res) => {
       session.user.accountId
     );
 
-    if(!(ownsAlbum || ownsPhoto)){
-      return res.status(403).json({message:"You are not the owner or a contributor of the photo"})
+    if (!(ownsAlbum || ownsPhoto)) {
+      return res.status(403).json({ message: "Unauthorized" });
     }
 
     // Removing album ID from the Photo
-    const updatedPhoto = await Photo.findByIdAndUpdate(
-      { _id: req.query.photoId },
-      {
-        $pull: { albums: req.query.albumId },
-      }
-    );
+    const updatedPhoto = await Photo.findByIdAndUpdate(req.query.photoId, {
+      $pull: { albums: req.query.albumId },
+    });
 
-    return res.status(200).json({message:"Photo removed from album successfully"});
+    await updateAlbumLastModification(req.query.albumId, new Date());
+
+    return res
+      .status(200)
+      .json({ message: "Photo removed from album successfully" });
   } catch (error) {
-    return res.status(500).json({message:"An error occurred while trying to remove Photo from Album."});
+    return res.status(500).json({
+      message: "An error occurred while trying to remove Photo from Album.",
+    });
   }
 };
 
 export const getFirstPhotoInAlbum = async (albumId) => {
   try {
-    const photo = await Photo.findOne({ albums: albumId }).sort('created_at').exec();
+    const photo = await Photo.findOne({ albums: albumId })
+      .sort("created_at")
+      .exec();
     return photo;
   } catch (error) {
     console.log(error);
-    throw new Error('Error retrieving first photo in album');
+    throw new Error("Error retrieving first photo in album");
   }
 };
