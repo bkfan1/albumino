@@ -38,10 +38,12 @@ export default function PhotoVisorHeader({}) {
     currentPhoto.author_account_id === session.user.accountId;
 
   const router = useRouter();
-  const { query } = router;
+  const { pathname, query } = router;
   const { albumId } = query;
 
   const toast = useToast();
+
+  const hideHeaderMenu = pathname === "/album/create"
 
   const handleDeletePhoto = async () => {
     try {
@@ -145,7 +147,7 @@ export default function PhotoVisorHeader({}) {
         </ButtonGroup>
 
         <ButtonGroup variant={"link"} spacing={4}>
-          <Tooltip label="Details">
+          {/* <Tooltip label="Details">
             <IconButton
               icon={
                 <BsInfoCircle
@@ -155,8 +157,8 @@ export default function PhotoVisorHeader({}) {
                 />
               }
             />
-          </Tooltip>
-          {!inAlbumPage ? (
+          </Tooltip> */}
+          {!inAlbumPage && !hideHeaderMenu ? (
             <Tooltip label="Delete this photo">
               <IconButton
                 icon={<BsTrash />}
@@ -171,7 +173,9 @@ export default function PhotoVisorHeader({}) {
             ""
           )}
 
-          <Menu>
+          {!hideHeaderMenu ? (
+            <>
+            <Menu>
             <Tooltip label="More options">
               <MenuButton
                 as={Button}
@@ -215,6 +219,8 @@ export default function PhotoVisorHeader({}) {
               )}
             </MenuList>
           </Menu>
+            </>
+          ) : ""}
         </ButtonGroup>
       </Flex>
     </>
