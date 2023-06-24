@@ -52,6 +52,7 @@ export async function getServerSideProps({ req, res, query }) {
     }
 
     const foundInvitation = await AlbumInvitation.findById(query.invitationId);
+    const albumDetails = await getAlbum(foundInvitation.album_id);
 
     if (session) {
       const isAuthor = await isInvitationAuthor(
@@ -73,8 +74,6 @@ export async function getServerSideProps({ req, res, query }) {
         };
       }
     }
-
-    const albumDetails = await getAlbum(foundInvitation.album_id);
 
     const author = await Account.findById(albumDetails.author_account_id);
 
