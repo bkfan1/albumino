@@ -8,37 +8,47 @@ export const authOptions = {
   providers: [
     Credentials({
       async authorize(credentials, req) {
-        const db = await connection();
-        const account = await Account.findOne({ email: credentials.email });
+        try {
+          const db = await connection();
+          const account = await Account.findOne({ email: credentials.email });
 
-        if (account) {
-          const match = await compare(credentials.password, account.password);
-          if (match) {
-            return { accountId: account._id.toString() ,email: account.email, name: `${account.firstname} ${account.lastname}`};
+          if (!account) {
+            return null;
           }
+
+          const match = await compare(credentials.password, account.password);
+
+          if (!match) {
+            return null;
+          }
+
+          return {
+            accountId: account._id.toString(),
+            email: account.email,
+            name: `${account.firstname} ${account.lastname}`,
+          };
+        } catch (error) {
           return null;
         }
-
-        return null;
       },
     }),
   ],
 
   callbacks: {
-    async jwt({token, user}){
-      return {...token, ...user}
+    async jwt({ token, user }) {
+      return { ...token, ...user };
     },
-    async session({session, user, token}){
+    async session({ session, user, token }) {
       session.user.accountId = token.accountId;
       return session;
-    }
+    },
   },
 
   pages: {
     signIn: "/signin",
-    error: "/error",
-  }
-
+    signOut: "/",
+    error: "/500",
+  },
 };
 
 export default NextAuth(authOptions);
