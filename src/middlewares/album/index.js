@@ -34,7 +34,7 @@ export const isAlbumOwner = async (albumId, accountId) => {
       throw Error("Account not found");
     }
 
-    const album = await Album.findById({ _id: albumId });
+    const album = await Album.findById(albumId);
     const isOwner = album.author_account_id.toString() === accountId;
 
     return isOwner;
@@ -232,22 +232,35 @@ export const removeAlbumContributor = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const updatedAlbum = await Album.findByIdAndUpdate(
-      { _id: req.query.albumId },
-      {
-        $pull: { contributors: req.query.contributorId },
-      }
-    );
+    const updatedAlbum = await Album.findByIdAndUpdate(req.query.albumId, {
+      $pull: { contributors: req.query.contributorId },
+    });
 
     return res
       .status(200)
       .json({ message: "Album contributor removed successfully" });
   } catch (error) {
-    return res
-      .status(500)
-      .json({
-        message:
-          "An error occurred while attempting to remove album contributor",
-      });
+    return res.status(500).json({
+      message: "An error occurred while attempting to remove album contributor",
+    });
   }
 };
+
+export const updateAlbumLastModification = async (albumId, date)=>{
+  try {
+    const db = await connection();
+    const existsAlbum = await albumExists(albumId);
+
+    if(!existsAlbum){
+      throw Error("Album not found")
+    }
+
+    const updatedAlbum = await Album.findByIdAndUpdate(albumId, {updated_at: date});
+
+    return true;
+
+  } catch (error) {
+    throw Error("An error occurred while attempting to update album last modification")
+  }
+
+}
