@@ -18,7 +18,7 @@ export default function PhotosPage({ photos }) {
     <>
       <Layout>
         <Flex as={"main"} flex={6} paddingRight={4} paddingTop={2}>
-          <MasonryGrid></MasonryGrid>
+          <MasonryGrid/>
         </Flex>
       </Layout>
     </>
