@@ -8,13 +8,12 @@ export const PhotoVisorProvider = ({ children }) => {
   const { isOpen, onClose, onOpen } = useDisclosure();
 
   const [visorPhotos, setVisorPhotos] = useState([]);
-  const [currentPhoto, setCurrentPhoto] = useState();
+  const [currentPhoto, setCurrentPhoto] = useState({});
 
   const [selectedPhotos, setSelectedPhotos] = useState([]);
 
   const [showAvailableAlbums, setShowAvailableAlbums] = useState(false);
   const [availableAlbums, setAvailableAlbums] = useState([]);
-  
 
   const handleSetNextPhoto = () => {
     const currentPhotoIndex = visorPhotos.findIndex(
