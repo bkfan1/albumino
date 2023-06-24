@@ -94,7 +94,7 @@ export async function getServerSideProps({ req, res }) {
   try {
     const session = await getServerSession(req, res, authOptions);
 
-    const albums = await getAccountAlbums(session.user.accountId);
+    const albums = await getAccountAlbums(session.user.accountId, "own");
 
     if (!albums) {
       return { redirect: { destination: "/404", permanent: false } };
