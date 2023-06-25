@@ -12,13 +12,17 @@ export default function PhotosPage({ photos }) {
 
   useEffect(() => {
     setVisorPhotos(photos);
+
+    return () => {
+      setVisorPhotos([]);
+    };
   }, [photos, setVisorPhotos]);
 
   return (
     <>
       <Layout>
         <Flex as={"main"} flex={6} paddingRight={4} paddingTop={2}>
-          <MasonryGrid/>
+          <MasonryGrid />
         </Flex>
       </Layout>
     </>
