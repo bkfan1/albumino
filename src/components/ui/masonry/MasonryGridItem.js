@@ -75,14 +75,14 @@ export default function MasonryGridItem({ data }) {
         >
           <Skeleton isLoaded={isMounted} rounded={"md"}>
             <Tooltip
-              label={selected ? "Unselect this photo" : "Select this photo"}
+              label={hideCheckBox ? "Delete photo" : selected ? "Unselect this photo" : "Select this photo"}
             >
               {hideCheckBox ? (
                 <IconButton
                   onClick={handleRemovePhotoToUpload}
                   icon={<BsXLg />}
                   position={"absolute"}
-                  variant={"ghost"}
+                  size={"xs"}
                   rounded={"full"}
                   margin={2}
                 />
