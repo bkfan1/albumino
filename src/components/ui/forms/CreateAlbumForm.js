@@ -75,7 +75,7 @@ export default function CreateAlbumForm() {
       // Since we can take advantage of MasonryGrid to display the uploading photos
       // for previewing them in this form (and saving us the need of create another component for this purpose)
 
-      // NOTE: I dont think that the described approach above is good to handle this form, but
+      // NOTE: I dont think that the described approach above is a good one to handle this form, but
       // I didn't came with a best solution, so... feel free to open an issue in the app's repository
       // about how to change this approach to a better one
 
