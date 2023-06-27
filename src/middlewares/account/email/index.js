@@ -1,3 +1,9 @@
+import { accountExists } from "..";
+import Account from "@/database/models/Account";
+import connection from "@/database/connection";
+import { getServerSession } from "next-auth";
+import { updateAccountEmailSchema } from "@/utils/joi/schemas/account/email";
+
 export const updateAccountEmail = async (req, res) => {
     try {
       const session = await getServerSession(req, res, authOptions);
@@ -7,28 +13,16 @@ export const updateAccountEmail = async (req, res) => {
       if (!existsAccount) {
         return res.status(404).json({ message: "Account not found" });
       }
-  
-      if (
-        !regex.email.test(req.body.oldEmail) ||
-        !(
-          regex.email.test(req.body.newEmail) ||
-          !regex.email.test(req.body.confirmNewEmail)
-        )
-      ) {
-        return res.status(400).json({ message: "Invalid credentials" });
+
+      const validationResult = await updateAccountEmailSchema.validateAsync(req.body);
+
+      if(validationResult.error){
+        return res.status(400).json({});
       }
+
+      const db = await connection();
   
       const account = await Account.findById(session.user.accountId);
-  
-      if (!(account.email === req.body.oldEmail)) {
-        return res.status(400).json({ message: "" });
-      }
-  
-      if (!(req.body.newEmail === req.body.confirmNewEmail)) {
-        return res
-          .status(400)
-          .json({ message: "New email and confirm email doesn't match" });
-      }
   
       const updatedAccount = await Account.findByIdAndUpdate(
         session.user.accountId,
