@@ -1,45 +1,54 @@
+import { getServerSession } from "next-auth";
+import { accountExists } from "..";
+import Account from "@/database/models/Account";
+import { compare, hash } from "bcrypt";
+import { updatePasswordSchema } from "@/utils/joi/schemas/account/password";
 
 export const updateAccountPassword = async (req, res) => {
-    try {
-      const session = await getServerSession(req, res, authOptions);
-      const existsAccount = await accountExists(session.user.accountId);
-  
-      if (!existsAccount) {
-        return res.status(404).json({ message: "Account not found" });
-      }
-  
-      if (!(req.body.newPassword === req.body.confirmNewPassword)) {
-        return res
-          .status(400)
-          .json({ message: "New password and confirm new password dont match" });
-      }
-  
-      const account = await Account.findById(session.user.accountId);
-  
-      const match = await compare(req.body.oldPassword, account.password);
-  
-      if (!match) {
-        return res.status(400).json({ message: "Passwords dont match" });
-      }
-  
-      const newPasswordHash = await hash(req.body.newPassword, 10);
-  
-      const updatedAccount = await Account.findByIdAndUpdate(
-        session.user.accountId,
-        {
-          password: newPasswordHash,
-        }
-      );
-  
-      return res.status(200).json({ message: "Password updated successfully" });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({
-        message: "An error occurred while trying to update account password",
-      });
+  try {
+    const session = await getServerSession(req, res, authOptions);
+    const existsAccount = await accountExists(session.user.accountId);
+
+    if (!existsAccount) {
+      return res.status(404).json({ message: "Account not found" });
     }
-  };
-  
-  
-  
-  
+
+    const validationResult = await updatePasswordSchema.validateAsync(req.body);
+
+    if(validationResult.error){
+      return res.status(400).json({});
+    }
+
+    const account = await Account.findById(session.user.accountId);
+
+    const matchWithAccountPassword = await compare(req.body.oldPassword, account.password);
+
+    // if the incoming value in req.body.oldPassword is not the same as the account current password
+    if (!(matchWithAccountPassword)) {
+      return res.status(400).json({ message: "Passwords dont match" });
+    }
+
+    const isCurrentPasswordMatchingNewPassword = await compare(req.body.newPassword, account.password)
+
+    // If the new password it's the same as the account current password, then...
+    if(isCurrentPasswordMatchingNewPassword){
+      return res.status(400).json({message:""})
+    }
+
+    const newPasswordHash = await hash(req.body.newPassword, 10);
+
+    const updatedAccount = await Account.findByIdAndUpdate(
+      session.user.accountId,
+      {
+        password: newPasswordHash,
+      }
+    );
+
+    return res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "An error occurred while trying to update account password",
+    });
+  }
+};
