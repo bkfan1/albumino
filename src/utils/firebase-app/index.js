@@ -21,9 +21,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const storage = getStorage(app);
 
-export const uploadFile = async (url, fileBuffer, metadata) => {
+export const uploadFile = async (path, fileBuffer, metadata) => {
   try {
-    const storageRef = ref(storage, url);
+    const storageRef = ref(storage, path);
     const snapshot = await uploadBytes(storageRef, fileBuffer, metadata);
 
     return snapshot;
@@ -35,15 +35,13 @@ export const uploadFile = async (url, fileBuffer, metadata) => {
 export const deleteFile = async (fileURL) => {
   try {
     const storageRef = ref(storage, fileURL);
-    await deleteObject(storageRef);
-
-    return true;
+    return await deleteObject(storageRef);
   } catch (error) {
     throw Error("An error ocurred while attempting to delete file");
   }
 };
 
-export const calculateFolderSize = async (folderPath) => {
+export const getFolderSize = async (folderPath) => {
   try {
     const folderRef = ref(storage, folderPath);
 
@@ -60,7 +58,9 @@ export const calculateFolderSize = async (folderPath) => {
     );
 
     return totalFolderSize;
+
   } catch (error) {
-    throw Error("An error occurred while trying to calculate folder size");
+    console.log(error)
+    throw Error("An error occurred while trying to get folder size");
   }
 };
