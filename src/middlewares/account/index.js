@@ -2,12 +2,12 @@ import connection from "@/database/connection";
 import Account from "@/database/models/Account";
 import Album from "@/database/models/Album";
 import Photo from "@/database/models/Photo";
-import accountSchema from "@/utils/joi/schemas/account";
-import { compare, hash } from "bcrypt";
+import { hash } from "bcrypt";
 import { getFirstPhotoInAlbum } from "../photo";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { calculateFolderSize } from "@/utils/firebase-app";
+import { accountSchema } from "@/utils/joi/schemas/account";
 
 export const accountExists = async (accountId) => {
   try {
@@ -22,7 +22,11 @@ export const accountExists = async (accountId) => {
 
 export const createAccount = async (req, res) => {
   try {
-    await accountSchema.validateAsync(req.body);
+    const validationResult = await accountSchema.validateAsync(req.body);
+
+    if (validationResult.error) {
+      return res.status(400).json({});
+    }
 
     const db = await connection();
 
@@ -64,7 +68,7 @@ export const getAccountPhotos = async (accountId) => {
 
     const photos = await Photo.find({
       author_account_id: accountId,
-    }).sort({ uploaded_at: "desc" });
+    });
 
     const data = photos.map(({ _id, author_account_id, albums, url }) => ({
       id: _id.toString(),
@@ -141,7 +145,7 @@ export const sendAccountAlbums = async (req, res) => {
 
     return res.status(200).json({ albums });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return res.status(500).json({
       message: "An error occurred while attempting to fetch account albums",
     });
@@ -158,7 +162,7 @@ export const getAccountStorageData = async (req, res) => {
       return res.status(404).json({ message: "Account not found" });
     }
 
-    const folderPath = `/users/${session.user.accountId}`;
+    const folderPath = `/users/${session.user.accountId}/`;
 
     // Getting used storage value in bytes
     const usedStorageInBytes = await calculateFolderSize(folderPath);
@@ -180,10 +184,8 @@ export const getAccountStorageData = async (req, res) => {
     return res.status(200).json({ storage });
   } catch (error) {
     console.log(error);
-    return res
-      .status(500)
-      .json({
-        message: "An error occurred while obtaining account storage data",
-      });
+    return res.status(500).json({
+      message: "An error occurred while obtaining account storage data",
+    });
   }
 };
