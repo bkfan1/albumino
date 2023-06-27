@@ -2,7 +2,7 @@ import { regex } from "@/utils/regex";
 
 const Joi = require("joi");
 
-const accountSchema = Joi.object({
+export const accountSchema = Joi.object({
   email: Joi.string().email().required(),
 
   password: Joi.string().min(8).required(),
@@ -12,4 +12,3 @@ const accountSchema = Joi.object({
   lastname: Joi.string().pattern(regex.lastname).required(),
 });
 
-export default accountSchema;
