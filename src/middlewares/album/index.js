@@ -137,6 +137,7 @@ export const deleteAlbum = async (req, res) => {
 
     const db = await connection();
 
+    // Remove the deleted album ID from "albums" attribute in "Photo" model
     const updatedPhotos = await Photo.updateMany(
       {
         albums: req.query.albumId,
@@ -203,7 +204,9 @@ export const canUploadToAlbum = async (accountId, albumId) => {
       isAlbumContributor(albumId, accountId),
     ]);
 
-    return isOwner || isContributor;
+    const canUpload = isOwner || isContributor;
+
+    return canUpload;
   } catch (error) {
     throw Error("Error while checking album permissions.");
   }
@@ -225,6 +228,8 @@ export const removeAlbumContributor = async (req, res) => {
       req.query.contributorId
     );
 
+    // Checking if the user making the request its the same as the contributor
+    // who is trying to remove
     const isTheSameContributor =
       session.user.accountId === req.query.contributorId;
 
@@ -246,21 +251,23 @@ export const removeAlbumContributor = async (req, res) => {
   }
 };
 
-export const updateAlbumLastModification = async (albumId, date)=>{
+export const updateAlbumLastModification = async (albumId, date) => {
   try {
     const db = await connection();
     const existsAlbum = await albumExists(albumId);
 
-    if(!existsAlbum){
-      throw Error("Album not found")
+    if (!existsAlbum) {
+      throw Error("Album not found");
     }
 
-    const updatedAlbum = await Album.findByIdAndUpdate(albumId, {updated_at: date});
+    const updatedAlbum = await Album.findByIdAndUpdate(albumId, {
+      updated_at: date,
+    });
 
     return true;
-
   } catch (error) {
-    throw Error("An error occurred while attempting to update album last modification")
+    throw Error(
+      "An error occurred while attempting to update album last modification"
+    );
   }
-
-}
+};
