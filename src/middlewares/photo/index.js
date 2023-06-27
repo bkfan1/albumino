@@ -2,11 +2,7 @@ import connection from "@/database/connection";
 import Photo from "@/database/models/Photo";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import {
-  calculateFolderSize,
-  deleteFile,
-  uploadFile,
-} from "@/utils/firebase-app";
+import { getFolderSize, deleteFile, uploadFile } from "@/utils/firebase-app";
 import { getDownloadURL } from "firebase/storage";
 import { getServerSession } from "next-auth";
 import { accountExists } from "../account";
@@ -19,11 +15,12 @@ import {
   updateAlbumLastModification,
 } from "../album";
 import { allowedPhotosFileTypes, hasInvalidFileType } from "@/utils/validation";
+import { getAvailableSpace } from "../account/storage";
 
 export const photoExists = async (photoId) => {
   try {
     const db = await connection();
-    const photo = await Photo.findById({ _id: photoId });
+    const photo = await Photo.findById(photoId);
 
     return photo ? true : false;
   } catch (error) {
@@ -109,15 +106,48 @@ export const deletePhoto = async (req, res) => {
     const url = `users/${author_account_id}/${filename}`;
 
     // Delete photo file from storage
-    const result = await deleteFile(url);
-
-    // await db.disconnect();
+    await deleteFile(url);
 
     return res.status(200).json({ message: "Photo deleted successfully" });
   } catch (error) {
     return res
       .status(500)
       .json({ message: "An error occurred while attempting to delete photo" });
+  }
+};
+
+export const calculateUploadSize = (files) => {
+  try {
+    let uploadSize = 0;
+
+    for (const file of files) {
+      uploadSize += file.size;
+    }
+
+    return uploadSize;
+  } catch (error) {
+    throw "An error occurred while calculating the upload size";
+  }
+};
+
+export const uploadPhotoToStorage = async (path, file) => {
+  try {
+    const newFileName = v4();
+    const filePath = `${path}${filename}`;
+
+    const metadata = {
+      contentType: file.mimetype,
+    };
+
+    const snapshot = await uploadFile(filePath, file.buffer, metadata);
+    const photoURL = await getDownloadURL(snapshot.ref);
+
+    return {
+      photoFileName: newFileName,
+      photoURL,
+    };
+  } catch (error) {
+    throw Error("An error occurred while trying to upload photo to storage");
   }
 };
 
@@ -146,7 +176,7 @@ export const uploadPhotos = async (req, res) => {
         allowedPhotosFileTypes
       );
 
-      // If req.files has at least 1 not allowed file type
+      // If req.files has at least one file with a not allowed filetype
       if (hasInvalidFiles) {
         // Filter the ones who actually have allowed file types
         const filteredFiles = req.files.filter((file) =>
@@ -168,7 +198,10 @@ export const uploadPhotos = async (req, res) => {
         !(await canUploadToAlbum(session.user.accountId, albumId))
       ) {
         return res.status(401).json({ message: "Unauthorized" });
-      } else if (!albumId) {
+      }
+      // If there is no albumId, then the user its just trying to upload
+      // photos without album association
+      else if (!albumId) {
         const exists = await accountExists(session.user.accountId);
 
         if (!exists) {
@@ -176,49 +209,40 @@ export const uploadPhotos = async (req, res) => {
         }
       }
 
-      let uploadSize = 0;
-
-      for (const file of filesToUpload) {
-        uploadSize += file.size;
-      }
-
-      const totalSpace = 1e8; // 100 MB in Bytes
-
-      const consumedSpace = await calculateFolderSize(
-        `/users/${session.user.accountId}`
-      );
-
-      const availableSpace = totalSpace - consumedSpace;
+      const uploadSize = calculateUploadSize(filesToUpload);
+      const availableSpace = await getAvailableSpace(session.user.accountId);
 
       if (!(uploadSize <= availableSpace)) {
-        return res.status(400).json({ message: "Full" });
+        return res.status(400).json({ message: "Account storage is full" });
       }
 
       let uploadedPhotos = await Promise.all(
         filesToUpload.map(async (file) => {
-          const filename = v4();
-          const fileURL = `users/${session.user.accountId}/${filename}`;
-
-          const metadata = {
-            contentType: file.mimetype,
-          };
-
-          const snapshot = await uploadFile(fileURL, file.buffer, metadata);
-          const photoURL = await getDownloadURL(snapshot.ref);
+          const accountPhotosPath = `users/${session.user.accountId}/`;
+          
+          const { photoFileName, photoURL } = await uploadPhotoToStorage(
+            accountPhotosPath,
+            file
+          );
+          
 
           return {
             author_account_id: session.user.accountId,
             albums: albumId ? [albumId] : [],
-            filename,
+
+            filename: photoFileName,
             url: photoURL,
+
             uploaded_at: new Date(),
           };
         })
       );
 
       const db = await connection();
+
       uploadedPhotos = await Photo.create(uploadedPhotos);
 
+      // If the uploading files are for an album, update album last modification date
       if (albumId) {
         await updateAlbumLastModification(albumId, new Date());
       }
