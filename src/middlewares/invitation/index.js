@@ -8,7 +8,11 @@ import AlbumInvitation from "@/database/models/AlbumInvitation";
 
 import { createTransport } from "nodemailer";
 import Account from "@/database/models/Account";
-import { domain, generateInvitationHTMLString, generateInvitationLink } from "@/utils/strings";
+import {
+  domain,
+  generateInvitationHTMLString,
+  generateInvitationLink,
+} from "@/utils/strings";
 import { accountExists } from "../account";
 
 export const invitationExists = async (invitationId) => {
@@ -16,7 +20,6 @@ export const invitationExists = async (invitationId) => {
     const foundInvitation = await AlbumInvitation.findById(invitationId);
 
     return foundInvitation ? true : false;
-
   } catch (error) {
     throw Error("An error occurred while checking invitation existence");
   }
@@ -32,8 +35,8 @@ export const isInvitationAuthor = async (invitationId, accountId) => {
 
     const existsAccount = await accountExists(accountId);
 
-    if(!existsAccount){
-      throw Error("Account not found")
+    if (!existsAccount) {
+      throw Error("Account not found");
     }
 
     const foundInvitation = await AlbumInvitation.findById(invitationId);
@@ -70,7 +73,7 @@ export const updateAlbumInvitation = async (req, res) => {
 
     // Only users that are not in the album can accept the invitation
 
-    if(isAuthor || isContributor){
+    if (isAuthor || isContributor) {
       return res.status(400).json({
         message:
           "Only users that are not in the album can accept the invitation",
@@ -104,10 +107,10 @@ export const updateAlbumInvitation = async (req, res) => {
     });
 
     // ...And update the album related to the current invitation by adding the new contributor account ID
-    await Album.findByIdAndUpdate(
-      req.query.albumId,
-      { $push: { contributors: session.user.accountId } }
-    );
+    // to "contributors" attribute
+    await Album.findByIdAndUpdate(req.query.albumId, {
+      $push: { contributors: session.user.accountId },
+    });
 
     return res.status(200).json({ message: "Invitation updated succesfully" });
   } catch (error) {
@@ -172,10 +175,14 @@ export const createAlbumInvitation = async (req, res) => {
       created_at: new Date(),
     });
 
-    const invitationLink = generateInvitationLink(domain, createdInvitation._id.toString());
+    const invitationLink = generateInvitationLink(
+      domain,
+      createdInvitation._id.toString()
+    );
 
     // Send an email with a link to the invitation if it is required
     if (req.body.sendEmail === true) {
+      // Getting the details about the album and his album
       const author = await Account.findById(session.user.accountId);
       const album = await Album.findById(req.query.albumId);
 
@@ -191,6 +198,7 @@ export const createAlbumInvitation = async (req, res) => {
         link: invitationLink,
       };
 
+      // Sending an email that contains a invitation link to join the album
       const sentEmail = await sendEmail(data);
 
       // If email was not sent, return 500 status code
