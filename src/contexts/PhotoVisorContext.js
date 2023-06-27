@@ -1,9 +1,14 @@
 import { useDisclosure } from "@chakra-ui/react";
-import { createContext, useState } from "react";
+import { useRouter } from "next/router";
+import { createContext, useEffect, useState } from "react";
 
 export const PhotoVisorContext = createContext();
 
 export const PhotoVisorProvider = ({ children }) => {
+
+  const router = useRouter();
+  const {pathname} = router;
+
   // For showing or hiding the PhotoVisor component in the UI
   const { isOpen, onClose, onOpen } = useDisclosure();
 
@@ -14,6 +19,16 @@ export const PhotoVisorProvider = ({ children }) => {
 
   const [showAvailableAlbums, setShowAvailableAlbums] = useState(false);
   const [availableAlbums, setAvailableAlbums] = useState([]);
+
+  useEffect(()=>{
+
+    const updateSelectPhotos = ()=>{
+      setSelectedPhotos([]);
+    }
+
+    updateSelectPhotos();
+
+  }, [pathname])
 
   const handleSetNextPhoto = () => {
     const currentPhotoIndex = visorPhotos.findIndex(
