@@ -1,8 +1,11 @@
 import {
+  Box,
   Button,
+  HStack,
   Heading,
   Image,
   Skeleton,
+  Text,
   VStack,
   useToast,
 } from "@chakra-ui/react";
@@ -21,11 +24,12 @@ export default function AlbumInvitationForm({ details }) {
   const toast = useToast();
 
   const onSubmit = async () => {
-    if (status === "unauthenticated") {
-      return router.push("/signin");
-    }
-
     try {
+
+      if (status === "unauthenticated") {
+        return router.push("/signin");
+      }
+
       const data = {
         status: "accepted",
       };
@@ -46,8 +50,10 @@ export default function AlbumInvitationForm({ details }) {
       await submitPromise;
 
       return router.push(`/album/${album.id}`);
+
     } catch (error) {
-      console.log(error)
+      console.log(error);
+
       toast({
         status: "error",
         title: "Error",
@@ -61,35 +67,52 @@ export default function AlbumInvitationForm({ details }) {
       <Skeleton isLoaded={isMounted}>
         <VStack
           as={"form"}
-          maxWidth={"sm"}
+          width={"360px"}
           onSubmit={onSubmit}
+          rounded={"md"}
           borderColor={"lightgray"}
-          padding={2}
+          py={4}
+          px={2}
           gap={1}
+          my={2}
+
+          backgroundColor={"gray.50"}
         >
-          <Heading size={"lg"} textAlign={"center"}>
-            {author.name} invited you to:
-          </Heading>
-          <VStack>
-            {album.cover ? (
-              <Image
-                src={album.cover}
-                width={"100%"}
-                height={"auto"}
-                alt="Album cover"
-                rounded={"md"}
-              />
-            ) : (
-              ""
-            )}
-            <Heading size={"lg"} textAlign={"center"}>
-              {album.name}
-            </Heading>
+          <VStack width={"100%"}>
+            <Box
+              width={"80px"}
+              backgroundColor={"lightgray"}
+              borderRadius={"md"}
+              alignItems={"center"}
+              justifyContent={"center"}
+            >
+              {album.cover ? (
+                <Image
+                  src={album.cover}
+                  width={"100%"}
+                  height={"auto"}
+                  alt="Album cover"
+                  rounded={"md"}
+                />
+              ) : (
+                ""
+              )}
+            </Box>
+
+            <VStack width={"100%"}>
+              <Heading size={"sm"} textAlign={"center"} fontWeight={"normal"}>
+                {author.name} invited you to join
+              </Heading>
+
+              <Heading size={"lg"} textAlign={"center"}>
+                {album.name}
+              </Heading>
+            </VStack>
           </VStack>
           <Button
             type="submit"
             width={"100%"}
-            colorScheme="green"
+            colorScheme="blue"
             isDisabled={status === "loading" ? true : false}
           >
             Accept invitation
