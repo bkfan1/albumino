@@ -1,11 +1,9 @@
 import { Box, Grid } from "@chakra-ui/react";
 import MasonryGridItem from "./MasonryGridItem";
-import { useContext } from "react";
-import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
+import { useContext, useEffect, useState } from "react";
+import { PhotoVisorProvider } from "@/contexts/PhotoVisorContext";
 
-export default function MasonryGrid({}) {
-  const { visorPhotos } = useContext(PhotoVisorContext);
-
+export default function MasonryGrid({ photos }) {
   return (
     <>
       <Box width={"100%"}>
@@ -14,9 +12,14 @@ export default function MasonryGrid({}) {
           gap={4}
           paddingBottom={4}
         >
-          {visorPhotos.map((photo) => (
-            <MasonryGridItem key={photo.id} data={photo} />
-          ))}
+          <PhotoVisorProvider>
+            {photos.map((photo) => (
+              <MasonryGridItem
+                key={photo.id}
+                data={photo}
+              />
+            ))}
+          </PhotoVisorProvider>
         </Grid>
       </Box>
     </>
