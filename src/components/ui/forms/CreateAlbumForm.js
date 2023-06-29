@@ -20,15 +20,13 @@ import { BsCheckLg } from "react-icons/bs";
 import { MdOutlineAddPhotoAlternate } from "react-icons/md";
 import MasonryGrid from "../masonry/MasonryGrid";
 import { nanoid } from "nanoid";
-import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 import axios from "axios";
-import { hasInvalidFileType } from "@/utils/validation";
 import { allowedPhotosFileTypes } from "@/utils/validation";
 
 export default function CreateAlbumForm() {
-  const { visorPhotos, setVisorPhotos, setCurrentPhoto } =
-    useContext(PhotoVisorContext);
   const inputFileRef = createRef();
+
+  const [loadedFiles, setLoadedFiles] = useState([]);
 
   const { register, handleSubmit } = useForm();
 
@@ -39,31 +37,23 @@ export default function CreateAlbumForm() {
   };
 
   const handleInputFileOnChange = (e) => {
-    let files = [...e.target.files];
-    const updatedVisorPhotos = [...visorPhotos];
+    const newFiles = [];
 
-    const hasInvalidFiles = hasInvalidFileType(files, allowedPhotosFileTypes);
+    for (const file of e.target.files) {
+      if (allowedPhotosFileTypes.includes(file.type)) {
+        const fileObject = {
+          id: nanoid(),
+          file,
+          url: URL.createObjectURL(file),
+        };
 
-    if (hasInvalidFiles) {
-      files = files.filter((file) =>
-        allowedPhotosFileTypes.includes(file.type)
-      );
+        newFiles.push(fileObject);
+      }
     }
 
-    for (const file of files) {
-      const url = URL.createObjectURL(file);
-      const id = nanoid();
+    const updatedLoadedFiles = [...newFiles, ...loadedFiles];
 
-      const photoToUpload = {
-        id,
-        file,
-        url,
-      };
-
-      updatedVisorPhotos.push(photoToUpload);
-    }
-
-    setVisorPhotos(updatedVisorPhotos);
+    setLoadedFiles(updatedLoadedFiles);
   };
 
   const onSubmit = async (data) => {
@@ -71,19 +61,11 @@ export default function CreateAlbumForm() {
       const res = await axios.post(`/api/albums`, { name: data.name });
       const albumId = res.data.albumId;
 
-      // We are going to use the photos from visorPhotos state variable
-      // Since we can take advantage of MasonryGrid to display the uploading photos
-      // for previewing them in this form (and saving us the need of create another component for this purpose)
-
-      // NOTE: I dont think that the described approach above is a good one to handle this form, but
-      // I didn't came with a best solution, so... feel free to open an issue in the app's repository
-      // about how to change this approach to a better one
-
-      if (visorPhotos.length > 0) {
+      if (loadedFiles.length > 0) {
         const formData = new FormData();
 
-        for (const photo of visorPhotos) {
-          const file = photo.file;
+        for (const fileObject of loadedFiles) {
+          const file = fileObject.file;
           console.log(file);
 
           formData.append("files", file);
@@ -100,10 +82,8 @@ export default function CreateAlbumForm() {
         status: "success",
         title: "Album created succesfully",
       });
-
-      setVisorPhotos([]);
-      setCurrentPhoto({});
     } catch (error) {
+      console.log(error);
       toast({
         status: "error",
         title: "An error occurred while trying to create album",
@@ -128,6 +108,11 @@ export default function CreateAlbumForm() {
               fontSize={"2xl"}
               {...register("name", {
                 required: { value: true, message: "This field is required" },
+                minLength: {
+                  value: 1,
+                  message: "Album name has to be at least 1 character long",
+                },
+                maxLength: { value: 256, message: "" },
               })}
             />
           </FormControl>
@@ -137,7 +122,7 @@ export default function CreateAlbumForm() {
                 onClick={handleInputFileOnClick}
                 icon={<MdOutlineAddPhotoAlternate />}
                 rounded={"full"}
-                display={visorPhotos.length > 0 ? "flex" : "none"}
+                display={loadedFiles.length > 0 ? "flex" : "none"}
               />
             </Tooltip>
             <Tooltip label="Create album">
@@ -149,20 +134,20 @@ export default function CreateAlbumForm() {
         <Flex
           width={"100%"}
           height={"100%"}
-          alignItems={visorPhotos.length === 0 && "center"}
-          justifyContent={visorPhotos.length === 0 && "center"}
+          alignItems={loadedFiles.length === 0 && "center"}
+          justifyContent={loadedFiles.length === 0 && "center"}
           py={6}
         >
-          {visorPhotos.length > 0 ? (
-            <MasonryGrid />
-          ) : (
+          {loadedFiles.length === 0 ? (
             <VStack>
-              <Image src={"/empty_state_album.svg"} alt="" />
+              <Image src="/empty_state_album.svg" alt="" />
               <Heading size={"md"}>Album is empty</Heading>
               <Button onClick={handleInputFileOnClick} colorScheme="blue">
-                Add photos
+                Upload photos
               </Button>
             </VStack>
+          ) : (
+            <MasonryGrid photos={loadedFiles} />
           )}
         </Flex>
 
