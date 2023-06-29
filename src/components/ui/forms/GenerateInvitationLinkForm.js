@@ -1,8 +1,5 @@
 import {
   Button,
-  Editable,
-  EditableInput,
-  EditablePreview,
   Flex,
   FormHelperText,
   Heading,
@@ -19,6 +16,7 @@ import { useForm } from "react-hook-form";
 export default function GenerateInvitationLinkForm() {
   const { handleSubmit } = useForm();
   const { onCopy, value, setValue, hasCopied } = useClipboard("");
+
   const router = useRouter();
   const toast = useToast();
   const { query } = router;
@@ -40,7 +38,6 @@ export default function GenerateInvitationLinkForm() {
 
       const res = await resPromise;
       setValue(res.data.invitationLink);
-      
     } catch (error) {
       toast({
         status: "error",
@@ -71,7 +68,9 @@ export default function GenerateInvitationLinkForm() {
             }}
             mr={2}
           />
-          <Button onClick={onCopy}>{hasCopied ? "Copied!" : "Copy"}</Button>
+          <Button onClick={onCopy} isDisabled={value === "" ? true : false}>
+            {hasCopied ? "Copied!" : "Copy"}
+          </Button>
         </Flex>
         <Button type="submit" width={"100%"} colorScheme="green">
           Generate
