@@ -1,3 +1,4 @@
+import { regex } from "@/utils/regex";
 import {
   Box,
   Button,
@@ -21,7 +22,6 @@ export default function SendAlbumInvitationEmailForm() {
   const toast = useToast();
 
   const onSubmit = async (data) => {
-
     try {
       const resPromise = axios.post(`/api/album/${albumId}/invitation`, {
         ...data,
@@ -29,18 +29,19 @@ export default function SendAlbumInvitationEmailForm() {
       });
 
       toast.promise(resPromise, {
-        loading: {title:"Sending invitation email..."},
-        success: {title:"Invitation email sent succesfully"},
-        error:{title:"An error occurred while attempting to send invitation email"}
-      })
+        loading: { title: "Sending invitation email..." },
+        success: { title: "Invitation email sent succesfully" },
+        error: {
+          title: "An error occurred while attempting to send invitation email",
+        },
+      });
 
       await resPromise;
-
     } catch (error) {
       toast({
-        status:"error",
-        title:"An error occurred while attempting to send invitation email"
-      })
+        status: "error",
+        title: "An error occurred while attempting to send invitation email",
+      });
     }
   };
 
@@ -54,7 +55,18 @@ export default function SendAlbumInvitationEmailForm() {
           <Text width={"100%"}>Send an email with an invitation link</Text>
         </VStack>
         <FormControl>
-          <Input type="email" {...register("email")} placeholder="Email" />
+          <Input
+            type="email"
+            {...register("email", {
+              required: { value: true, message: "This field is required" },
+              pattern: {
+                value: regex.email,
+                message: "Type a valid email address",
+              },
+            })}
+            placeholder="Type an email address"
+            isRequired
+          />
         </FormControl>
 
         <Button width={"100%"} colorScheme="green" type="submit">
