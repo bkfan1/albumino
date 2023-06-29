@@ -1,4 +1,4 @@
-import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
+// import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 import {
   Box,
   Flex,
@@ -23,21 +23,21 @@ import {
 import AvailableAlbumCard from "../cards/AvailableAlbumCard";
 
 export default function PhotoVisorBody({}) {
-  const {
-    visorPhotos,
-    currentPhoto,
-    showAvailableAlbums,
-    setShowAvailableAlbums,
-    availableAlbums,
-    handleSetNextPhoto,
-    handleSetPreviousPhoto,
-  } = useContext(PhotoVisorContext);
+  // const {
+  //   visorPhotos,
+  //   currentPhoto,
+  //   showAvailableAlbums,
+  //   setShowAvailableAlbums,
+  //   availableAlbums,
+  //   handleSetNextPhoto,
+  //   handleSetPreviousPhoto,
+  // } = useContext(PhotoVisorContext);
 
-  const photoIndex = visorPhotos.findIndex(
-    (photo) => photo.id === currentPhoto.id
-  );
-  const isLastPhoto = photoIndex === visorPhotos.length - 1;
-  
+  // const photoIndex = visorPhotos.findIndex(
+  //   (photo) => photo.id === currentPhoto.id
+  // );
+
+  // const isLastPhoto = photoIndex === visorPhotos.length - 1;
 
   return (
     <>
@@ -68,7 +68,7 @@ export default function PhotoVisorBody({}) {
         )}
 
         <Box position="relative">
-          <Image src={currentPhoto.url} alt={"photo"} w="auto" h="auto" />
+          <Image src={currentPhoto.url} alt={"Photo"} objectFit={"contain"} maxW="100%" maxH="100%" />
         </Box>
         {showAvailableAlbums ? (
           <>
