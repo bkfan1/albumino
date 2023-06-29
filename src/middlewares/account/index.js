@@ -205,7 +205,7 @@ export const sendAccountPhotos = async (req, res)=>{
     return res.status(200).json({photos});
 
   } catch (error) {
-    
+    return res.status(500).json({message:"An error occurred while trying to send account photos"})
   }
 
 }
