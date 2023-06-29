@@ -1,5 +1,4 @@
 import { AlbumPageProvider } from "@/contexts/AlbumPageContext";
-import { PhotoVisorProvider } from "@/contexts/PhotoVisorContext";
 import { ChakraProvider } from "@chakra-ui/react";
 import { SessionProvider } from "next-auth/react";
 import "@/styles/globals.css";
@@ -44,16 +43,14 @@ export default function App({
   return (
     <SessionProvider session={session}>
       <AlbumPageProvider>
-        <PhotoVisorProvider>
-          <ChakraProvider>
-            <Head>
-              <title>
-                {pageTitle === null ? "Albumino" : `${pageTitle} - Albumino`}
-              </title>
-            </Head>
-            <Component {...pageProps} />
-          </ChakraProvider>
-        </PhotoVisorProvider>
+            <ChakraProvider>
+              <Head>
+                <title>
+                  {pageTitle === null ? "Albumino" : `${pageTitle} - Albumino`}
+                </title>
+              </Head>
+              <Component {...pageProps} />
+            </ChakraProvider>
       </AlbumPageProvider>
     </SessionProvider>
   );
