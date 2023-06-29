@@ -189,3 +189,23 @@ export const getAccountStorageData = async (req, res) => {
     });
   }
 };
+
+export const sendAccountPhotos = async (req, res)=>{
+  try {
+    const session = await getServerSession(req, res, authOptions);
+
+    const existsAccount = await accountExists(session.user.accountId);
+
+    if(!existsAccount){
+      return res.status(404).json({message:"Account not found"})
+    }
+
+    const photos = await getAccountPhotos(session.user.accountId);
+
+    return res.status(200).json({photos});
+
+  } catch (error) {
+    
+  }
+
+}
