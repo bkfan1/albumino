@@ -1,5 +1,6 @@
 import { AlbumPageContext } from "@/contexts/AlbumPageContext";
-import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
+// import { MasonryGridContext } from "@/contexts/MasonryGridContext";
+// import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 import {
   ButtonGroup,
   Flex,
@@ -23,16 +24,15 @@ export default function PhotoVisorHeader({}) {
 
   const { inAlbumPage, isAlbumOwner } = useContext(AlbumPageContext);
 
-  const {
-    visorPhotos,
-    setVisorPhotos,
-    onClose,
-    currentPhoto,
-    setCurrentPhoto,
-    showAvailableAlbums,
-    setShowAvailableAlbums,
-    setAvailableAlbums,
-  } = useContext(PhotoVisorContext);
+  // const {
+  //   onClose,
+  //   visorPhotos,
+  //   setVisorPhotos,
+  //   currentPhoto,
+  //   setCurrentPhoto,
+  //   setShowAvailableAlbums,
+  //   setAvailableAlbums,
+  // } = useContext(PhotoVisorContext);
 
   const isCurrentPhotoOwner =
     currentPhoto.author_account_id === session.user.accountId;
@@ -62,11 +62,12 @@ export default function PhotoVisorHeader({}) {
 
       await deletePromise;
 
-      const updatedVisorPhotos = visorPhotos.filter(
-        (photo) => photo.id !== currentPhoto.id
-      );
+      const updatedVisorPhotos = [...visorPhotos.filter((photo)=>photo.id !== currentPhoto.id)];
+
       setVisorPhotos(updatedVisorPhotos);
+
       onClose();
+
     } catch (error) {
       toast({
         status: "error",
@@ -91,10 +92,12 @@ export default function PhotoVisorHeader({}) {
 
       await removePromise;
 
-      const updatedVisorPhotos = [
-        ...visorPhotos.filter((photo) => photo.id !== currentPhoto.id),
-      ];
-      setVisorPhotos(updatedVisorPhotos);
+      let updatedMasonryPhotos = [...masonryPhotos];
+
+      updatedMasonryPhotos = 
+        masonryPhotos.filter((photo) => photo.id !== currentPhoto.id);
+
+      updateMasonryPhotos(updatedMasonryPhotos);
       onClose();
     } catch (error) {
       console.log(error);
