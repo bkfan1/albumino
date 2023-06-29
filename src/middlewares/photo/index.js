@@ -133,7 +133,7 @@ export const calculateUploadSize = (files) => {
 export const uploadPhotoToStorage = async (path, file) => {
   try {
     const newFileName = v4();
-    const filePath = `${path}${filename}`;
+    const filePath = `${path}${newFileName}`;
 
     const metadata = {
       contentType: file.mimetype,
@@ -147,6 +147,7 @@ export const uploadPhotoToStorage = async (path, file) => {
       photoURL,
     };
   } catch (error) {
+    console.log(error)
     throw Error("An error occurred while trying to upload photo to storage");
   }
 };
@@ -248,11 +249,10 @@ export const uploadPhotos = async (req, res) => {
       }
 
       const photos = uploadedPhotos.map(
-        ({ _id, author_account_id, albums, filename, url, uploaded_at }) => ({
+        ({ _id, author_account_id, albums, url, uploaded_at }) => ({
           id: _id.toString(),
           author_account_id,
           albums,
-          filename,
           url,
           uploaded_at,
         })
