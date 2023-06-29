@@ -4,25 +4,13 @@ import { Flex } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../api/auth/[...nextauth]";
 import { getAccountPhotos } from "@/middlewares/account";
-import { useContext, useEffect } from "react";
-import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 
 export default function PhotosPage({ photos }) {
-  const { setVisorPhotos } = useContext(PhotoVisorContext);
-
-  useEffect(() => {
-    setVisorPhotos(photos);
-
-    return () => {
-      setVisorPhotos([]);
-    };
-  }, [photos, setVisorPhotos]);
-
   return (
     <>
       <Layout>
         <Flex as={"main"} flex={6} paddingRight={4} paddingTop={2}>
-          <MasonryGrid />
+            <MasonryGrid photos={photos} />
         </Flex>
       </Layout>
     </>
