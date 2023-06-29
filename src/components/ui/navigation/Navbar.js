@@ -1,64 +1,26 @@
-import {
-  Avatar,
-  ButtonGroup,
-  Flex,
-  HStack,
-  IconButton,
-  Menu,
-  MenuButton,
-  MenuGroup,
-  MenuItem,
-  MenuList,
-  Skeleton,
-  Stack,
-  Text,
-  Tooltip,
-  useToast,
-} from "@chakra-ui/react";
-import SearchForm from "../forms/SearchForm";
+import { Flex, HStack, IconButton, useToast } from "@chakra-ui/react";
 import NavbarBrand from "./NavbarBrand";
 import { useRouter } from "next/router";
-import {
-  BsArrowLeft,
-  BsDashCircle,
-  BsDownload,
-  BsGearFill,
-  BsPlusLg,
-  BsThreeDots,
-  BsTrash,
-  BsTrashFill,
-  BsXLg,
-} from "react-icons/bs";
+import { BsArrowLeft } from "react-icons/bs";
 import axios from "axios";
-import { signOut, useSession } from "next-auth/react";
-import Link from "next/link";
-import { MdLogout } from "react-icons/md";
-import { useIsMounted } from "@/hooks/useIsMounted";
-import UploadPhotosForm from "../forms/UploadPhotosForm";
+import { useSession } from "next-auth/react";
 import { useContext } from "react";
 import { AlbumPageContext } from "@/contexts/AlbumPageContext";
-import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
+import UserNavbarMenu from "./UserNavbarMenu";
+import AlbumNavbarMenu from "./AlbumNavbarMenu";
+import UploadPhotosHomeForm from "../forms/UploadPhotosHomeForm";
+import AlbumUploadPhotosNavbarMenu from "./AlbumUploadPhotosNavbarMenu";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
-  const { inAlbumPage, isAlbumOwner, showAlbumSettings, setShowAlbumSettings } =
-    useContext(AlbumPageContext);
-  const {
-    // onClose,
-    visorPhotos,
-    setVisorPhotos,
-    selectedPhotos,
-    setSelectedPhotos,
-  } = useContext(PhotoVisorContext);
-  const { isMounted } = useIsMounted();
+
+  const { inAlbumPage } = useContext(AlbumPageContext);
 
   const router = useRouter();
   const { pathname, query } = router;
   const { albumId } = query;
 
   const toast = useToast();
-
-  const hideNavbarBrand = pathname === "/album/create";
 
   const handleDeleteAlbum = async () => {
     try {
@@ -79,51 +41,6 @@ export default function Navbar() {
         status: "error",
         title: "Error",
         description: "An error occurred while trying to delete album",
-      });
-    }
-  };
-
-  const handleDeleteSelectedPhotos = async () => {
-    try {
-      const promises = selectedPhotos.map(async (selectedPhoto) => {
-        return axios.delete(`/api/photo/${selectedPhoto.id}`);
-      });
-
-      toast({
-        status: "loading",
-        title: `Deleting selected photo${
-          selectedPhotos.length > 1 ? "s" : ""
-        }...`,
-      });
-
-      await Promise.all(promises)
-        .then(() => {
-          toast({
-            status: "success",
-            title: "Photos deleted successfully",
-          });
-        })
-        .catch(() => {
-          toast({
-            status: "error",
-            title:
-              "An error occurred while trying to delete the selected photos",
-          });
-        });
-
-      const updatedVisorPhotos = visorPhotos.filter(
-        (photo) => !selectedPhotos.includes(photo)
-      );
-
-      setVisorPhotos(updatedVisorPhotos);
-
-      setSelectedPhotos([]);
-
-      // onClose();
-    } catch (error) {
-      toast({
-        status: "error",
-        title: "An error occurred while trying to delete photos",
       });
     }
   };
@@ -156,13 +73,13 @@ export default function Navbar() {
           });
         });
 
-      const updatedVisorPhotos = visorPhotos.filter(
+      const updatedMasonryPhotos = masonryPhotos.filter(
         (photo) => !selectedPhotos.includes(photo)
       );
 
-      setVisorPhotos(updatedVisorPhotos);
+      updateMasonryPhotos(updatedMasonryPhotos);
 
-      setSelectedPhotos([]);
+      updateSelectedPhotos([]);
 
       // onClose();
     } catch (error) {
@@ -196,6 +113,8 @@ export default function Navbar() {
     }
   };
 
+  const hideNavbarItems = pathname === "/album/create";
+
   return (
     <>
       <Flex
@@ -205,161 +124,42 @@ export default function Navbar() {
         alignItems={"center"}
         paddingX={4}
         paddingY={2}
-        borderBottom={!inAlbumPage && !hideNavbarBrand ? "1px" : ""}
+        borderBottom={inAlbumPage || hideNavbarItems ? "0" : "1px"}
         borderBottomColor={"#edf2f7"}
       >
-        <ButtonGroup className="navbar__brandContainer">
-          {selectedPhotos.length === 0 ? (
-            <>
-              {inAlbumPage || hideNavbarBrand ? (
-                <IconButton
-                  rounded={"full"}
-                  onClick={() => router.back()}
-                  icon={<BsArrowLeft />}
-                  variant={"ghost"}
-                />
-              ) : (
-                <NavbarBrand />
-              )}
-            </>
+        <HStack className="navbar__brandArea">
+          {inAlbumPage || hideNavbarItems ? (
+            <IconButton
+              onClick={() => {
+                router.back();
+              }}
+              icon={<BsArrowLeft />}
+              rounded={"full"}
+              variant={"ghost"}
+            />
           ) : (
-            <>
-              <HStack>
-                <Tooltip label="Undo selection">
-                  <IconButton
-                    onClick={() => setSelectedPhotos([])}
-                    icon={<BsXLg />}
-                    variant={"ghost"}
-                    rounded={"full"}
-                  />
-                </Tooltip>
-                <Text>{selectedPhotos.length} selected</Text>
-              </HStack>
-            </>
+            <NavbarBrand />
           )}
-        </ButtonGroup>
+        </HStack>
 
-        <ButtonGroup gap={6} className="navbar__menuArea">
-          {selectedPhotos.length > 0 ? (
-            <>
-              <ButtonGroup gap={2} variant={"ghost"} colorScheme="blue">
-                {selectedPhotos.every(
-                  (photo) => photo.author_account_id === session.user.accountId
-                ) ? (
-                  <>
-                    <Tooltip label="Add selected photos to...">
-                      <IconButton icon={<BsPlusLg />} rounded={"full"} />
-                    </Tooltip>
-                    {inAlbumPage ? (
-                      <Tooltip label="Remove selected photos">
-                        <IconButton
-                          onClick={handleRemoveSelectedPhotosFromAlbum}
-                          icon={<BsDashCircle />}
-                          rounded={"full"}
-                        />
-                      </Tooltip>
-                    ) : (
-                      ""
-                    )}
-                    <Tooltip label="Delete selected photos">
-                      <IconButton
-                        icon={<BsTrash />}
-                        onClick={handleDeleteSelectedPhotos}
-                        rounded={"full"}
-                      />
-                    </Tooltip>
-                  </>
-                ) : (
-                  <>
-                    {isAlbumOwner ? (
-                      <>
-                        <Tooltip label="Remove selected photos">
-                          <IconButton
-                            onClick={handleRemoveSelectedPhotosFromAlbum}
-                            icon={<BsDashCircle />}
-                            rounded={"full"}
-                          />
-                        </Tooltip>
-                      </>
-                    ) : (
-                      ""
-                    )}
-                  </>
-                )}
-                <Tooltip label="Download selected photos">
-                  <IconButton icon={<BsDownload />} rounded={"full"} />
-                </Tooltip>
-              </ButtonGroup>
-            </>
-          ) : (
-            <>{!hideNavbarBrand ? <UploadPhotosForm /> : ""}</>
-          )}
+        {!hideNavbarItems ? (
+          <HStack gap={6}>
+            {inAlbumPage ? (
+              <>
+                <AlbumUploadPhotosNavbarMenu />
+                <AlbumNavbarMenu />
+              </>
+            ) : (
+              <>
+                <UploadPhotosHomeForm />
 
-          {!hideNavbarBrand ? (
-            <Menu>
-              <Tooltip label="More options">
-                <MenuButton>
-                  <Skeleton isLoaded={isMounted} rounded={"full"}>
-                    {inAlbumPage ? (
-                      <>{selectedPhotos.length === 0 ? <BsThreeDots /> : ""}</>
-                    ) : (
-                      <Avatar
-                        size="sm"
-                        name={
-                          status === "authenticated" ? session.user.name : ""
-                        }
-                      />
-                    )}
-                  </Skeleton>
-                </MenuButton>
-              </Tooltip>
-              <MenuList>
-                {inAlbumPage ? (
-                  <>
-                    {isAlbumOwner ? (
-                      <>
-                        <MenuItem
-                          icon={<BsGearFill />}
-                          onClick={() =>
-                            setShowAlbumSettings(!showAlbumSettings)
-                          }
-                        >
-                          Settings
-                        </MenuItem>
-                        <MenuItem
-                          onClick={handleDeleteAlbum}
-                          icon={<BsTrashFill />}
-                        >
-                          Delete this album
-                        </MenuItem>
-                      </>
-                    ) : (
-                      <MenuItem onClick={handleLeaveAlbum}>
-                        Leave album
-                      </MenuItem>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <MenuGroup>
-                      <Link href={"/account/settings"}>
-                        <MenuItem icon={<BsGearFill />}>Settings</MenuItem>
-                      </Link>
-                      <MenuItem
-                        icon={<MdLogout />}
-                        onClick={() => signOut({ callbackUrl: "/" })}
-                      >
-                        Log Out
-                      </MenuItem>
-                    </MenuGroup>
-                  </>
-                )}
-              </MenuList>
-            </Menu>
-          ) : (
-            ""
-          )}
-        </ButtonGroup>
+                <UserNavbarMenu />
+              </>
+            )}
+          </HStack>
+        ) : (
+          ""
+        )}
       </Flex>
     </>
   );
