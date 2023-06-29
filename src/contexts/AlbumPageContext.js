@@ -5,33 +5,53 @@ export const AlbumPageContext = createContext();
 
 export const AlbumPageProvider = ({ children }) => {
   const router = useRouter();
-  const {pathname} = router;
+  const { pathname } = router;
 
   const [inAlbumPage, setInAlbumPage] = useState(false);
   const [isAlbumOwner, setIsAlbumOwner] = useState(false);
   const [showAlbumSettings, setShowAlbumSettings] = useState(false);
 
-  useEffect(()=>{
+  const [showUploadPhotosForm, setShowUploadPhotosForm] = useState(false);
+  const [showAddPhotosForm, setShowAddPhotosForm] = useState(false);
 
-    const updateInAlbumPage = ()=>{
-      if(pathname === "/album/[albumId]"){
+  const [showAddContributorsForm, setShowAddContributorsForm] = useState(false);
+
+  useEffect(() => {
+    const updateInAlbumPage = () => {
+      if (pathname === "/album/[albumId]") {
         setInAlbumPage(true);
       }
-    }
+    };
 
     updateInAlbumPage();
 
-    return ()=>{
+    return () => {
       setInAlbumPage(false);
-    }
+    };
+  }, [pathname]);
 
-  }, [pathname])
+  const contextValue = {
+    inAlbumPage,
+    setInAlbumPage,
+    isAlbumOwner,
+    setIsAlbumOwner,
+    showAlbumSettings,
+    setShowAlbumSettings,
+
+    showAddPhotosForm,
+    setShowAddPhotosForm,
+
+
+    showUploadPhotosForm,
+    setShowUploadPhotosForm,
+
+    showAddContributorsForm,
+    setShowAddContributorsForm
+  };
 
   return (
     <>
-      <AlbumPageContext.Provider
-        value={{ inAlbumPage, setInAlbumPage, isAlbumOwner, setIsAlbumOwner, showAlbumSettings, setShowAlbumSettings }}
-      >
+      <AlbumPageContext.Provider value={contextValue}>
         {children}
       </AlbumPageContext.Provider>
     </>
