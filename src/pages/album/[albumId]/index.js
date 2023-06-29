@@ -36,7 +36,7 @@ import axios from "axios";
 import AddPhotosToAlbumForm from "@/components/ui/forms/AddPhotosToAlbumForm";
 import UploadPhotosToAlbumForm from "@/components/ui/forms/UploadPhotosToAlbumForm";
 import { useRouter } from "next/router";
-import AddContributorToAlbumModal from "@/components/modals/AddContributorToAlbumModal";
+import AddContributorToAlbumModal from "@/components/ui/forms/AddContributorToAlbumModal";
 
 export default function AlbumPage({ album }) {
   const { data: session, status } = useSession();
