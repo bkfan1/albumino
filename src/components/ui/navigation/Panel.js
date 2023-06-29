@@ -50,13 +50,7 @@ export default function Panel() {
   const { isMounted } = useIsMounted();
   // const {data: session, status} = useSession();
 
-  const [storage, setStorage] = useState({
-    used: {
-      bytes: 0,
-      mb: 0,
-      percent: 0,
-    },
-  });
+  const [storage, setStorage] = useState(null);
 
   useEffect(() => {
     const fetchStorageValue = () => {
@@ -72,6 +66,8 @@ export default function Panel() {
 
     fetchStorageValue();
   }, [router]);
+
+  const storageValueLoaded = storage !== null ? true : false;
 
   return (
     <>
@@ -130,9 +126,14 @@ export default function Panel() {
                 </HStack>
 
                 <Box width={"100%"}>
-                  <Tooltip label={`${storage.used.percent.toFixed(1)}% used`}>
+                  <Tooltip
+                    label={`${
+                      storageValueLoaded ? storage.used.percent.toFixed(1) : ""
+                    }% used`}
+                  >
                     <Progress
-                      value={storage.used.percent}
+                      value={storageValueLoaded ? storage.used.percent : ""}
+                      isIndeterminate={!storageValueLoaded}
                       colorScheme={"blue"}
                       rounded={"full"}
                       display={{ sm: "none", md: "flex" }}
@@ -144,19 +145,25 @@ export default function Panel() {
                     display={{ sm: "flex", md: "none" }}
                     textAlign={"center"}
                   >
-                    {storage.used.percent.toFixed(1)}%
+                    {storageValueLoaded ? storage.used.percent.toFixed(1) : ""}%
                   </Heading>
                 </Box>
               </VStack>
             </Tooltip>
 
-            <Text
-              textAlign={"center"}
-              display={{ sm: "none", md: "initial" }}
-              fontSize={"sm"}
-            >
-              {storage.used.mb.toFixed(1)} MB of 100 MB used
-            </Text>
+            {storageValueLoaded ? (
+              <Skeleton isLoaded={isMounted}>
+                <Text
+                  textAlign={"center"}
+                  display={{ sm: "none", md: "initial" }}
+                  fontSize={"sm"}
+                >
+                  {storage.used.mb.toFixed(1)} MB of 100 MB used
+                </Text>
+              </Skeleton>
+            ) : (
+              ""
+            )}
           </VStack>
         </Skeleton>
       </VStack>
