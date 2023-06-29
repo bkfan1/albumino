@@ -10,32 +10,14 @@ import {
   VStack,
   Tooltip,
   useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalCloseButton,
-  ModalBody,
-  ModalHeader,
-  Tabs,
-  TabList,
-  Tab,
-  TabPanels,
-  TabPanel,
-  Icon,
+
   useToast,
-  Button,
 } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
 import {
   BsCalendar,
   BsCalendarPlus,
-  BsEnvelope,
-  BsFillPeopleFill,
-  BsLink45Deg,
-  BsPeople,
-  BsPeopleFill,
   BsPlus,
-  BsTrash,
 } from "react-icons/bs";
 import { authOptions } from "../../api/auth/[...nextauth]";
 import Layout from "@/components/ui/Layout";
@@ -47,13 +29,14 @@ import {
 } from "@/middlewares/album";
 import MasonryGrid from "@/components/ui/masonry/MasonryGrid";
 import { useContext, useEffect, useState } from "react";
-import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 import { AlbumPageContext } from "@/contexts/AlbumPageContext";
 import moment from "moment";
 import { useSession } from "next-auth/react";
-import GenerateInvitationLinkForm from "@/components/ui/forms/GenerateInvitationLinkForm";
-import SendAlbumInvitationEmailForm from "@/components/ui/forms/SendAlbumInvitationEmailForm";
 import axios from "axios";
+import AddPhotosToAlbumForm from "@/components/ui/forms/AddPhotosToAlbumForm";
+import UploadPhotosToAlbumForm from "@/components/ui/forms/UploadPhotosToAlbumForm";
+import { useRouter } from "next/router";
+import AddContributorToAlbumModal from "@/components/modals/AddContributorToAlbumModal";
 
 export default function AlbumPage({ album }) {
   const { data: session, status } = useSession();
@@ -62,11 +45,13 @@ export default function AlbumPage({ album }) {
     setIsAlbumOwner,
     showAlbumSettings,
     setShowAlbumSettings,
+    setShowAddContributorsForm,
   } = useContext(AlbumPageContext);
-  const { setVisorPhotos } = useContext(PhotoVisorContext);
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
+  
   const toast = useToast();
+
+  const router = useRouter();
+  const {query} = router;
 
   const { contributors, name, photos, created_at, updated_at, isOwner } = album;
 
@@ -77,14 +62,6 @@ export default function AlbumPage({ album }) {
       setIsAlbumOwner(false);
     };
   }, [isOwner, setIsAlbumOwner]);
-
-  useEffect(() => {
-    setVisorPhotos(photos);
-
-    return () => {
-      setVisorPhotos([]);
-    };
-  }, [photos, setVisorPhotos]);
 
   const handleRemoveContributorFromAlbum = async (albumId, contributorId) => {
     try {
@@ -157,7 +134,7 @@ export default function AlbumPage({ album }) {
                 <ButtonGroup>
                   <Tooltip label="Add contributors">
                     <IconButton
-                      onClick={onOpen}
+                      onClick={()=>setShowAddContributorsForm(true)}
                       icon={<BsPlus />}
                       borderRadius={"full"}
                     />
@@ -168,93 +145,12 @@ export default function AlbumPage({ album }) {
               )}
             </HStack>
           </VStack>
-          <MasonryGrid />
+          <MasonryGrid photos={photos} />
 
-          <Modal isOpen={isOpen || showAlbumSettings} onClose={onClose}>
-            <ModalOverlay />
-            <ModalContent>
-              <ModalHeader>
-                {showAlbumSettings ? "Album settings" : "Add contributor"}
-              </ModalHeader>
-              <ModalCloseButton
-                onClick={() => {
-                  onClose();
-                  setShowAlbumSettings(false);
-                }}
-              />
-              <ModalBody>
-                {showAlbumSettings ? (
-                  <Tabs>
-                    <TabList>
-                      <Tab><Icon as={BsPeopleFill} mr={1}/> Contributors</Tab>
-                    </TabList>
-
-                    <TabPanels>
-                      <TabPanel>
-                        <VStack>
-                          {contributors.map((contributor) => (
-                            <HStack
-                              key={contributor.id}
-                              width={"100%"}
-                              justifyContent={"space-between"}
-                            >
-                              <HStack>
-                                <Avatar
-                                  name={`${contributor.firstname} ${contributor.lastname}`}
-                                  size={"sm"}
-                                />
-                                <Text>
-                                  {contributor.firstname} {contributor.lastname}
-                                </Text>
-                              </HStack>
-
-                              <ButtonGroup size={"sm"}>
-                                <Tooltip label="Delete this contributor">
-                                  <IconButton
-                                    onClick={() =>
-                                      handleRemoveContributorFromAlbum(
-                                        album.id,
-                                        contributor.id
-                                      )
-                                    }
-                                    icon={<BsTrash />}
-                                    colorScheme="red"
-                                    variant={"solid"}
-                                  />
-                                </Tooltip>
-                              </ButtonGroup>
-                            </HStack>
-                          ))}
-                        </VStack>
-                      </TabPanel>
-                    </TabPanels>
-                  </Tabs>
-                ) : (
-                  <Tabs>
-                    <TabList>
-                      <Tab>
-                        {" "}
-                        <Icon as={BsLink45Deg} mr={1} /> Link
-                      </Tab>
-                      <Tab>
-                        {" "}
-                        <Icon as={BsEnvelope} mr={1} /> Email
-                      </Tab>
-                    </TabList>
-
-                    <TabPanels>
-                      <TabPanel>
-                        <GenerateInvitationLinkForm />
-                      </TabPanel>
-                      <TabPanel>
-                        <SendAlbumInvitationEmailForm />
-                      </TabPanel>
-                    </TabPanels>
-                  </Tabs>
-                )}
-              </ModalBody>
-            </ModalContent>
-          </Modal>
+          <AddContributorToAlbumModal/>
+      
+          <UploadPhotosToAlbumForm albumId={query.albumId}/>
+          <AddPhotosToAlbumForm/>
         </Flex>
       </Layout>
     </>
