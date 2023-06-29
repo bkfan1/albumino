@@ -1,79 +1,24 @@
 import { useDisclosure } from "@chakra-ui/react";
-import { useRouter } from "next/router";
-import { createContext, useEffect, useState } from "react";
+import { createContext } from "react";
+
 
 export const PhotoVisorContext = createContext();
 
-export const PhotoVisorProvider = ({ children }) => {
+export const PhotoVisorProvider = ({children})=>{
+    const {isOpen, onOpen, onClose} = useDisclosure();
 
-  const router = useRouter();
-  const {pathname} = router;
-
-  // For showing or hiding the PhotoVisor component in the UI
-  const { isOpen, onClose, onOpen } = useDisclosure();
-
-  const [visorPhotos, setVisorPhotos] = useState([]);
-  const [currentPhoto, setCurrentPhoto] = useState({});
-
-  const [selectedPhotos, setSelectedPhotos] = useState([]);
-
-  const [showAvailableAlbums, setShowAvailableAlbums] = useState(false);
-  const [availableAlbums, setAvailableAlbums] = useState([]);
-
-  useEffect(()=>{
-
-    const updateSelectPhotos = ()=>{
-      setSelectedPhotos([]);
+    const contextValue = {
+        isOpen,
+        onOpen,
+        onClose,
     }
 
-    updateSelectPhotos();
+    return (
+        <>
+        <PhotoVisorContext.Provider value={contextValue}>
+            {children}
+        </PhotoVisorContext.Provider>
+        </>
+    )
 
-  }, [pathname])
-
-  const handleSetNextPhoto = () => {
-    const currentPhotoIndex = visorPhotos.findIndex(
-      (photo) => photo.id === currentPhoto.id
-    );
-
-    if (!(currentPhotoIndex === visorPhotos.length - 1)) {
-      setCurrentPhoto(visorPhotos[currentPhotoIndex + 1]);
-      return;
-    }
-  };
-
-  const handleSetPreviousPhoto = () => {
-    const currentPhotoIndex = visorPhotos.findIndex(
-      (photo) => photo.id === currentPhoto.id
-    );
-    if (currentPhotoIndex > 0) {
-      setCurrentPhoto(visorPhotos[currentPhotoIndex - 1]);
-      return;
-    }
-  };
-
-  return (
-    <>
-      <PhotoVisorContext.Provider
-        value={{
-          visorPhotos,
-          setVisorPhotos,
-          selectedPhotos,
-          setSelectedPhotos,
-          isOpen,
-          onClose,
-          onOpen,
-          currentPhoto,
-          setCurrentPhoto,
-          showAvailableAlbums,
-          setShowAvailableAlbums,
-          availableAlbums,
-          setAvailableAlbums,
-          handleSetNextPhoto,
-          handleSetPreviousPhoto,
-        }}
-      >
-        {children}
-      </PhotoVisorContext.Provider>
-    </>
-  );
-};
+}
