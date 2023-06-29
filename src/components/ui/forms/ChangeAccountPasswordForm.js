@@ -1,8 +1,5 @@
-import { regex } from "@/utils/regex";
 import {
-  Box,
   Button,
-  Flex,
   FormControl,
   Heading,
   Input,
@@ -11,7 +8,6 @@ import {
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useForm } from "react-hook-form";
-import PasswordInput from "../inputs/PasswordInput";
 
 export default function ChangeAccountPasswordForm() {
   const { register, handleSubmit } = useForm();
@@ -47,17 +43,41 @@ export default function ChangeAccountPasswordForm() {
           Change account password
         </Heading>
         <FormControl>
-            <PasswordInput placeholder={"Old password"} required={true} />
-
+          <Input
+            type="password"
+            {...register("oldPassword", {
+              required: { value: true, message: "This field is required" },
+            })}
+            placeholder="Old password"
+          />
         </FormControl>
 
         <FormControl>
-            <PasswordInput placeholder={"New password"} required={true} />
-
+          <Input
+            type="password"
+            {...register("newPassword", {
+              required: { value: true, message: "This field is required" },
+              minLength: {
+                value: 8,
+                message: "Password has to be at least 8 characters long",
+              },
+            })}
+            placeholder="New password"
+          />
         </FormControl>
 
         <FormControl>
-            <PasswordInput placeholder={"Type new password again"} required={true}  />
+          <Input
+            type="password"
+            {...register("confirmNewPassword", {
+              required: { value: true, message: "This field is required" },
+              minLength: {
+                value: 8,
+                message: "Password has to be at least 8 characters long",
+              },
+            })}
+            placeholder="Type new password again"
+          />
         </FormControl>
 
         <Button type="submit" width={"100%"} colorScheme={"blue"}>
