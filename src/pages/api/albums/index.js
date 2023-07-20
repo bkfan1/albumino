@@ -12,7 +12,7 @@ export default async function handler(req, res) {
       break;
 
     default:
-      return await res.status(405).json({});
+      return await res.status(405).json({ message: "" });
       break;
   }
 }
