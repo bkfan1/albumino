@@ -1,10 +1,8 @@
 import { AlbumPageContext } from "@/contexts/AlbumPageContext";
-// import { MasonryGridContext } from "@/contexts/MasonryGridContext";
-// import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
+import { MasonryGridContext } from "@/contexts/MasonryGridContext";
 import {
   ButtonGroup,
   Flex,
-  Button,
   IconButton,
   Menu,
   MenuButton,
@@ -12,6 +10,8 @@ import {
   MenuList,
   useToast,
   Tooltip,
+  Icon,
+  HStack,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useSession } from "next-auth/react";
@@ -23,19 +23,16 @@ export default function PhotoVisorHeader({}) {
   const { data: session, status } = useSession();
 
   const { inAlbumPage, isAlbumOwner } = useContext(AlbumPageContext);
-
-  // const {
-  //   onClose,
-  //   visorPhotos,
-  //   setVisorPhotos,
-  //   currentPhoto,
-  //   setCurrentPhoto,
-  //   setShowAvailableAlbums,
-  //   setAvailableAlbums,
-  // } = useContext(PhotoVisorContext);
-
-  const isCurrentPhotoOwner =
-    currentPhoto.author_account_id === session.user.accountId;
+  const {
+    masonryPhotos,
+    setMasonryPhotos,
+    currentVisorPhoto,
+    onClose,
+    setShowAvailableAlbums,
+    setAvailableAlbums,
+    showCurrentVisorPhotoDetails,
+    setShowCurrentVisorPhotoDetails,
+  } = useContext(MasonryGridContext);
 
   const router = useRouter();
   const { pathname, query } = router;
@@ -43,77 +40,53 @@ export default function PhotoVisorHeader({}) {
 
   const toast = useToast();
 
-  const hideHeaderMenu = pathname === "/album/create"
-
   const handleDeletePhoto = async () => {
-    try {
-      const deletePromise = axios.delete(`/api/photo/${currentPhoto.id}`);
-      toast.promise(deletePromise, {
-        loading: {
-          title: "Deleting Photo...",
-        },
-        success: {
-          title: "Photo deleted successfully",
-        },
-        error: {
-          title: "Error while deleting Photo",
-        },
-      });
+    const deletePromise = axios.delete(`/api/photo/${currentVisorPhoto.id}`);
+    toast.promise(deletePromise, {
+      loading: {
+        title: "Deleting photo...",
+      },
+      success: {
+        title: "Photo deleted successfully",
+      },
+      error: {
+        title: "Error while deleting Photo",
+      },
+    });
 
-      await deletePromise;
+    const updatedMasonryPhotos = [
+      ...masonryPhotos.filter((photo) => photo.id !== currentVisorPhoto.id),
+    ];
 
-      const updatedVisorPhotos = [...visorPhotos.filter((photo)=>photo.id !== currentPhoto.id)];
-
-      setVisorPhotos(updatedVisorPhotos);
-
-      onClose();
-
-    } catch (error) {
-      toast({
-        status: "error",
-        title: "Error",
-        description: "An error occurred while attempting to delete photo.",
-        duration: 5000,
-      });
-    }
+    setMasonryPhotos(updatedMasonryPhotos);
+    onClose();
   };
 
   const handleRemoveFromAlbum = async () => {
-    try {
-      const removePromise = axios.delete(
-        `/api/album/${albumId}/photos/${currentPhoto.id}`
-      );
+    const removePromise = axios.delete(
+      `/api/album/${albumId}/photos/${currentVisorPhoto.id}`
+    );
 
-      toast.promise(removePromise, {
-        loading: { title: "Removing photo from album..." },
-        success: { title: "Photo removed from album successfully" },
-        error: { title: "Error while removing photo from album" },
-      });
+    toast.promise(removePromise, {
+      loading: { title: "Removing photo from album..." },
+      success: { title: "Photo removed from album successfully" },
+      error: { title: "Error while removing photo from album" },
+    });
 
-      await removePromise;
+    const updatedMasonryPhotos = [
+      ...masonryPhotos.filter((photo) => photo.id !== currentVisorPhoto.id),
+    ];
 
-      let updatedMasonryPhotos = [...masonryPhotos];
-
-      updatedMasonryPhotos = 
-        masonryPhotos.filter((photo) => photo.id !== currentPhoto.id);
-
-      updateMasonryPhotos(updatedMasonryPhotos);
-      onClose();
-    } catch (error) {
-      console.log(error);
-      toast({
-        status: "error",
-        title: "Error while removing photo from album",
-      });
-    }
+    setMasonryPhotos(updatedMasonryPhotos);
+    onClose();
   };
 
-  const handleClickAddToAlbum = async () => {
+  const handleShowAvailableAlbums = async () => {
     try {
       const res = await axios.get(`/api/albums`);
 
-      setShowAvailableAlbums(true);
       setAvailableAlbums(res.data.albums);
+      setShowAvailableAlbums(true);
     } catch (error) {
       toast({
         status: "error",
@@ -122,7 +95,10 @@ export default function PhotoVisorHeader({}) {
     }
   };
 
-  const handleDownloadPhoto = () => {};
+  const isPhotoOwner =
+    pathname === "/photos"
+      ? true
+      : session.user.accountId === currentVisorPhoto.author.id;
 
   return (
     <>
@@ -130,7 +106,7 @@ export default function PhotoVisorHeader({}) {
         as="header"
         position="fixed"
         justifyContent={"space-between"}
-        zIndex={6}
+        zIndex={8}
         top={0}
         left={0}
         right={0}
@@ -149,67 +125,49 @@ export default function PhotoVisorHeader({}) {
           </Tooltip>
         </ButtonGroup>
 
-        <ButtonGroup variant={"link"} spacing={4}>
-          {/* <Tooltip label="Details">
-            <IconButton
-              icon={
-                <BsInfoCircle
-                  fontSize={"24px"}
-                  color="white"
-                  rounded={"full"}
-                />
-              }
-            />
-          </Tooltip> */}
-          {!inAlbumPage && !hideHeaderMenu ? (
-            <Tooltip label="Delete this photo">
+        <HStack gap={5}>
+          <ButtonGroup variant={"link"} size={"lg"}>
+            <Tooltip label="Info">
               <IconButton
-                icon={<BsTrash />}
-                fontSize={"24px"}
-                color="white"
-                rounded={"full"}
-                title="Delete this photo permanently"
-                onClick={handleDeletePhoto}
+                onClick={() => setShowCurrentVisorPhotoDetails(true)}
+                icon={<BsInfoCircle />}
+                color={"white"}
               />
             </Tooltip>
-          ) : (
-            ""
-          )}
+            {!inAlbumPage ? (
+              <Tooltip label="Delete permanently">
+                <IconButton
+                  onClick={handleDeletePhoto}
+                  icon={<BsTrash />}
+                  color={"white"}
+                />
+              </Tooltip>
+            ) : (
+              ""
+            )}
+          </ButtonGroup>
 
-          {!hideHeaderMenu ? (
-            <>
-            <Menu>
-            <Tooltip label="More options">
-              <MenuButton
-                as={Button}
-                fontSize={"24px"}
-                color="white"
-                rounded={"full"}
-              >
-                <BsThreeDots />
-              </MenuButton>
-            </Tooltip>
+          <Menu>
+            <MenuButton>
+              <Icon as={BsThreeDots} color={"white"} />
+            </MenuButton>
 
             <MenuList>
-              <MenuItem onClick={handleDownloadPhoto}>Download</MenuItem>
-
-              {isCurrentPhotoOwner ? (
-                <>
-                  <MenuItem onClick={handleClickAddToAlbum}>
-                    Add to album
-                  </MenuItem>
-
-                  <MenuItem onClick={handleDeletePhoto}>
-                    Delete permanently
-                  </MenuItem>
-                </>
-              ) : (
-                ""
-              )}
-
               {inAlbumPage ? (
                 <>
-                  {isAlbumOwner || isCurrentPhotoOwner ? (
+                  {isPhotoOwner ? (
+                    <>
+                      <MenuItem onClick={handleShowAvailableAlbums}>
+                        Add to album
+                      </MenuItem>
+                      <MenuItem onClick={handleDeletePhoto}>
+                        Delete permanently
+                      </MenuItem>
+                    </>
+                  ) : (
+                    ""
+                  )}
+                  {isAlbumOwner || isPhotoOwner ? (
                     <MenuItem onClick={handleRemoveFromAlbum}>
                       Remove from album
                     </MenuItem>
@@ -218,13 +176,16 @@ export default function PhotoVisorHeader({}) {
                   )}
                 </>
               ) : (
-                ""
+                <>
+                  <MenuItem onClick={handleShowAvailableAlbums}>
+                    Add to album
+                  </MenuItem>
+                  <MenuItem>Download</MenuItem>
+                </>
               )}
             </MenuList>
           </Menu>
-            </>
-          ) : ""}
-        </ButtonGroup>
+        </HStack>
       </Flex>
     </>
   );
