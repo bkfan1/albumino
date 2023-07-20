@@ -1,37 +1,33 @@
 import AlbumCard from "@/components/ui/cards/AlbumCard";
-import Layout from "@/components/ui/Layout";
 import {
-  Button,
   ButtonGroup,
   Divider,
   Flex,
   Heading,
-  IconButton,
   SimpleGrid,
   Skeleton,
-  Text,
-  Tooltip,
   VStack,
 } from "@chakra-ui/react";
-import { MdOutlineAddBox } from "react-icons/md";
-import Link from "next/link";
 import { useIsMounted } from "@/hooks/useIsMounted";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../api/auth/[...nextauth]";
 import { getAccountAlbums } from "@/middlewares/account";
-import { useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
+import { AlbumsContext } from "@/contexts/AlbumsContext";
+import AuthCommonLayout from "@/components/ui/layouts/AuthCommonLayout";
+import CreateAlbumForm from "@/components/ui/forms/CreateAlbumForm";
 
-export default function AlbumsPage({ albums }) {
+export default function AlbumsPage({ accountAlbums }) {
   const { isMounted } = useIsMounted();
-
-  const [userAlbums, setUserAlbums] = useState([]);
+  const { albums, setAlbums } = useContext(AlbumsContext);
 
   useEffect(() => {
-    setUserAlbums(albums);
-  }, [albums]);
+    setAlbums(accountAlbums);
+  }, [accountAlbums, setAlbums]);
+
   return (
     <>
-      <Layout>
+      <AuthCommonLayout>
         <Flex as="main" height={"100%"} flex={6} flexDirection={"column"}>
           <VStack width={"100%"}>
             <Flex
@@ -46,23 +42,9 @@ export default function AlbumsPage({ albums }) {
               </Skeleton>
 
               <ButtonGroup variant={"ghost"}>
-                <Link href={"/album/create"}>
-                  <Skeleton isLoaded={isMounted} rounded={"md"}>
-                    <Tooltip label="Create album">
-                      <IconButton
-                        icon={<MdOutlineAddBox />}
-                        display={{ base: "flex", sm: "flex", md: "none" }}
-                        rounded={"full"}
-                      ></IconButton>
-                    </Tooltip>
-                    <Button
-                      leftIcon={<MdOutlineAddBox />}
-                      display={{ base: "none", sm: "none", md: "flex" }}
-                    >
-                      Create album
-                    </Button>
-                  </Skeleton>
-                </Link>
+                <Skeleton isLoaded={isMounted} rounded={"md"}>
+                  <CreateAlbumForm />
+                </Skeleton>
               </ButtonGroup>
             </Flex>
           </VStack>
@@ -79,13 +61,13 @@ export default function AlbumsPage({ albums }) {
               columns={{ sm: 2, md: 3, lg: 4, xl: 5, "2xl": 8 }}
               className="albumsGrid"
             >
-              {userAlbums.map((album) => (
+              {albums.map((album) => (
                 <AlbumCard key={album.id} data={album} />
               ))}
             </SimpleGrid>
           </Flex>
         </Flex>
-      </Layout>
+      </AuthCommonLayout>
     </>
   );
 }
@@ -94,15 +76,15 @@ export async function getServerSideProps({ req, res }) {
   try {
     const session = await getServerSession(req, res, authOptions);
 
-    const albums = await getAccountAlbums(session.user.accountId, "own");
+    const accountAlbums = await getAccountAlbums(session.user.accountId, "own");
 
-    if (!albums) {
+    if (!accountAlbums) {
       return { redirect: { destination: "/404", permanent: false } };
     }
 
     return {
       props: {
-        albums,
+        accountAlbums,
       },
     };
   } catch (error) {
