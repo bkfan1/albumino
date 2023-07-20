@@ -7,7 +7,7 @@ import { getServerSession } from "next-auth";
 
 import { invitationExists, isInvitationAuthor } from "@/middlewares/invitation";
 import { getAlbum, isAlbumContributor } from "@/middlewares/album";
-import AlbumInvitationForm from "@/components/ui/forms/AlbumInvitationForm";
+import AlbumInvitationForm from "@/components/ui/forms/invitation/AlbumInvitationForm";
 import NavbarBrand from "@/components/ui/navigation/NavbarBrand";
 import Footer from "@/components/ui/Footer";
 
@@ -100,7 +100,6 @@ export async function getServerSideProps({ req, res, query }) {
       },
     };
   } catch (error) {
-    console.log(error);
     return {
       redirect: {
         destination: "/500",
