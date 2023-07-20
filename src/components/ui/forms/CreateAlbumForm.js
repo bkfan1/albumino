@@ -1,165 +1,62 @@
+import { useIsMounted } from "@/hooks/useIsMounted";
 import {
-  Box,
   Button,
   ButtonGroup,
-  Flex,
-  FormControl,
-  HStack,
-  Heading,
   IconButton,
-  Image,
-  Input,
-  Text,
+  Skeleton,
   Tooltip,
-  VStack,
   useToast,
 } from "@chakra-ui/react";
-import { createRef, useContext, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { BsCheckLg } from "react-icons/bs";
-import { MdOutlineAddPhotoAlternate } from "react-icons/md";
-import MasonryGrid from "../masonry/MasonryGrid";
-import { nanoid } from "nanoid";
 import axios from "axios";
-import { allowedPhotosFileTypes } from "@/utils/validation";
+import { useRouter } from "next/router";
+import { MdOutlineAddBox } from "react-icons/md";
 
 export default function CreateAlbumForm() {
-  const inputFileRef = createRef();
-
-  const [loadedFiles, setLoadedFiles] = useState([]);
-
-  const { register, handleSubmit } = useForm();
-
+  const { isMounted } = useIsMounted();
+  const router = useRouter();
   const toast = useToast();
+  const handleCreateAlbum = async () => {
+    const data = {
+      name: "Untitled album",
+    };
 
-  const handleInputFileOnClick = () => {
-    inputFileRef.current.click();
-  };
+    const resPromise = axios.post(`/api/albums/`, data);
 
-  const handleInputFileOnChange = (e) => {
-    const newFiles = [];
+    toast.promise(resPromise, {
+      loading: { title: "Creating new album..." },
+      success: { title: "Album created succesfully" },
+      error: { title: "An error ocurred while trying to create album" },
+    });
 
-    for (const file of e.target.files) {
-      if (allowedPhotosFileTypes.includes(file.type)) {
-        const fileObject = {
-          id: nanoid(),
-          file,
-          url: URL.createObjectURL(file),
-        };
+    const res = await resPromise;
 
-        newFiles.push(fileObject);
-      }
-    }
+    const albumId = res.data.albumId;
 
-    const updatedLoadedFiles = [...newFiles, ...loadedFiles];
-
-    setLoadedFiles(updatedLoadedFiles);
-  };
-
-  const onSubmit = async (data) => {
-    try {
-      const res = await axios.post(`/api/albums`, { name: data.name });
-      const albumId = res.data.albumId;
-
-      if (loadedFiles.length > 0) {
-        const formData = new FormData();
-
-        for (const fileObject of loadedFiles) {
-          const file = fileObject.file;
-          console.log(file);
-
-          formData.append("files", file);
-        }
-
-        formData.append("albumId", albumId);
-
-        const config = { headers: { "Content-Type": "multipart/form-data" } };
-
-        const res2 = await axios.post(`/api/photos`, formData, config);
-      }
-
-      toast({
-        status: "success",
-        title: "Album created succesfully",
-      });
-    } catch (error) {
-      console.log(error);
-      toast({
-        status: "error",
-        title: "An error occurred while trying to create album",
-      });
-    }
+    router.push(`/album/${albumId}`);
   };
 
   return (
     <>
-      <Box
-        as="form"
-        width={"100%"}
-        height={"100%"}
-        onSubmit={handleSubmit(onSubmit)}
-      >
-        <HStack>
-          <FormControl>
-            <Input
-              type="text"
-              placeholder="Album name"
-              variant={"flushed"}
-              fontSize={"2xl"}
-              {...register("name", {
-                required: { value: true, message: "This field is required" },
-                minLength: {
-                  value: 1,
-                  message: "Album name has to be at least 1 character long",
-                },
-                maxLength: { value: 256, message: "" },
-              })}
+      <Tooltip label="Create album">
+        <Skeleton isLoaded={isMounted} rounded={"md"}>
+          <ButtonGroup variant={"ghost"}>
+            <Button
+              onClick={handleCreateAlbum}
+              leftIcon={<MdOutlineAddBox />}
+              display={{ base: "none", sm: "none", md: "flex" }}
+            >
+              Create album
+            </Button>
+
+            <IconButton
+              onClick={handleCreateAlbum}
+              icon={<MdOutlineAddBox />}
+              display={{ base: "flex", sm: "flex", md: "none" }}
+              rounded={"full"}
             />
-          </FormControl>
-          <ButtonGroup>
-            <Tooltip label="Add photos">
-              <IconButton
-                onClick={handleInputFileOnClick}
-                icon={<MdOutlineAddPhotoAlternate />}
-                rounded={"full"}
-                display={loadedFiles.length > 0 ? "flex" : "none"}
-              />
-            </Tooltip>
-            <Tooltip label="Create album">
-              <IconButton type="submit" icon={<BsCheckLg />} rounded={"full"} />
-            </Tooltip>
           </ButtonGroup>
-        </HStack>
-
-        <Flex
-          width={"100%"}
-          height={"100%"}
-          alignItems={loadedFiles.length === 0 && "center"}
-          justifyContent={loadedFiles.length === 0 && "center"}
-          py={6}
-        >
-          {loadedFiles.length === 0 ? (
-            <VStack>
-              <Image src="/empty_state_album.svg" alt="" />
-              <Heading size={"md"}>Album is empty</Heading>
-              <Button onClick={handleInputFileOnClick} colorScheme="blue">
-                Upload photos
-              </Button>
-            </VStack>
-          ) : (
-            <MasonryGrid photos={loadedFiles} />
-          )}
-        </Flex>
-
-        <Input
-          ref={inputFileRef}
-          onChange={(e) => handleInputFileOnChange(e)}
-          type="file"
-          accept=".jpg,.jpeg, .png"
-          multiple
-          display={"none"}
-        />
-      </Box>
+        </Skeleton>
+      </Tooltip>
     </>
   );
 }
