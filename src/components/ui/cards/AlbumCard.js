@@ -1,6 +1,14 @@
+import { AlbumsContext } from "@/contexts/AlbumsContext";
 import { useIsMounted } from "@/hooks/useIsMounted";
 import {
-  Box,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
+  Button,
+  ButtonGroup,
   Flex,
   Heading,
   Icon,
@@ -13,19 +21,22 @@ import {
   Text,
   Tooltip,
   VStack,
-  useToast,
+  useDisclosure,
 } from "@chakra-ui/react";
-import axios from "axios";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useContext } from "react";
 
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { MdOutlinePhotoAlbum } from "react-icons/md";
 
 export default function AlbumCard({ data }) {
+  const { handleDeleteAlbum, handleLeaveAlbum } = useContext(AlbumsContext);
 
-  const {data: session, status}= useSession();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const { data: session, status } = useSession();
 
   const { id, name, photos, cover } = data;
   const { isMounted } = useIsMounted();
@@ -34,52 +45,6 @@ export default function AlbumCard({ data }) {
   const { pathname } = router;
 
   const inSharedAlbumsPage = pathname === "/shared";
-
-  const toast = useToast();
-
-  const handleDeleteAlbum = async (albumId) => {
-    try {
-      const deletePromise = axios.delete(`/api/album/${albumId}`);
-      toast.promise(deletePromise, {
-        loading: { title: "Deleting album..." },
-        success: { title: "Album deleted successfully" },
-        error: { title: "Error while trying to delete album" },
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error ocurred while trying to delete album.",
-        status: "error",
-        isClosable: false,
-      });
-    }
-  };
-
-  const handleLeaveAlbum = async (albumId, accountId) => {
-    try {
-      const leavePromise = axios.delete(
-        `/api/album/${albumId}/contributors/${accountId}`
-      );
-
-      toast.promise(leavePromise, {
-        loading: { title: "Leaving album..." },
-        success: { title: "You left the album successfully" },
-        error: { title: "An error occurred while trying to leave the album" },
-      });
-
-      await leavePromise;
-
-      if(pathname === "/album/[albumId]"){
-        router.push("/");
-      }
-
-    } catch (error) {
-      toast({
-        status: "error",
-        title: "An error occurred while trying to leave the album",
-      });
-    }
-  };
 
   return (
     <>
@@ -100,11 +65,15 @@ export default function AlbumCard({ data }) {
 
           <MenuList>
             {inSharedAlbumsPage ? (
-              <MenuItem onClick={()=>handleLeaveAlbum(data.id, session.user.accountId)}>Leave album</MenuItem>
-            ) : (
-              <MenuItem onClick={() => handleDeleteAlbum(id)}>
-                Delete this album
+              <MenuItem
+                onClick={() =>
+                  handleLeaveAlbum(data.id, session.user.accountId)
+                }
+              >
+                Leave album
               </MenuItem>
+            ) : (
+              <MenuItem onClick={() => onOpen()}>Delete this album</MenuItem>
             )}
           </MenuList>
         </Menu>
@@ -154,6 +123,31 @@ export default function AlbumCard({ data }) {
           </Skeleton>
         </Link>
       </VStack>
+
+      <AlertDialog isOpen={isOpen} isCentered>
+        <AlertDialogOverlay />
+        <AlertDialogContent>
+          <AlertDialogHeader>Delete album</AlertDialogHeader>
+          <AlertDialogBody>
+            <Text>
+              Deleted albums cannot be recovered. Photos and videos in deleted
+              albums are kept in Google Photos.
+            </Text>
+          </AlertDialogBody>
+          <AlertDialogFooter>
+            <ButtonGroup>
+              <Button onClick={() => onClose()}>Cancel</Button>
+
+              <Button
+                onClick={() => handleDeleteAlbum(data.id, onClose)}
+                colorScheme="red"
+              >
+                Delete
+              </Button>
+            </ButtonGroup>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
