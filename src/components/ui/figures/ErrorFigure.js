@@ -2,7 +2,7 @@ import { Button, Heading, VStack, Text } from "@chakra-ui/react";
 import { MdWarning } from "react-icons/md";
 import { useRouter } from "next/router";
 
-export default function ErrorFigure({description}) {
+export default function ErrorFigure({ description }) {
   const router = useRouter();
   return (
     <>
@@ -11,7 +11,9 @@ export default function ErrorFigure({description}) {
           <MdWarning></MdWarning>
         </Heading>
         <Heading>Error</Heading>
-        <Text maxWidth={"2xl"} textAlign={"center"} >{description}</Text>
+        <Text maxWidth={"2xl"} textAlign={"center"}>
+          {description}
+        </Text>
         <Button onClick={() => router.push("/")} colorScheme="blue">
           Back to app
         </Button>
