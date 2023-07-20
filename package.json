@@ -16,6 +16,7 @@
     "bcrypt": "^5.1.0",
     "eslint": "8.38.0",
     "eslint-config-next": "13.3.0",
+    "exifreader": "^4.13.0",
     "firebase": "^9.20.0",
     "framer-motion": "^10.12.2",
     "joi": "^17.9.1",
