@@ -12,7 +12,7 @@ const PhotoSchema = new Schema(
       {
         type: Schema.ObjectId,
         ref: "Album",
-      }
+      },
     ],
 
     filename: {
@@ -22,6 +22,11 @@ const PhotoSchema = new Schema(
 
     url: {
       type: String,
+      required: true,
+    },
+
+    metadata: {
+      type: Object,
       required: true,
     },
 
