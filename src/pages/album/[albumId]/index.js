@@ -4,23 +4,33 @@ import {
   Heading,
   AvatarGroup,
   Avatar,
-  ButtonGroup,
   IconButton,
   HStack,
   VStack,
-  Tooltip,
-  useDisclosure,
-
   useToast,
+  Icon,
+  Image,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
+  ButtonGroup,
+  Button,
+  Tooltip,
+  Skeleton,
+  SkeletonText,
 } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
 import {
   BsCalendar,
   BsCalendarPlus,
+  BsPencilFill,
   BsPlus,
+  BsTrash,
 } from "react-icons/bs";
 import { authOptions } from "../../api/auth/[...nextauth]";
-import Layout from "@/components/ui/Layout";
 
 import {
   isAlbumOwner,
@@ -30,129 +40,303 @@ import {
 import MasonryGrid from "@/components/ui/masonry/MasonryGrid";
 import { useContext, useEffect, useState } from "react";
 import { AlbumPageContext } from "@/contexts/AlbumPageContext";
-import moment from "moment";
 import { useSession } from "next-auth/react";
-import axios from "axios";
-import AddPhotosToAlbumForm from "@/components/ui/forms/AddPhotosToAlbumForm";
-import UploadPhotosToAlbumForm from "@/components/ui/forms/UploadPhotosToAlbumForm";
-import { useRouter } from "next/router";
-import AddContributorToAlbumModal from "@/components/ui/forms/AddContributorToAlbumModal";
+import AddContributorToAlbumModal from "@/components/ui/modals/AddContributorToAlbumModal";
+import { MasonryGridProvider } from "@/contexts/MasonryGridContext";
 
-export default function AlbumPage({ album }) {
+import PhotoVisor from "@/components/ui/visor/PhotoVisor";
+
+import AlbumSettingsModal from "@/components/ui/modals/AlbumSettingsModal";
+import AlbumPageNavbar from "@/components/ui/navigation/AlbumPageNavbar";
+import axios from "axios";
+import { useRouter } from "next/router";
+import AddExistentPhotosToAlbumForm from "@/components/ui/forms/upload/AddExistentPhotosToAlbumForm";
+import ChangeAlbumNameForm from "@/components/ui/forms/ChangeAlbumNameForm";
+import Footer from "@/components/ui/Footer";
+import { MdOutlineAddPhotoAlternate } from "react-icons/md";
+import { useIsMounted } from "@/hooks/useIsMounted";
+
+export default function AlbumPage({ album, isOwner }) {
   const { data: session, status } = useSession();
 
   const {
+    isAlbumOwner,
     setIsAlbumOwner,
-    showAlbumSettings,
-    setShowAlbumSettings,
+    showAddPhotosForm,
     setShowAddContributorsForm,
+    showChangeAlbumNameForm,
+    setShowChangeAlbumNameForm,
+    showDeleteAlbumAlertDialog,
+    setShowDeleteAlbumAlertDialog,
   } = useContext(AlbumPageContext);
-  
-  const toast = useToast();
+
+  const [albumData, setAlbumData] = useState(album);
+  const [accountPhotos, setAccountPhotos] = useState(null);
+
+  const { name, photos, contributors, created_at, updated_at } = albumData;
 
   const router = useRouter();
-  const {query} = router;
+  const { isMounted } = useIsMounted();
 
-  const { contributors, name, photos, created_at, updated_at, isOwner } = album;
+  const toast = useToast();
+
+  const { query } = router;
+  const { albumId } = query;
 
   useEffect(() => {
     setIsAlbumOwner(isOwner);
-
-    return () => {
-      setIsAlbumOwner(false);
-    };
   }, [isOwner, setIsAlbumOwner]);
 
-  const handleRemoveContributorFromAlbum = async (albumId, contributorId) => {
-    try {
-      const res = axios.delete(
-        `/api/album/${albumId}/contributors/${contributorId}`
-      );
+  useEffect(() => {
+    const fetchAccountPhotos = async () => {
+      try {
+        const res = await axios.get(`/api/photos`);
+        const photos = res.data.photos;
 
-      toast.promise(res, {
-        loading: { title: "Removing contributor from album..." },
-        success: { title: "Contributor from album removed successfully" },
-        error: {
-          title:
-            "An error occurred while trying to removing contributor from album",
-        },
-      });
+        setAccountPhotos(photos);
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
-      await res;
-    } catch (error) {
-      toast({
-        status: "error",
-        title:
-          "An error occurred while trying to removing contributor from album",
-      });
+    if (showAddPhotosForm) {
+      fetchAccountPhotos();
     }
+  }, [showAddPhotosForm]);
+
+  const handleRemoveContributorFromAlbum = async (contributorId, albumId) => {
+    const res = axios.delete(
+      `/api/album/${albumId}/contributors/${contributorId}`
+    );
+    toast.promise(res, {
+      loading: { title: "Removing contributor from album..." },
+      success: { title: "Contributor removed succesfully" },
+      error: {
+        title: "An error occurred while trying to remove contributor",
+      },
+    });
+
+    const updatedAlbumContributors = [...albumData["contributors"]];
+
+    const index = updatedAlbumContributors.findIndex(
+      (id) => id === contributorId
+    );
+
+    updatedAlbumContributors.splice(index, 1);
+
+    const updatedAlbumData = {
+      ...albumData,
+      ["contributors"]: updatedAlbumContributors,
+    };
+
+    setAlbumData(updatedAlbumData);
   };
 
+  const handleDeleteAlbum = async (albumId) => {
+    const res = axios.delete(`/api/album/${albumId}`);
+    toast.promise(res, {
+      loading: { title: "Deleting album..." },
+      success: { title: "Album deleted successfully" },
+      error: { title: "An error occurred while trying to delete album" },
+    });
+
+    setShowDeleteAlbumAlertDialog(false);
+
+    return router.push("/albums");
+  };
+
+  const updateAlbumName = (newName) => {
+    const updatedAlbumData = { ...albumData, ["name"]: newName };
+
+    setAlbumData(updatedAlbumData);
+  };
+ 
   return (
     <>
-      <Layout>
-        <Flex width={"100%"} flexDirection={"column"} gap={6} paddingX={6}>
-          <VStack as="header" width={"100%"}>
-            <Tooltip label="Album name" placement="bottom-start">
-              <Heading width={"100%"}>{name}</Heading>
-            </Tooltip>
+      <MasonryGridProvider photos={photos}>
+        <AlbumPageNavbar />
+        <Flex
+          as={"main"}
+          flexDirection={"column"}
+          minHeight={"100vh"}
+          px={6}
+          pt={4}
+          gap={6}
+        >
+          <VStack as={"header"} width={"100%"} gap={1}>
+            <Skeleton isLoaded={isMounted} alignSelf={"flex-start"}>
+              <VStack className="albumPage__titleContainer" width={"100%"}>
+                {isAlbumOwner ? (
+                  <>
+                    {showChangeAlbumNameForm ? (
+                      <ChangeAlbumNameForm
+                        albumId={albumId}
+                        currentAlbumName={name}
+                        updateAlbumName={updateAlbumName}
+                      />
+                    ) : (
+                      <HStack width={"100%"}>
+                        <Heading>{name}</Heading>{" "}
+                        <Tooltip label="Change album name">
+                          <IconButton
+                            onClick={() =>
+                              setShowChangeAlbumNameForm(
+                                !showChangeAlbumNameForm
+                              )
+                            }
+                            icon={<BsPencilFill />}
+                            variant={"ghost"}
+                            rounded={"full"}
+                          />
+                        </Tooltip>
+                      </HStack>
+                    )}
+                  </>
+                ) : (
+                  <Heading width={"100%"}>{name}</Heading>
+                )}
+              </VStack>
+            </Skeleton>
 
-            <VStack width={"100%"} color={"gray.600"}>
-              <HStack width={"100%"}>
-                <BsCalendar />
+            <VStack
+              className="albumPage__datesContainer"
+              width={"100%"}
+              color={"gray.600"}
+            >
+              <SkeletonText
+                isLoaded={isMounted}
+                noOfLines={1}
+                skeletonHeight={4}
+                alignSelf={"flex-start"}
+              >
                 <Text width={"100%"}>
-                  Created:{" "}
-                  {moment(created_at).format("MMMM Do YYYY, h:mm:ss a")}
+                  <Icon as={BsCalendar} mr={1} /> Created at {created_at}
                 </Text>
-              </HStack>
-              <HStack width={"100%"}>
-                <BsCalendarPlus />
+              </SkeletonText>
+
+              <SkeletonText
+                isLoaded={isMounted}
+                noOfLines={1}
+                skeletonHeight={4}
+                alignSelf={"flex-start"}
+              >
                 <Text width={"100%"}>
-                  Last update:{" "}
-                  {moment(updated_at).format("MMMM Do YYYY, h:mm:ss a")}
+                  <Icon as={BsCalendarPlus} mr={1} /> Updated at {updated_at}
                 </Text>
-              </HStack>
+              </SkeletonText>
             </VStack>
 
-            <HStack width={"100%"}>
-              <AvatarGroup size={"sm"}>
-                {contributors.map(({ id, firstname, lastname }) => (
-                  <Avatar
-                    key={id}
-                    name={`${firstname} ${lastname}`}
-                    title={`${firstname} ${lastname} ${
-                      status === "authenticated"
-                        ? id === session.user.accountId
-                          ? "(You)"
-                          : ""
-                        : ""
-                    }`}
-                  />
-                ))}
-              </AvatarGroup>
-              {isOwner ? (
-                <ButtonGroup>
+            <Skeleton
+              isLoaded={isMounted}
+              alignSelf={"flex-start"}
+              rounded={"md"}
+            >
+              <HStack
+                className="albumPage__contributorsContainer"
+                width={"100%"}
+              >
+                {contributors.length > 0 ? (
+                  <>
+                    <AvatarGroup size={"sm"}>
+                      {contributors.map(({ id, firstname, lastname }) => (
+                        <Avatar
+                          key={id}
+                          name={`${firstname} ${lastname}`}
+                          title={`${firstname} ${lastname} ${
+                            status === "authenticated"
+                              ? session.user.accountId === id
+                                ? "(You)"
+                                : ""
+                              : ""
+                          }`}
+                        />
+                      ))}
+                    </AvatarGroup>
+                  </>
+                ) : (
+                  ""
+                )}
+
+                {isAlbumOwner ? (
                   <Tooltip label="Add contributors">
                     <IconButton
-                      onClick={()=>setShowAddContributorsForm(true)}
+                      onClick={() => setShowAddContributorsForm(true)}
                       icon={<BsPlus />}
-                      borderRadius={"full"}
+                      rounded={"full"}
                     />
                   </Tooltip>
-                </ButtonGroup>
-              ) : (
-                ""
-              )}
-            </HStack>
+                ) : (
+                  ""
+                )}
+              </HStack>
+            </Skeleton>
           </VStack>
-          <MasonryGrid photos={photos} />
 
-          <AddContributorToAlbumModal/>
-      
-          <UploadPhotosToAlbumForm albumId={query.albumId}/>
-          <AddPhotosToAlbumForm/>
+          <Flex as={"section"} width={"100%"}>
+            {photos.length === 0 ? (
+              <VStack width={"100%"}>
+                <Image src="/empty_state_album.svg" alt="" />
+                <Heading size={"md"} fontWeight={"normal"}>
+                  Album is empty
+                </Heading>
+                <Text maxW={"sm"} textAlign={"center"} fontWeight={"bold"}>
+                  Add or upload photos to album using{" "}
+                  <Icon as={MdOutlineAddPhotoAlternate} boxSize={6} mx={1} />
+                  at the navigation bar.
+                </Text>
+              </VStack>
+            ) : (
+              <>
+                <MasonryGrid />
+                <PhotoVisor />
+              </>
+            )}
+          </Flex>
         </Flex>
-      </Layout>
+        <Footer />
+      </MasonryGridProvider>
+
+      {showAddPhotosForm && accountPhotos !== null ? (
+        <MasonryGridProvider photos={accountPhotos}>
+          <AddExistentPhotosToAlbumForm albumId={albumId} />
+        </MasonryGridProvider>
+      ) : (
+        ""
+      )}
+
+      <AddContributorToAlbumModal />
+      <AlbumSettingsModal
+        contributors={contributors}
+        handleRemoveContributorFromAlbum={handleRemoveContributorFromAlbum}
+      />
+      <AlertDialog
+        isOpen={showDeleteAlbumAlertDialog}
+        onClose={() => {
+          setShowDeleteAlbumAlertDialog(false);
+        }}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader>Delete album</AlertDialogHeader>
+            <AlertDialogBody>
+              Deleted albums cannot be recovered. Photos in deleted albums are
+              kept in Albumino.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <ButtonGroup>
+                <Button>Cancel</Button>
+                <Button
+                  onClick={() => handleDeleteAlbum(albumId)}
+                  leftIcon={<BsTrash />}
+                  colorScheme="red"
+                >
+                  Delete
+                </Button>
+              </ButtonGroup>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </>
   );
 }
@@ -188,11 +372,10 @@ export async function getServerSideProps({ req, res, query }) {
       };
     }
 
-    album["isOwner"] = isOwner;
-
     return {
       props: {
         album,
+        isOwner,
       },
     };
   } catch (error) {
