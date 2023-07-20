@@ -2,7 +2,7 @@ import connection from "@/database/connection";
 import Photo from "@/database/models/Photo";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getFolderSize, deleteFile, uploadFile } from "@/utils/firebase-app";
+import { deleteFile, uploadFile } from "@/utils/firebase-app";
 import { getDownloadURL } from "firebase/storage";
 import { getServerSession } from "next-auth";
 import { accountExists } from "../account";
@@ -14,15 +14,20 @@ import {
   isAlbumOwner,
   updateAlbumLastModification,
 } from "../album";
-import { allowedPhotosFileTypes, hasInvalidFileType } from "@/utils/validation";
+import { allowedPhotosFileTypes } from "@/utils/constants";
 import { getAvailableSpace } from "../account/storage";
+import Account from "@/database/models/Account";
+import moment from "moment/moment";
+import ExifReader from "exifreader";
 
 export const photoExists = async (photoId) => {
   try {
     const db = await connection();
     const photo = await Photo.findById(photoId);
 
-    return photo ? true : false;
+    const exists = photo ? true : false;
+
+    return exists;
   } catch (error) {
     throw Error("An error occurred while attempting to find the photo.");
   }
@@ -58,7 +63,6 @@ export const isPhotoInAlbum = async (photoId, albumId) => {
 
 export const isPhotoOwner = async (photoId, accountId) => {
   try {
-    const db = await connection();
     const existsPhoto = await photoExists(photoId);
     if (!existsPhoto) {
       throw Error("Photo not found");
@@ -70,6 +74,7 @@ export const isPhotoOwner = async (photoId, accountId) => {
       throw Error("Account not found");
     }
 
+    const db = await connection();
     const photo = await Photo.findById(photoId);
 
     const isOwner = photo.author_account_id.toString() === accountId;
@@ -103,7 +108,7 @@ export const deletePhoto = async (req, res) => {
     const deletedPhoto = await Photo.findByIdAndDelete(req.query.photoId);
 
     const { filename, author_account_id } = deletedPhoto;
-    const url = `users/${author_account_id}/${filename}`;
+    const url = `/users/${author_account_id}/${filename}`;
 
     // Delete photo file from storage
     await deleteFile(url);
@@ -147,7 +152,7 @@ export const uploadPhotoToStorage = async (path, file) => {
       photoURL,
     };
   } catch (error) {
-    console.log(error)
+    console.log(error);
     throw Error("An error occurred while trying to upload photo to storage");
   }
 };
@@ -166,34 +171,22 @@ export const uploadPhotos = async (req, res) => {
 
       if (!req.files || req.files.length === 0) {
         return res.status(400).json({
-          message: "No files found in the request",
+          message: "No files found on the upload process",
         });
       }
 
-      let filesToUpload = [...req.files];
-
-      const hasInvalidFiles = hasInvalidFileType(
-        req.files,
-        allowedPhotosFileTypes
+      let filesToUpload = req.files.filter((file) =>
+        allowedPhotosFileTypes.includes(file.mimetype)
       );
 
-      // If req.files has at least one file with a not allowed filetype
-      if (hasInvalidFiles) {
-        // Filter the ones who actually have allowed file types
-        const filteredFiles = req.files.filter((file) =>
-          allowedPhotosFileTypes.includes(file.mimetype)
-        );
-        filesToUpload = filteredFiles;
-      }
-
-      // If after filtering, the array does not have items, send a 400 status and end the function
       if (filesToUpload.length === 0) {
         return res
           .status(400)
-          .json({ message: "No files found in the request" });
+          .json({ message: "No allowed files found on the upload process" });
       }
 
       const albumId = req.body.albumId;
+
       if (
         albumId &&
         !(await canUploadToAlbum(session.user.accountId, albumId))
@@ -219,13 +212,20 @@ export const uploadPhotos = async (req, res) => {
 
       let uploadedPhotos = await Promise.all(
         filesToUpload.map(async (file) => {
-          const accountPhotosPath = `users/${session.user.accountId}/`;
-          
+          const accountPhotosPath = `/users/${session.user.accountId}/`;
+
+          const tags = ExifReader.load(file.buffer);
+
           const { photoFileName, photoURL } = await uploadPhotoToStorage(
             accountPhotosPath,
             file
           );
-          
+
+          const metadata = {
+            resolution: `${tags["Image Width"].value} x ${tags["Image Height"].value}`,
+            device: tags.Make && tags.Model ? `${tags.Make.description} ${tags.Model.description}` : null ,
+            datetime: tags.DateTime ? tags.DateTime.description : null,
+          }
 
           return {
             author_account_id: session.user.accountId,
@@ -233,6 +233,8 @@ export const uploadPhotos = async (req, res) => {
 
             filename: photoFileName,
             url: photoURL,
+
+            metadata,
 
             uploaded_at: new Date(),
           };
@@ -248,15 +250,35 @@ export const uploadPhotos = async (req, res) => {
         await updateAlbumLastModification(albumId, new Date());
       }
 
-      const photos = uploadedPhotos.map(
-        ({ _id, author_account_id, albums, url, uploaded_at }) => ({
-          id: _id.toString(),
-          author_account_id,
-          albums,
-          url,
-          uploaded_at,
-        })
+      const photos = await Promise.all(
+        uploadedPhotos.map(
+          async ({ _id, author_account_id, albums, url, metadata, uploaded_at }) => {
+            const author = await Account.findById(author_account_id);
+
+            const data = {
+              id: _id.toString(),
+              author: {
+                id: author.id,
+                firstname: author.firstname,
+                lastname: author.lastname,
+              },
+
+              albums,
+              url,
+
+              metadata,
+
+              uploaded_at: moment(uploaded_at).format(
+                "MMMM Do YYYY, h:mm:ss a"
+              ),
+            };
+
+            return data;
+          }
+        )
       );
+
+      console.log(photos)
 
       return res.status(200).json({
         photos,
@@ -272,17 +294,14 @@ export const uploadPhotos = async (req, res) => {
 export const addExistentPhotoToAlbum = async (req, res) => {
   try {
     const session = await getServerSession(req, res, authOptions);
-    const isInAlbum = await isPhotoInAlbum(
-      req.query.photoId,
-      req.query.albumId
-    );
+    const isInAlbum = await isPhotoInAlbum(req.body.photoId, req.query.albumId);
 
     if (isInAlbum) {
       return res.status(400).json({ message: "Photo is already on album" });
     }
 
     const ownsPhoto = await isPhotoOwner(
-      req.query.photoId,
+      req.body.photoId,
       session.user.accountId
     );
 
@@ -301,7 +320,7 @@ export const addExistentPhotoToAlbum = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const updatedPhoto = await Photo.findByIdAndUpdate(req.query.photoId, {
+    const updatedPhoto = await Photo.findByIdAndUpdate(req.body.photoId, {
       $push: { albums: req.query.albumId },
     });
 
@@ -309,6 +328,7 @@ export const addExistentPhotoToAlbum = async (req, res) => {
 
     return res.status(200).json({ photo: updatedPhoto });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       message: "An error occurred while attempting to add photo to album",
     });
@@ -351,6 +371,7 @@ export const removePhotoFromAlbum = async (req, res) => {
       .status(200)
       .json({ message: "Photo removed from album successfully" });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       message: "An error occurred while trying to remove Photo from Album.",
     });
@@ -360,7 +381,7 @@ export const removePhotoFromAlbum = async (req, res) => {
 export const getFirstPhotoInAlbum = async (albumId) => {
   try {
     const photo = await Photo.findOne({ albums: albumId })
-      .sort("created_at")
+      .sort("uploaded_at")
       .exec();
     return photo;
   } catch (error) {
