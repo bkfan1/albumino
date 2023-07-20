@@ -6,15 +6,17 @@ import { hash } from "bcrypt";
 import { getFirstPhotoInAlbum } from "../photo";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { calculateFolderSize } from "@/utils/firebase-app";
 import { accountSchema } from "@/utils/joi/schemas/account";
+import moment from "moment/moment";
+import { passwordSalt } from "@/utils/constants";
 
 export const accountExists = async (accountId) => {
   try {
     const db = await connection();
     const account = await Account.findById({ _id: accountId });
+    const exists = account ? true : false;
 
-    return account ? true : false;
+    return exists;
   } catch (error) {
     throw Error("An error occurred while finding the account");
   }
@@ -25,7 +27,7 @@ export const createAccount = async (req, res) => {
     const validationResult = await accountSchema.validateAsync(req.body);
 
     if (validationResult.error) {
-      return res.status(400).json({});
+      return res.status(400).json({ message: "Bad credentials" });
     }
 
     const db = await connection();
@@ -36,7 +38,7 @@ export const createAccount = async (req, res) => {
       return res.status(400).json({ message: "Email taken" });
     }
 
-    const hashedPassword = await hash(req.body.password, 10);
+    const hashedPassword = await hash(req.body.password, passwordSalt);
 
     const createdAccount = await Account.create({
       email: req.body.email,
@@ -50,6 +52,7 @@ export const createAccount = async (req, res) => {
 
     return res.status(200).json({ message: "Account created successfully" });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       message: "An error occurred while attempting to create account",
     });
@@ -63,19 +66,27 @@ export const getAccountPhotos = async (accountId) => {
     const exists = await accountExists(accountId);
 
     if (!exists) {
-      throw Error("Account doesn't found");
+      throw Error("Account not found");
     }
 
     const photos = await Photo.find({
       author_account_id: accountId,
     });
 
-    const data = photos.map(({ _id, author_account_id, albums, url }) => ({
-      id: _id.toString(),
-      author_account_id: author_account_id.toString(),
-      albums: albums.map((albumId) => albumId.toString()),
-      url,
-    }));
+    const data = photos.map(
+      ({ _id, author_account_id, albums, url, metadata, uploaded_at }) => {
+        const photo = {
+          id: _id.toString(),
+          author_account_id: author_account_id.toString(),
+          albums: albums.map((albumId) => albumId.toString()),
+          url,
+          metadata,
+          uploaded_at: moment(uploaded_at).format("MMMM Do YYYY, h:mm:ss a"),
+        };
+
+        return photo;
+      }
+    );
 
     return data;
   } catch (error) {
@@ -117,11 +128,14 @@ export const getAccountAlbums = async (accountId, albumType = "own") => {
         photos: albumPhotos.map((photo) => ({
           id: photo._id.toString(),
           url: photo.url,
-          uploaded_at: photo.uploaded_at.toString(),
+          uploaded_at: moment(photo.uploaded_at).format(
+            "MMMM Do YYYY, h:mm:ss a"
+          ),
         })),
 
-        created_at: album.created_at.toString(),
-        updated_at: album.updated_at.toString(),
+        created_at: moment(album.created_at).format("MMMM Do YYYY, h:mm:ss a"),
+
+        updated_at: moment(album.updated_at).format("MMMM Do YYYY, h:mm:ss a"),
       });
     }
 
@@ -152,7 +166,7 @@ export const sendAccountAlbums = async (req, res) => {
   }
 };
 
-export const getAccountStorageData = async (req, res) => {
+export const sendAccountPhotos = async (req, res) => {
   try {
     const session = await getServerSession(req, res, authOptions);
 
@@ -162,50 +176,12 @@ export const getAccountStorageData = async (req, res) => {
       return res.status(404).json({ message: "Account not found" });
     }
 
-    const folderPath = `/users/${session.user.accountId}/`;
+    const photos = await getAccountPhotos(session.user.accountId);
 
-    // Getting used storage value in bytes
-    const usedStorageInBytes = await calculateFolderSize(folderPath);
-
-    // Converting used storage value to MB
-    const mb = usedStorageInBytes / 1e6;
-
-    // Converting used storage value to percentage
-    const percent = (mb * 100) / 100;
-
-    const storage = {
-      used: {
-        bytes: usedStorageInBytes,
-        mb,
-        percent,
-      },
-    };
-
-    return res.status(200).json({ storage });
+    return res.status(200).json({ photos });
   } catch (error) {
-    console.log(error);
     return res.status(500).json({
-      message: "An error occurred while obtaining account storage data",
+      message: "An error occurred while trying to send account photos",
     });
   }
 };
-
-export const sendAccountPhotos = async (req, res)=>{
-  try {
-    const session = await getServerSession(req, res, authOptions);
-
-    const existsAccount = await accountExists(session.user.accountId);
-
-    if(!existsAccount){
-      return res.status(404).json({message:"Account not found"})
-    }
-
-    const photos = await getAccountPhotos(session.user.accountId);
-
-    return res.status(200).json({photos});
-
-  } catch (error) {
-    return res.status(500).json({message:"An error occurred while trying to send account photos"})
-  }
-
-}
