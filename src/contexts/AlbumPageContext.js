@@ -9,12 +9,18 @@ export const AlbumPageProvider = ({ children }) => {
 
   const [inAlbumPage, setInAlbumPage] = useState(false);
   const [isAlbumOwner, setIsAlbumOwner] = useState(false);
+
   const [showAlbumSettings, setShowAlbumSettings] = useState(false);
 
   const [showUploadPhotosForm, setShowUploadPhotosForm] = useState(false);
   const [showAddPhotosForm, setShowAddPhotosForm] = useState(false);
 
   const [showAddContributorsForm, setShowAddContributorsForm] = useState(false);
+
+  const [showChangeAlbumNameForm, setShowChangeAlbumNameForm] = useState(false);
+
+  const [showDeleteAlbumAlertDialog, setShowDeleteAlbumAlertDialog] =
+    useState(false);
 
   useEffect(() => {
     const updateInAlbumPage = () => {
@@ -37,16 +43,20 @@ export const AlbumPageProvider = ({ children }) => {
     setIsAlbumOwner,
     showAlbumSettings,
     setShowAlbumSettings,
-
     showAddPhotosForm,
     setShowAddPhotosForm,
-
 
     showUploadPhotosForm,
     setShowUploadPhotosForm,
 
     showAddContributorsForm,
-    setShowAddContributorsForm
+    setShowAddContributorsForm,
+
+    showChangeAlbumNameForm,
+    setShowChangeAlbumNameForm,
+
+    showDeleteAlbumAlertDialog,
+    setShowDeleteAlbumAlertDialog,
   };
 
   return (
