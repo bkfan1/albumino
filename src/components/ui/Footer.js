@@ -25,9 +25,7 @@ export default function Footer() {
           <Text>
             Created by Jackson Paredes Ferranti (
             <Tooltip label="Github profile">
-            <Link href="https://www.github.com/bkfan1" >
-              @bkfan1
-            </Link>
+              <Link href="https://www.github.com/bkfan1">@bkfan1</Link>
             </Tooltip>
             )
           </Text>
@@ -42,7 +40,7 @@ export default function Footer() {
 
             <Tooltip label="Send an email to bkfan1">
               <Link href={"mailto:jpf8296@gmail.com"}>
-                <Icon as={BsEnvelopeFill}/>
+                <Icon as={BsEnvelopeFill} />
               </Link>
             </Tooltip>
           </HStack>
