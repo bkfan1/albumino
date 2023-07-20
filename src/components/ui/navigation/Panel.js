@@ -16,12 +16,11 @@ import {
 import { nanoid } from "nanoid";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { BsCloud, BsFillPeopleFill, BsPeople } from "react-icons/bs";
+import { BsCloud, BsFillPeopleFill } from "react-icons/bs";
 import { HiOutlinePhotograph } from "react-icons/hi";
 import { MdOutlinePhotoAlbum } from "react-icons/md";
 import { useIsMounted } from "@/hooks/useIsMounted";
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
 import axios from "axios";
 
 const linkButtons = [
@@ -47,6 +46,7 @@ const linkButtons = [
 
 export default function Panel() {
   const router = useRouter();
+  const {pathname} = router;
   const { isMounted } = useIsMounted();
   // const {data: session, status} = useSession();
 
@@ -65,7 +65,7 @@ export default function Panel() {
     };
 
     fetchStorageValue();
-  }, [router]);
+  }, [pathname]);
 
   const storageValueLoaded = storage !== null ? true : false;
 

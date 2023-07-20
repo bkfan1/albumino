@@ -1,8 +1,7 @@
 import { useIsMounted } from "@/hooks/useIsMounted";
-import { HStack, Icon, Image, Skeleton, Text } from "@chakra-ui/react";
+import { HStack, Image, Skeleton, Text } from "@chakra-ui/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { SiGooglephotos } from "react-icons/si";
 
 export default function NavbarBrand() {
   const { isMounted } = useIsMounted();
