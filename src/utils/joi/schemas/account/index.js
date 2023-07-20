@@ -11,4 +11,3 @@ export const accountSchema = Joi.object({
 
   lastname: Joi.string().pattern(regex.lastname).required(),
 });
-
