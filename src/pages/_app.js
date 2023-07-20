@@ -5,6 +5,7 @@ import "@/styles/globals.css";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { AlbumsProvider } from "@/contexts/AlbumsContext";
 
 const titlesForPages = {
   "/signin": "Sign In",
@@ -42,16 +43,18 @@ export default function App({
 
   return (
     <SessionProvider session={session}>
-      <AlbumPageProvider>
-            <ChakraProvider>
-              <Head>
-                <title>
-                  {pageTitle === null ? "Albumino" : `${pageTitle} - Albumino`}
-                </title>
-              </Head>
-              <Component {...pageProps} />
-            </ChakraProvider>
-      </AlbumPageProvider>
+      <AlbumsProvider>
+        <AlbumPageProvider>
+          <ChakraProvider>
+            <Head>
+              <title>
+                {pageTitle === null ? "Albumino" : `${pageTitle} - Albumino`}
+              </title>
+            </Head>
+            <Component {...pageProps} />
+          </ChakraProvider>
+        </AlbumPageProvider>
+      </AlbumsProvider>
     </SessionProvider>
   );
 }
