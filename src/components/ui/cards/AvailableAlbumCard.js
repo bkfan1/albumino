@@ -1,60 +1,51 @@
-// import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 import { Box, HStack, Icon, Image, Text, VStack } from "@chakra-ui/react";
-// import { useContext } from "react";
 import { MdOutlinePhotoAlbum } from "react-icons/md";
 import { useToast } from "@chakra-ui/react";
 import axios from "axios";
+import { MasonryGridContext } from "@/contexts/MasonryGridContext";
+import { useContext } from "react";
 
 export default function AvailableAlbumCard({ album }) {
-  // const {
-  //   currentPhoto,
-  //   updateCurrentPhoto,
-  //   setShowAvailableAlbums,
-  //   setAvailableAlbums,
-  // } = useContext(PhotoVisorContext);
+  const {
+    currentVisorPhoto,
+    setCurrentVisorPhoto,
+    setShowAvailableAlbums,
+    setAvailableAlbums,
+  } = useContext(MasonryGridContext);
 
-  // const isPhotoAlreadyOnAlbum =
-  //   currentPhoto.albums.includes(album.id) ||
-  //   album.photos.find((albumPhoto) => albumPhoto.id === currentPhoto.id)
-  //     ? true
-  //     : false;
+  const isPhotoAlreadyOnAlbum =
+    currentVisorPhoto.albums.includes(album.id) ||
+    album.photos.find((albumPhoto) => albumPhoto.id === currentVisorPhoto.id)
+      ? true
+      : false;
 
-  // const toast = useToast();
+  const toast = useToast();
 
-  // const handleAddToAlbum = async (albumId) => {
-  //   try {
-  //     const addPromise = axios.put(
-  //       `/api/album/${albumId}/photos/${currentPhoto.id}`
-  //     );
+  const handleAddToAlbum = async (albumId) => {
+    const data = {
+      photoId: currentVisorPhoto.id,
+    }
 
-  //     toast.promise(addPromise, {
-  //       loading: { title: "Adding photo to album..." },
-  //       success: { title: "Photo added to album succesfully" },
-  //       error: { title: "Error while trying to add photo to album" },
-  //     });
+    const res = axios.post(
+      `/api/album/${albumId}/photos/`, data
+    );
 
-  //     await addPromise;
+    toast.promise(res, {
+      loading: { title: "Adding photo to album..." },
+      success: { title: "Photo added to album succesfully" },
+      error: { title: "Error while trying to add photo to album" },
+    });
 
-  //     const updatedCurrentPhoto = {
-  //       ...currentPhoto,
-  //       albums: [...currentPhoto.albums, { id: albumId }],
-  //     }
+    const updatedCurrentVisorPhoto = {
+      ...currentVisorPhoto,
+      albums: [...currentVisorPhoto.albums, { id: albumId }],
+    };
 
-  //     updateCurrentPhoto(updatedCurrentPhoto);
+    setCurrentVisorPhoto(updatedCurrentVisorPhoto);
 
-  //     setShowAvailableAlbums(false);
-  //     setAvailableAlbums([]);
-  //   } catch (error) {
-  //     console.log(error);
-  //     toast({
-  //       status: "error",
-  //       title: "Error",
-  //       description: "An error occurred while trying to add photo to album.",
-  //       duration: 5000,
-  //       isClosable: false,
-  //     });
-  //   }
-  // };
+    setShowAvailableAlbums(false);
+    setAvailableAlbums([]);
+  };
 
   return (
     <>
@@ -98,7 +89,8 @@ export default function AvailableAlbumCard({ album }) {
         </Box>
         <VStack>
           <Text width={"100%"}>{album.name}</Text>
-          {currentPhoto.albums.includes(album.id) || isPhotoAlreadyOnAlbum ? (
+          {currentVisorPhoto.albums.includes(album.id) ||
+          isPhotoAlreadyOnAlbum ? (
             <Text fontStyle={"italic"}>Already on this album</Text>
           ) : (
             ""
