@@ -1,43 +1,48 @@
-// import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 import {
-  Box,
   Flex,
-  Heading,
   IconButton,
   Image,
   ModalBody,
   ModalContent,
   ModalHeader,
   Text,
-  Tooltip,
   VStack,
 } from "@chakra-ui/react";
 import { useContext } from "react";
-import {
-  BsArrowLeft,
-  BsArrowRight,
-  BsChevronLeft,
-  BsChevronRight,
-  BsX,
-} from "react-icons/bs";
+import { BsChevronLeft, BsChevronRight, BsX } from "react-icons/bs";
 import AvailableAlbumCard from "../cards/AvailableAlbumCard";
-
+import { MasonryGridContext } from "@/contexts/MasonryGridContext";
+import PhotoVisorDrawer from "./PhotoVisorDrawer";
 export default function PhotoVisorBody({}) {
-  // const {
-  //   visorPhotos,
-  //   currentPhoto,
-  //   showAvailableAlbums,
-  //   setShowAvailableAlbums,
-  //   availableAlbums,
-  //   handleSetNextPhoto,
-  //   handleSetPreviousPhoto,
-  // } = useContext(PhotoVisorContext);
+  const {
+    masonryPhotos,
+    currentVisorPhoto,
+    setCurrentVisorPhoto,
+    showAvailableAlbums,
+    setShowAvailableAlbums,
+    availableAlbums,
+    setAvailableAlbums,
+  } = useContext(MasonryGridContext);
 
-  // const photoIndex = visorPhotos.findIndex(
-  //   (photo) => photo.id === currentPhoto.id
-  // );
+  const photoIndex = masonryPhotos.findIndex(
+    (photo) => photo.id === currentVisorPhoto.id
+  );
 
-  // const isLastPhoto = photoIndex === visorPhotos.length - 1;
+  const isLastPhoto = photoIndex === masonryPhotos.length - 1;
+
+  const handleSetNextPhoto = () => {
+    if (!isLastPhoto) {
+      const updatedCurrentVisorPhoto = masonryPhotos[photoIndex + 1];
+      setCurrentVisorPhoto(updatedCurrentVisorPhoto);
+    }
+  };
+
+  const handleSetPrevPhoto = () => {
+    if (photoIndex !== 0) {
+      const updatedCurrentVisorPhoto = masonryPhotos[photoIndex - 1];
+      setCurrentVisorPhoto(updatedCurrentVisorPhoto);
+    }
+  };
 
   return (
     <>
@@ -48,52 +53,64 @@ export default function PhotoVisorBody({}) {
         alignItems={"center"}
         className="photoVisor__body"
       >
-        {!(photoIndex === 0) ? (
-          <Tooltip label="Previous photo">
-            <IconButton
-              onClick={handleSetPreviousPhoto}
-              icon={<BsChevronLeft />}
-              rounded={"full"}
+        {photoIndex !== 0 ? (
+          <>
+            <Flex
+              onClick={handleSetPrevPhoto}
+              _hover={{ cursor: "pointer" }}
+              height={"100%"}
               position={"absolute"}
               left={0}
-              size={"lg"}
-              zIndex={3}
-              marginLeft={4}
-              variant={"link"}
-              color={"white"}
-            />
-          </Tooltip>
+              paddingX={4}
+            >
+              <IconButton
+                as={BsChevronLeft}
+                rounded={"full"}
+                variant={"link"}
+                color={"white"}
+              />
+            </Flex>
+          </>
         ) : (
           ""
         )}
 
-        <Box position="relative">
-          <Image src={currentPhoto.url} alt={"Photo"} objectFit={"contain"} maxW="100%" maxH="100%" />
-        </Box>
+        <Flex height={"100%"}>
+          <Image
+            src={currentVisorPhoto.url}
+            alt={"Photo"}
+            objectFit={"contain"}
+            maxW="100%"
+            maxH="100%"
+          />
+        </Flex>
+
         {showAvailableAlbums ? (
           <>
             <ModalContent>
               <ModalHeader>
+                <Text>Available albums</Text>
                 <IconButton
-                  onClick={() => setShowAvailableAlbums(false)}
+                  onClick={() => {
+                    setShowAvailableAlbums(false);
+                    setAvailableAlbums([]);
+                  }}
+                  _hover={{ cursor: "pointer" }}
+                  as={BsX}
                   position={"absolute"}
                   right={0}
                   top={0}
-                  margin={2}
-                  icon={<BsX />}
+                  margin={4}
+                  size={"sm"}
+                  variant={"ghost"}
                 />
-
-                <Heading size={"md"}>Add photo to</Heading>
               </ModalHeader>
 
               <ModalBody>
-                <VStack width={"100%"}>
-                <Text width={"100%"}>Available albums:</Text>
-                <VStack marginTop={6} height={"72"} overflowY={"scroll"} width={"100%"}>
+                <VStack height={"290px"} overflowY={"scroll"}>
                   {availableAlbums.map((album) => (
                     <AvailableAlbumCard key={album.id} album={album} />
                   ))}
-                </VStack>
                 </VStack>
               </ModalBody>
             </ModalContent>
@@ -103,24 +120,28 @@ export default function PhotoVisorBody({}) {
         )}
 
         {!isLastPhoto ? (
-          <Tooltip label="Next photo">
+          <Flex
+            onClick={handleSetNextPhoto}
+            _hover={{ cursor: "pointer" }}
+            height={"100%"}
+            position={"absolute"}
+            right={0}
+            paddingX={4}
+          >
             <IconButton
-              onClick={handleSetNextPhoto}
-              icon={<BsChevronRight />}
+              as={BsChevronRight}
               rounded={"full"}
-              position={"absolute"}
-              right={0}
-              size={"lg"}
-              zIndex={3}
-              marginRight={4}
               variant={"link"}
               color={"white"}
             />
-          </Tooltip>
+          </Flex>
         ) : (
           ""
         )}
       </Flex>
+
+      {/* To display details about the current visor photo*/}
+      <PhotoVisorDrawer />
     </>
   );
 }
