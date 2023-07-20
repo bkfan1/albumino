@@ -58,9 +58,8 @@ export const getFolderSize = async (folderPath) => {
     );
 
     return totalFolderSize;
-
   } catch (error) {
-    console.log(error)
+    console.log(error);
     throw Error("An error occurred while trying to get folder size");
   }
 };
