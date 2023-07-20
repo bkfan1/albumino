@@ -11,7 +11,7 @@ const AccountSchema = new Schema(
     password: {
       type: String,
       required: true,
-      minLength: 8
+      minLength: 8,
     },
 
     firstname: {

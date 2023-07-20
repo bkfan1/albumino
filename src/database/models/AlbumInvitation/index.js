@@ -1,30 +1,31 @@
+import { Schema, models, model } from "mongoose";
 
-import {Schema, models, model} from "mongoose";
-
-const AlbumInvitationSchema = new Schema({
-
+const AlbumInvitationSchema = new Schema(
+  {
     album_id: {
-        type: Schema.ObjectId,
-        ref: "Albums",
-        required: true,
+      type: Schema.ObjectId,
+      ref: "Albums",
+      required: true,
     },
 
     sender_id: {
-        type: Schema.ObjectId,
-        ref: "Accounts",
-        required:true,
+      type: Schema.ObjectId,
+      ref: "Accounts",
+      required: true,
     },
 
     status: {
-        type:String,
-        enum: ["pending", "accepted"],
-        default: "pending", 
+      type: String,
+      enum: ["pending", "accepted"],
+      default: "pending",
     },
 
     created_at: {
-        type:Date,
-    }
+      type: Date,
+    },
+  },
+  { collection: "albumInvitations" }
+);
 
-}, {collection:"albumInvitations"})
-
-export default models.AlbumInvitation || model("AlbumInvitation", AlbumInvitationSchema)
+export default models.AlbumInvitation ||
+  model("AlbumInvitation", AlbumInvitationSchema);
