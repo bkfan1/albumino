@@ -12,14 +12,16 @@ import {
   domain,
   generateInvitationHTMLString,
   generateInvitationLink,
-} from "@/utils/strings";
+} from "@/utils/constants";
 import { accountExists } from "../account";
 
 export const invitationExists = async (invitationId) => {
   try {
-    const foundInvitation = await AlbumInvitation.findById(invitationId);
+    const invitation = await AlbumInvitation.findById(invitationId);
 
-    return foundInvitation ? true : false;
+    const exists = invitation ? true : false;
+
+    return exists;
   } catch (error) {
     throw Error("An error occurred while checking invitation existence");
   }
@@ -74,7 +76,7 @@ export const updateAlbumInvitation = async (req, res) => {
     // Only users that are not in the album can accept the invitation
 
     if (isAuthor || isContributor) {
-      return res.status(400).json({
+      return res.status(401).json({
         message:
           "Only users that are not in the album can accept the invitation",
       });
@@ -94,16 +96,9 @@ export const updateAlbumInvitation = async (req, res) => {
       return res.status(404).json({ message: "Album not found" });
     }
 
-    const isValidData = req.body.status === "accepted";
-
-    if (!isValidData) {
-      return res.status(400).json({ message: "Bad request" });
-    }
-
     // Otherwise, update the invitation status
     await AlbumInvitation.findByIdAndUpdate(req.query.invitationId, {
-      // Use the value sent in req.body status
-      status: req.body.status,
+      status: "accepted",
     });
 
     // ...And update the album related to the current invitation by adding the new contributor account ID
