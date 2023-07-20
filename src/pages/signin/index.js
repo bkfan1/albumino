@@ -1,7 +1,7 @@
 import { authOptions } from "../api/auth/[...nextauth]";
 import { getServerSession } from "next-auth";
 
-import SignInForm from "@/components/ui/forms/SignInForm";
+import SignInForm from "@/components/ui/forms/auth/SignInForm";
 import { Flex } from "@chakra-ui/react";
 import NavbarBrand from "@/components/ui/navigation/NavbarBrand";
 import Footer from "@/components/ui/Footer";
@@ -21,7 +21,7 @@ export default function SignInPage() {
 
         <SignInForm />
       </Flex>
-      <Footer/>
+      <Footer />
     </>
   );
 }
