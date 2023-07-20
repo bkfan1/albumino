@@ -6,13 +6,17 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import Account from "@/database/models/Account";
 import { getFirstPhotoInAlbum } from "../photo";
+import moment from "moment/moment";
+import Joi from "joi";
 
 export const albumExists = async (albumId) => {
   try {
     const db = await connection();
-    const foundAlbum = await Album.findById({ _id: albumId });
+    const album = await Album.findById(albumId);
 
-    return foundAlbum ? true : false;
+    const exists = album ? true : false;
+
+    return exists;
   } catch (error) {
     throw Error("An error occurred while attempting to find album");
   }
@@ -60,7 +64,7 @@ export const isAlbumContributor = async (albumId, accountId) => {
 
     const album = await Album.findById(albumId);
 
-    const isContributor = album.contributors.includes(accountId);
+    const isContributor = album.contributors.includes(accountId) ? true : false;
 
     return isContributor;
   } catch (error) {
@@ -101,18 +105,38 @@ export const getAlbum = async (albumId) => {
         lastname,
       })),
 
-      photos: albumPhotos.map(
-        ({ _id, author_account_id, albums, url, uploaded_at }) => ({
-          id: _id.toString(),
-          author_account_id: author_account_id.toString(),
-          albums: albums.map((albumId) => albumId.toString()),
-          url,
-          uploaded_at: uploaded_at.toString(),
-        })
+      photos: await Promise.all(
+        albumPhotos.map(
+          async ({
+            _id,
+            author_account_id,
+            albums,
+            url,
+            metadata,
+            uploaded_at,
+          }) => {
+            const photoAuthor = await Account.findById(author_account_id);
+
+            return {
+              id: _id.toString(),
+              author: {
+                id: photoAuthor.id.toString(),
+                firstname: photoAuthor.firstname,
+                lastname: photoAuthor.lastname,
+              },
+              albums: albums.map((albumId) => albumId.toString()),
+              url,
+              metadata,
+              uploaded_at: moment(uploaded_at).format(
+                "MMMM Do YYYY, h:mm:ss a"
+              ),
+            };
+          }
+        )
       ),
 
-      updated_at: album.updated_at.toString(),
-      created_at: album.created_at.toString(),
+      updated_at: moment(album.updated_at).format("MMMM Do YYYY, h:mm:ss a"),
+      created_at: moment(album.created_at).format("MMMM Do YYYY, h:mm:ss a"),
     };
 
     return data;
@@ -269,5 +293,61 @@ export const updateAlbumLastModification = async (albumId, date) => {
     throw Error(
       "An error occurred while attempting to update album last modification"
     );
+  }
+};
+
+export const updateAlbumName = async (req, res) => {
+  try {
+    const nameSchema = Joi.string().min(1).max(256);
+
+    const session = await getServerSession(req, res, authOptions);
+    const isOwner = await isAlbumOwner(
+      req.query.albumId,
+      session.user.accountId
+    );
+
+    if (!isOwner) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const validationResult = await nameSchema.validateAsync(req.body.newName);
+
+    if (validationResult.error) {
+      return res.status(400).json({
+        message: "Album name must be between 1 and 256 characters long.",
+      });
+    }
+
+    await Album.findByIdAndUpdate(req.query.albumId, {
+      name: req.body.newName,
+    });
+
+    return res.status(200).json({ message: "Updated album name successfully" });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "An error occurred while trying to update album name" });
+  }
+};
+
+export const sendAlbumPhotos = async (req, res) => {
+  try {
+    const session = getServerSession(req, res, authOptions);
+
+    const canUpload = await canUploadToAlbum(
+      session.user.accountId,
+      req.query.albumId
+    );
+
+    if (!canUpload) {
+      return res.status(401).json({ message: "" });
+    }
+
+    const album = await getAlbum(req.query.albumId);
+    const photos = album.photos;
+
+    return res.status(200).json({ photos });
+  } catch (error) {
+    return res.status(500).json({ message: "" });
   }
 };
