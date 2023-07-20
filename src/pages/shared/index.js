@@ -1,4 +1,3 @@
-import Layout from "@/components/ui/Layout";
 import AlbumCard from "@/components/ui/cards/AlbumCard";
 import { useIsMounted } from "@/hooks/useIsMounted";
 import {
@@ -18,15 +17,16 @@ import {
 } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
-import { MdOutlineAddBox } from "react-icons/md";
 import { authOptions } from "../api/auth/[...nextauth]";
 import { getAccountAlbums } from "@/middlewares/account";
+import AuthCommonLayout from "@/components/ui/layouts/AuthCommonLayout";
+import CreateAlbumForm from "@/components/ui/forms/CreateAlbumForm";
 
 export default function SharedAlbumsPage({ sharedAlbums }) {
   const { isMounted } = useIsMounted();
   return (
     <>
-      <Layout>
+      <AuthCommonLayout>
         <Flex as="main" height={"100%"} flex={6} flexDirection={"column"}>
           <VStack width={"100%"}>
             <Flex
@@ -41,23 +41,7 @@ export default function SharedAlbumsPage({ sharedAlbums }) {
               </Skeleton>
 
               <ButtonGroup variant={"ghost"}>
-                <Link href={"/album/create"}>
-                  <Skeleton isLoaded={isMounted} rounded={"md"}>
-                    <Tooltip label="Create album">
-                      <IconButton
-                        icon={<MdOutlineAddBox />}
-                        display={{ base: "flex", sm: "flex", md: "none" }}
-                        rounded={"full"}
-                      ></IconButton>
-                    </Tooltip>
-                    <Button
-                      leftIcon={<MdOutlineAddBox />}
-                      display={{ base: "none", sm: "none", md: "flex" }}
-                    >
-                      Create album
-                    </Button>
-                  </Skeleton>
-                </Link>
+                <CreateAlbumForm />
               </ButtonGroup>
             </Flex>
           </VStack>
@@ -89,7 +73,7 @@ export default function SharedAlbumsPage({ sharedAlbums }) {
             )}
           </Flex>
         </Flex>
-      </Layout>
+      </AuthCommonLayout>
     </>
   );
 }
