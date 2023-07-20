@@ -2,16 +2,20 @@ import { useContext } from "react";
 import { Modal, ModalOverlay } from "@chakra-ui/react";
 import PhotoVisorHeader from "./PhotoVisorHeader";
 import PhotoVisorBody from "./PhotoVisorBody";
+import { MasonryGridContext } from "@/contexts/MasonryGridContext";
 
 export default function PhotoVisor({}) {
+  const { isOpen, onClose } = useContext(MasonryGridContext);
 
   return (
     <>
       <Modal
-        blockScrollOnMount={true}
+        isOpen={isOpen}
+        onClose={onClose}
         isCentered
+        scrollBehavior={"inside"}
       >
-        <ModalOverlay>
+        <ModalOverlay bg={"black"}>
           <PhotoVisorHeader />
           <PhotoVisorBody />
         </ModalOverlay>
