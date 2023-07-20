@@ -1,9 +1,10 @@
 import { authOptions } from "../api/auth/[...nextauth]";
 import { getServerSession } from "next-auth";
 
-import SignUpForm from "@/components/ui/forms/SignUpForm";
+import SignUpForm from "@/components/ui/forms/auth/SignUpForm";
 import { Flex } from "@chakra-ui/react";
 import NavbarBrand from "@/components/ui/navigation/NavbarBrand";
+import Footer from "@/components/ui/Footer";
 
 export default function SignUpPage() {
   return (
@@ -20,6 +21,7 @@ export default function SignUpPage() {
 
         <SignUpForm />
       </Flex>
+      <Footer />
     </>
   );
 }
