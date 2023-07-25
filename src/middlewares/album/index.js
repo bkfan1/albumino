@@ -214,24 +214,28 @@ export const createAlbum = async (req, res) => {
 
 export const canUploadToAlbum = async (accountId, albumId) => {
   try {
-    const exists = await Promise.all([
-      accountExists(accountId),
-      albumExists(albumId),
-    ]);
 
-    if (!exists[0] || !exists[1]) {
-      throw Error("Error while checking album permissions.");
+    const existsAccount = await accountExists(accountId);
+
+    if(!existsAccount){
+      throw Error("Accout not found");
     }
 
-    const [isOwner, isContributor] = await Promise.all([
-      isAlbumOwner(albumId, accountId),
-      isAlbumContributor(albumId, accountId),
-    ]);
+    const existsAlbum = await albumExists(albumId);
+
+    if(!existsAlbum){
+      throw Error("Albumt not found");
+    }
+
+    const isOwner = await isAlbumOwner(albumId, accountId);
+
+    const isContributor = await isAlbumContributor(albumId, accountId);
 
     const canUpload = isOwner || isContributor;
 
     return canUpload;
   } catch (error) {
+    console.log(error)
     throw Error("Error while checking album permissions.");
   }
 };
@@ -332,7 +336,7 @@ export const updateAlbumName = async (req, res) => {
 
 export const sendAlbumPhotos = async (req, res) => {
   try {
-    const session = getServerSession(req, res, authOptions);
+    const session = await getServerSession(req, res, authOptions);
 
     const canUpload = await canUploadToAlbum(
       session.user.accountId,
@@ -348,6 +352,7 @@ export const sendAlbumPhotos = async (req, res) => {
 
     return res.status(200).json({ photos });
   } catch (error) {
+    console.log(error)
     return res.status(500).json({ message: "" });
   }
 };
