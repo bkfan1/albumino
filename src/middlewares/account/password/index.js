@@ -22,7 +22,7 @@ export const updateAccountPassword = async (req, res) => {
     const validationResult = await updatePasswordSchema.validateAsync(req.body);
 
     if (validationResult.error) {
-      return res.status(400).json({});
+      return res.status(400).json({ message: "" });
     }
 
     const account = await Account.findById(session.user.accountId);
@@ -46,7 +46,7 @@ export const updateAccountPassword = async (req, res) => {
     // If the new password it's the same as the account current password, then...
     if (isCurrentPasswordMatchingNewPassword) {
       return res.status(400).json({
-        message: "New password has to be different from your current password",
+        message: "New password has to be different from current password",
       });
     }
 
