@@ -22,6 +22,7 @@ export default function AlbumOptionsMenu({}) {
     isAlbumOwner,
     setShowAlbumSettings,
     showDeleteAlbumAlertDialog,
+    uploadingPhotosToAlbum,
     setShowDeleteAlbumAlertDialog,
   } = useContext(AlbumPageContext);
   const { handleLeaveAlbum } = useContext(AlbumsContext);
@@ -47,6 +48,7 @@ export default function AlbumOptionsMenu({}) {
                 <MenuItem
                   onClick={() => setShowAlbumSettings(true)}
                   icon={<BsGearFill />}
+                  isDisabled={uploadingPhotosToAlbum}
                 >
                   Settings
                 </MenuItem>
@@ -55,6 +57,7 @@ export default function AlbumOptionsMenu({}) {
                     setShowDeleteAlbumAlertDialog(!showDeleteAlbumAlertDialog)
                   }
                   icon={<BsTrashFill />}
+                  isDisabled={uploadingPhotosToAlbum}
                 >
                   Delete album
                 </MenuItem>
@@ -65,6 +68,7 @@ export default function AlbumOptionsMenu({}) {
                   onClick={() =>
                     handleLeaveAlbum(albumId, session.user.accountId)
                   }
+                  isDisabled={uploadingPhotosToAlbum}
                 >
                   Leave album
                 </MenuItem>
