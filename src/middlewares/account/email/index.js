@@ -43,7 +43,7 @@ export const updateAccountEmail = async (req, res) => {
       });
     }
 
-    const emailTaken = await Account.find({ email: req.body.newEmail });
+    const emailTaken = await Account.findOne({ email: req.body.newEmail });
 
     if (emailTaken) {
       return res
