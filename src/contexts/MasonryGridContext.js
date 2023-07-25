@@ -1,4 +1,3 @@
-import { useDisclosure } from "@chakra-ui/react";
 import { createContext, useState } from "react";
 
 export const MasonryGridContext = createContext({
@@ -11,16 +10,6 @@ export const MasonryGridProvider = ({ children, photos }) => {
 
   const [selectedPhotos, setSelectedPhotos] = useState([]);
 
-  const [showAvailableAlbums, setShowAvailableAlbums] = useState(false);
-  const [availableAlbums, setAvailableAlbums] = useState([]);
-
-  const [currentVisorPhoto, setCurrentVisorPhoto] = useState(null);
-
-  const [showCurrentVisorPhotoDetails, setShowCurrentVisorPhotoDetails] =
-    useState(false);
-
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
   const handleUndoSelection = () => {
     setSelectedPhotos([]);
   };
@@ -32,21 +21,6 @@ export const MasonryGridProvider = ({ children, photos }) => {
     selectedPhotos,
     setSelectedPhotos,
     handleUndoSelection,
-
-    isOpen,
-    onOpen,
-    onClose,
-
-    currentVisorPhoto,
-    setCurrentVisorPhoto,
-
-    showAvailableAlbums,
-    setShowAvailableAlbums,
-    availableAlbums,
-    setAvailableAlbums,
-
-    showCurrentVisorPhotoDetails,
-    setShowCurrentVisorPhotoDetails,
   };
 
   return (
