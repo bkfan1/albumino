@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useRouter } from "next/router";
 import { createContext, useEffect, useState } from "react";
 
@@ -22,6 +23,22 @@ export const AlbumPageProvider = ({ children }) => {
   const [showDeleteAlbumAlertDialog, setShowDeleteAlbumAlertDialog] =
     useState(false);
 
+  const [showSpinner, setShowSpinner] = useState(false);
+
+  const [uploadingPhotosToAlbum, setUploadingPhotosToAlbum] = useState(false);
+
+  const fetchAlbumPhotos = async (albumId) => {
+    try {
+      const res = await axios.get(`/api/album/${albumId}/photos`);
+      const photos = res.data.photos;
+
+      return photos;
+    } catch (error) {
+      console.log(error);
+      throw Error("An error occurred while fetching album photos.");
+    }
+  };
+
   useEffect(() => {
     const updateInAlbumPage = () => {
       if (pathname === "/album/[albumId]") {
@@ -45,6 +62,13 @@ export const AlbumPageProvider = ({ children }) => {
     setShowAlbumSettings,
     showAddPhotosForm,
     setShowAddPhotosForm,
+
+    uploadingPhotosToAlbum,
+    setUploadingPhotosToAlbum,
+
+    fetchAlbumPhotos,
+    showSpinner,
+    setShowSpinner,
 
     showUploadPhotosForm,
     setShowUploadPhotosForm,
