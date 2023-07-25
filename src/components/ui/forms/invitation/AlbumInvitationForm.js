@@ -12,34 +12,52 @@ import {
 import { useRouter } from "next/router";
 import axios from "axios";
 import { useIsMounted } from "@/hooks/useIsMounted";
+import { useForm } from "react-hook-form";
+import { useDisableButtons } from "@/hooks/useDisableButtons";
 
 export default function AlbumInvitationForm({ details }) {
-  const router = useRouter();
   const { invitation, author, album } = details;
 
   const { isMounted } = useIsMounted();
+
+  const {disableButtons, toggleDisableButtons} = useDisableButtons();
+  const {handleSubmit} = useForm();
+  const router = useRouter();
+
   const toast = useToast();
 
   const onSubmit = async () => {
-    const res = axios.put(`/api/album/${album.id}/invitation/${invitation.id}`);
+
+    toggleDisableButtons();
+    const res = axios.put(`/api/album/${album.id}/invitations/${invitation.id}`);
 
     toast.promise(res, {
-      loading: { title: "Joining to album..." },
-      success: { title: "Joined to album successfully" },
+      loading: {
+        title:"Joining to album...",
+      },
+      success: {
+        title:"Joined to album successfully",
+        description:"Redirecting to album..."
+      },
       error: {
-        title: "An error occurred while trying to accept the invitation",
+        title:"Error",
+        description:"An error occurred while trying to accept the invitation"
       },
     });
 
-    router.push(`/album/${album.id}/`);
+    await res;
+
+    await router.push(`/album/${album.id}/`);
+
   };
+
   return (
     <>
       <Skeleton isLoaded={isMounted}>
         <VStack
           as={"form"}
           width={"360px"}
-          onSubmit={onSubmit}
+          onSubmit={handleSubmit(onSubmit)}
           rounded={"md"}
           borderColor={"lightgray"}
           py={4}
@@ -70,13 +88,12 @@ export default function AlbumInvitationForm({ details }) {
             </Box>
 
             <VStack width={"100%"}>
-
               <Heading size={"lg"} textAlign={"center"}>
                 {album.name}
               </Heading>
             </VStack>
           </VStack>
-          <Button type="submit" width={"100%"} colorScheme="blue">
+          <Button type="submit" width={"100%"} colorScheme="blue" isDisabled={disableButtons}>
             Join album
           </Button>
         </VStack>
