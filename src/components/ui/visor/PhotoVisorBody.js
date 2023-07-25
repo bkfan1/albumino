@@ -13,16 +13,18 @@ import { BsChevronLeft, BsChevronRight, BsX } from "react-icons/bs";
 import AvailableAlbumCard from "../cards/AvailableAlbumCard";
 import { MasonryGridContext } from "@/contexts/MasonryGridContext";
 import PhotoVisorDrawer from "./PhotoVisorDrawer";
+import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 export default function PhotoVisorBody({}) {
   const {
-    masonryPhotos,
     currentVisorPhoto,
     setCurrentVisorPhoto,
     showAvailableAlbums,
     setShowAvailableAlbums,
     availableAlbums,
     setAvailableAlbums,
-  } = useContext(MasonryGridContext);
+  } = useContext(PhotoVisorContext);
+
+  const { masonryPhotos } = useContext(MasonryGridContext);
 
   const photoIndex = masonryPhotos.findIndex(
     (photo) => photo.id === currentVisorPhoto.id
