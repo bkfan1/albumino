@@ -21,6 +21,7 @@ import {
   Tooltip,
   Skeleton,
   SkeletonText,
+  Spinner,
 } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
 import {
@@ -55,6 +56,8 @@ import ChangeAlbumNameForm from "@/components/ui/forms/ChangeAlbumNameForm";
 import Footer from "@/components/ui/Footer";
 import { MdOutlineAddPhotoAlternate } from "react-icons/md";
 import { useIsMounted } from "@/hooks/useIsMounted";
+import { PhotoVisorProvider } from "@/contexts/PhotoVisorContext";
+import LoadingPageLayout from "@/components/ui/layouts/LoadingPageLayout";
 
 export default function AlbumPage({ album, isOwner }) {
   const { data: session, status } = useSession();
@@ -68,6 +71,8 @@ export default function AlbumPage({ album, isOwner }) {
     setShowChangeAlbumNameForm,
     showDeleteAlbumAlertDialog,
     setShowDeleteAlbumAlertDialog,
+    showSpinner,
+    setShowSpinner,
   } = useContext(AlbumPageContext);
 
   const [albumData, setAlbumData] = useState(album);
@@ -140,7 +145,11 @@ export default function AlbumPage({ album, isOwner }) {
       error: { title: "An error occurred while trying to delete album" },
     });
 
+    await res;
+
     setShowDeleteAlbumAlertDialog(false);
+
+    setShowSpinner(true);
 
     return router.push("/albums");
   };
@@ -150,156 +159,168 @@ export default function AlbumPage({ album, isOwner }) {
 
     setAlbumData(updatedAlbumData);
   };
- 
+
+  if (!isMounted || showSpinner) {
+    return (
+      <>
+        <LoadingPageLayout />
+      </>
+    );
+  }
+
   return (
     <>
-      <MasonryGridProvider photos={photos}>
-        <AlbumPageNavbar />
-        <Flex
-          as={"main"}
-          flexDirection={"column"}
-          minHeight={"100vh"}
-          px={6}
-          pt={4}
-          gap={6}
-        >
-          <VStack as={"header"} width={"100%"} gap={1}>
-            <Skeleton isLoaded={isMounted} alignSelf={"flex-start"}>
-              <VStack className="albumPage__titleContainer" width={"100%"}>
-                {isAlbumOwner ? (
-                  <>
-                    {showChangeAlbumNameForm ? (
-                      <ChangeAlbumNameForm
-                        albumId={albumId}
-                        currentAlbumName={name}
-                        updateAlbumName={updateAlbumName}
-                      />
-                    ) : (
-                      <HStack width={"100%"}>
-                        <Heading>{name}</Heading>{" "}
-                        <Tooltip label="Change album name">
-                          <IconButton
-                            onClick={() =>
-                              setShowChangeAlbumNameForm(
-                                !showChangeAlbumNameForm
-                              )
-                            }
-                            icon={<BsPencilFill />}
-                            variant={"ghost"}
-                            rounded={"full"}
-                          />
-                        </Tooltip>
-                      </HStack>
-                    )}
-                  </>
-                ) : (
-                  <Heading width={"100%"}>{name}</Heading>
-                )}
+      <PhotoVisorProvider>
+        <MasonryGridProvider photos={photos}>
+          <AlbumPageNavbar />
+          <Flex
+            as={"main"}
+            flexDirection={"column"}
+            minHeight={"100vh"}
+            px={6}
+            pt={4}
+            gap={6}
+          >
+            <VStack as={"header"} width={"100%"} gap={1}>
+              <Skeleton isLoaded={isMounted} alignSelf={"flex-start"}>
+                <VStack className="albumPage__titleContainer" width={"100%"}>
+                  {isAlbumOwner ? (
+                    <>
+                      {showChangeAlbumNameForm ? (
+                        <ChangeAlbumNameForm
+                          albumId={albumId}
+                          currentAlbumName={name}
+                          updateAlbumName={updateAlbumName}
+                        />
+                      ) : (
+                        <HStack width={"100%"}>
+                          <Heading>{name}</Heading>{" "}
+                          <Tooltip label="Change album name">
+                            <IconButton
+                              onClick={() =>
+                                setShowChangeAlbumNameForm(
+                                  !showChangeAlbumNameForm
+                                )
+                              }
+                              icon={<BsPencilFill />}
+                              variant={"ghost"}
+                              rounded={"full"}
+                            />
+                          </Tooltip>
+                        </HStack>
+                      )}
+                    </>
+                  ) : (
+                    <Heading width={"100%"}>{name}</Heading>
+                  )}
+                </VStack>
+              </Skeleton>
+
+              <VStack
+                className="albumPage__datesContainer"
+                width={"100%"}
+                color={"gray.600"}
+              >
+                <SkeletonText
+                  isLoaded={isMounted}
+                  noOfLines={1}
+                  skeletonHeight={4}
+                  alignSelf={"flex-start"}
+                >
+                  <Text width={"100%"}>
+                    <Icon as={BsCalendar} mr={1} /> Created at {created_at}
+                  </Text>
+                </SkeletonText>
+
+                <SkeletonText
+                  isLoaded={isMounted}
+                  noOfLines={1}
+                  skeletonHeight={4}
+                  alignSelf={"flex-start"}
+                >
+                  <Text width={"100%"}>
+                    <Icon as={BsCalendarPlus} mr={1} /> Updated at {updated_at}
+                  </Text>
+                </SkeletonText>
               </VStack>
-            </Skeleton>
 
-            <VStack
-              className="albumPage__datesContainer"
-              width={"100%"}
-              color={"gray.600"}
-            >
-              <SkeletonText
+              <Skeleton
                 isLoaded={isMounted}
-                noOfLines={1}
-                skeletonHeight={4}
                 alignSelf={"flex-start"}
+                rounded={"md"}
               >
-                <Text width={"100%"}>
-                  <Icon as={BsCalendar} mr={1} /> Created at {created_at}
-                </Text>
-              </SkeletonText>
+                <HStack
+                  className="albumPage__contributorsContainer"
+                  width={"100%"}
+                >
+                  {contributors.length > 0 ? (
+                    <>
+                      <AvatarGroup size={"sm"}>
+                        {contributors.map(({ id, firstname, lastname }) => (
+                          <Avatar
+                            key={id}
+                            name={`${firstname} ${lastname}`}
+                            title={`${firstname} ${lastname} ${
+                              status === "authenticated"
+                                ? session.user.accountId === id
+                                  ? "(You)"
+                                  : ""
+                                : ""
+                            }`}
+                          />
+                        ))}
+                      </AvatarGroup>
+                    </>
+                  ) : (
+                    ""
+                  )}
 
-              <SkeletonText
-                isLoaded={isMounted}
-                noOfLines={1}
-                skeletonHeight={4}
-                alignSelf={"flex-start"}
-              >
-                <Text width={"100%"}>
-                  <Icon as={BsCalendarPlus} mr={1} /> Updated at {updated_at}
-                </Text>
-              </SkeletonText>
+                  {isAlbumOwner ? (
+                    <Tooltip label="Add contributors">
+                      <IconButton
+                        onClick={() => setShowAddContributorsForm(true)}
+                        icon={<BsPlus />}
+                        rounded={"full"}
+                      />
+                    </Tooltip>
+                  ) : (
+                    ""
+                  )}
+                </HStack>
+              </Skeleton>
             </VStack>
 
-            <Skeleton
-              isLoaded={isMounted}
-              alignSelf={"flex-start"}
-              rounded={"md"}
-            >
-              <HStack
-                className="albumPage__contributorsContainer"
-                width={"100%"}
-              >
-                {contributors.length > 0 ? (
-                  <>
-                    <AvatarGroup size={"sm"}>
-                      {contributors.map(({ id, firstname, lastname }) => (
-                        <Avatar
-                          key={id}
-                          name={`${firstname} ${lastname}`}
-                          title={`${firstname} ${lastname} ${
-                            status === "authenticated"
-                              ? session.user.accountId === id
-                                ? "(You)"
-                                : ""
-                              : ""
-                          }`}
-                        />
-                      ))}
-                    </AvatarGroup>
-                  </>
-                ) : (
-                  ""
-                )}
-
-                {isAlbumOwner ? (
-                  <Tooltip label="Add contributors">
-                    <IconButton
-                      onClick={() => setShowAddContributorsForm(true)}
-                      icon={<BsPlus />}
-                      rounded={"full"}
-                    />
-                  </Tooltip>
-                ) : (
-                  ""
-                )}
-              </HStack>
-            </Skeleton>
-          </VStack>
-
-          <Flex as={"section"} width={"100%"}>
-            {photos.length === 0 ? (
-              <VStack width={"100%"}>
-                <Image src="/empty_state_album.svg" alt="" />
-                <Heading size={"md"} fontWeight={"normal"}>
-                  Album is empty
-                </Heading>
-                <Text maxW={"sm"} textAlign={"center"} fontWeight={"bold"}>
-                  Add or upload photos to album using{" "}
-                  <Icon as={MdOutlineAddPhotoAlternate} boxSize={6} mx={1} />
-                  at the navigation bar.
-                </Text>
-              </VStack>
-            ) : (
-              <>
-                <MasonryGrid />
-                <PhotoVisor />
-              </>
-            )}
+            <Flex as={"section"} width={"100%"}>
+              {photos.length === 0 ? (
+                <VStack width={"100%"}>
+                  <Image src="/empty_state_album.svg" alt="" />
+                  <Heading size={"md"} fontWeight={"normal"}>
+                    Album is empty
+                  </Heading>
+                  <Text maxW={"sm"} textAlign={"center"} fontWeight={"bold"}>
+                    Add or upload photos to album using{" "}
+                    <Icon as={MdOutlineAddPhotoAlternate} boxSize={6} mx={1} />
+                    at the navigation bar.
+                  </Text>
+                </VStack>
+              ) : (
+                <>
+                  <MasonryGrid />
+                  <PhotoVisor />
+                </>
+              )}
+            </Flex>
           </Flex>
-        </Flex>
-        <Footer />
-      </MasonryGridProvider>
+          <Footer />
+        </MasonryGridProvider>
+      </PhotoVisorProvider>
 
       {showAddPhotosForm && accountPhotos !== null ? (
-        <MasonryGridProvider photos={accountPhotos}>
-          <AddExistentPhotosToAlbumForm albumId={albumId} />
-        </MasonryGridProvider>
+        <PhotoVisorProvider>
+          <MasonryGridProvider photos={accountPhotos}>
+            <AddExistentPhotosToAlbumForm albumId={albumId} />
+          </MasonryGridProvider>
+        </PhotoVisorProvider>
       ) : (
         ""
       )}
@@ -314,6 +335,7 @@ export default function AlbumPage({ album, isOwner }) {
         onClose={() => {
           setShowDeleteAlbumAlertDialog(false);
         }}
+        isCentered
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
