@@ -19,6 +19,7 @@ import { getAvailableSpace } from "../account/storage";
 import Account from "@/database/models/Account";
 import moment from "moment/moment";
 import ExifReader from "exifreader";
+import { convertToISO8601 } from "@/utils/date";
 
 export const photoExists = async (photoId) => {
   try {
@@ -227,7 +228,7 @@ export const uploadPhotos = async (req, res) => {
               tags.Make && tags.Model
                 ? `${tags.Make.description} ${tags.Model.description}`
                 : null,
-            datetime: tags.DateTime ? tags.DateTime.description : null,
+            datetime: tags.DateTime ? convertToISO8601(tags.DateTime.description) : null,
           };
 
           return {
