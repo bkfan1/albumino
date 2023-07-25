@@ -41,10 +41,11 @@ export const AlbumsProvider = ({ children }) => {
 
     await res;
 
-    if (pathname === "/album/[albumId]") {
-      return router.push("/photos");
+    if (pathname === "/shared") {
+      const updatedAlbums = [...albums.filter((album)=>album.id !==  albumId)];
+      setAlbums(updatedAlbums);
     } else {
-      setAlbums(albums.filter((album) => album.id !== albumId));
+      return await router.push("/photos");
     }
   };
 
