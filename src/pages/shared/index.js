@@ -1,29 +1,32 @@
 import AlbumCard from "@/components/ui/cards/AlbumCard";
 import { useIsMounted } from "@/hooks/useIsMounted";
 import {
-  Box,
-  Button,
   ButtonGroup,
   Divider,
   Flex,
   Heading,
-  IconButton,
   Image,
   SimpleGrid,
   Skeleton,
   Text,
-  Tooltip,
   VStack,
 } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
-import Link from "next/link";
-import { authOptions } from "../api/auth/[...nextauth]";
 import { getAccountAlbums } from "@/middlewares/account";
 import AuthCommonLayout from "@/components/ui/layouts/AuthCommonLayout";
 import CreateAlbumForm from "@/components/ui/forms/CreateAlbumForm";
+import { useContext, useEffect } from "react";
+import { AlbumsContext } from "@/contexts/AlbumsContext";
+import { authOptions } from "../api/auth/[...nextauth]";
 
 export default function SharedAlbumsPage({ sharedAlbums }) {
+  const { albums, setAlbums } = useContext(AlbumsContext);
   const { isMounted } = useIsMounted();
+
+  useEffect(() => {
+    setAlbums(sharedAlbums);
+  }, [sharedAlbums, setAlbums]);
+
   return (
     <>
       <AuthCommonLayout>
@@ -54,13 +57,14 @@ export default function SharedAlbumsPage({ sharedAlbums }) {
             height={"100%"}
             flexDirection={"column"}
           >
-            {sharedAlbums.length > 0 ? (
+            {albums.length > 0 ? (
               <>
                 <SimpleGrid
                   columns={{ sm: 2, md: 3, lg: 4, xl: 5, "2xl": 8 }}
                   className="albumsGrid"
+                  spacing={4}
                 >
-                  {sharedAlbums.map((album) => (
+                  {albums.map((album) => (
                     <AlbumCard key={album.id} data={album} />
                   ))}
                 </SimpleGrid>
