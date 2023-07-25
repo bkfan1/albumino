@@ -1,5 +1,6 @@
 import { AlbumPageContext } from "@/contexts/AlbumPageContext";
 import { AlbumsContext } from "@/contexts/AlbumsContext";
+import { MasonryGridContext } from "@/contexts/MasonryGridContext";
 import { useIsMounted } from "@/hooks/useIsMounted";
 import {
   Icon,
@@ -26,11 +27,15 @@ export default function AlbumOptionsMenu({}) {
     setShowDeleteAlbumAlertDialog,
   } = useContext(AlbumPageContext);
   const { handleLeaveAlbum } = useContext(AlbumsContext);
+  const {selectedPhotos} = useContext(MasonryGridContext);
+
   const { isMounted } = useIsMounted();
 
   const router = useRouter();
   const { query } = router;
   const { albumId } = query;
+
+  const disableButton = selectedPhotos.length > 0 || uploadingPhotosToAlbum;
 
   return (
     <>
@@ -48,7 +53,7 @@ export default function AlbumOptionsMenu({}) {
                 <MenuItem
                   onClick={() => setShowAlbumSettings(true)}
                   icon={<BsGearFill />}
-                  isDisabled={uploadingPhotosToAlbum}
+                  isDisabled={disableButton}
                 >
                   Settings
                 </MenuItem>
@@ -57,7 +62,7 @@ export default function AlbumOptionsMenu({}) {
                     setShowDeleteAlbumAlertDialog(!showDeleteAlbumAlertDialog)
                   }
                   icon={<BsTrashFill />}
-                  isDisabled={uploadingPhotosToAlbum}
+                  isDisabled={disableButton}
                 >
                   Delete album
                 </MenuItem>
@@ -68,7 +73,7 @@ export default function AlbumOptionsMenu({}) {
                   onClick={() =>
                     handleLeaveAlbum(albumId, session.user.accountId)
                   }
-                  isDisabled={uploadingPhotosToAlbum}
+                  isDisabled={disableButton}
                 >
                   Leave album
                 </MenuItem>
