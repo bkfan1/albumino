@@ -23,7 +23,7 @@ export default function GenerateInvitationLinkForm() {
 
   const onSubmit = async () => {
     const data = { sendEmail: false };
-    const res = axios.post(`/api/album/${albumId}/invitation`, data);
+    const res = axios.post(`/api/album/${albumId}/invitations`, data);
 
     toast.promise(res, {
       loading: { title: "Generating invitation link..." },
