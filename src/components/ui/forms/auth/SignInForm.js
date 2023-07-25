@@ -5,6 +5,7 @@ import {
   FormControl,
   FormErrorMessage,
   Input,
+  Spinner,
   Text,
   VStack,
   useToast,
@@ -13,8 +14,10 @@ import { nanoid } from "nanoid";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { signIn } from "next-auth/react";
+import { useDisableButtons } from "@/hooks/useDisableButtons";
 
 export default function SignInForm() {
+  const { disableButtons, toggleDisableButtons } = useDisableButtons();
   const {
     register,
     handleSubmit,
@@ -25,18 +28,21 @@ export default function SignInForm() {
 
   const onSubmit = async (data) => {
     try {
-      const result = await signIn("credentials", {
+      toggleDisableButtons();
+      await signIn("credentials", {
         email: data.email,
         password: data.password,
         callbackUrl: "/photos",
       });
     } catch (error) {
+      console.log(error);
       toast({
         status: "error",
         title: "Error",
         description: "An error occurred while trying to sign in",
         duration: 5000,
       });
+      toggleDisableButtons();
     }
   };
 
@@ -93,8 +99,10 @@ export default function SignInForm() {
           </FormControl>
         ))}
 
-        <Button type="submit" colorScheme="blue">
-          Sign In
+        <Input type="submit" hidden isDisabled={disableButtons} />
+
+        <Button type="submit" colorScheme="blue" isDisabled={disableButtons}>
+          {disableButtons ? <Spinner /> : "Sign In"}
         </Button>
 
         <VStack width={"100%"}>
