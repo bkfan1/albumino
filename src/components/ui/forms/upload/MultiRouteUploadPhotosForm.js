@@ -52,7 +52,7 @@ export default function MultiRouteUploadPhotosForm() {
 
     const res = await resPromise;
 
-    if (pathname === "/photos" || pathname === "/album/[albumId]") {
+    if (pathname === "/photos") {
       const photos = res.data.photos;
       const updatedMasonryPhotos = [...photos, ...masonryPhotos];
 
