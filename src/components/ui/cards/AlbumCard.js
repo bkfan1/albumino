@@ -106,7 +106,7 @@ export default function AlbumCard({ data }) {
         <Link href={`album/${id}`} style={{ width: "100%" }}>
           <Tooltip label="Album name">
             <Skeleton isLoaded={isMounted} rounded={"md"}>
-              <Heading size={"sm"} width={"100%"}>
+              <Heading size={"sm"} width={"100%"} noOfLines={1}>
                 {name}
               </Heading>
             </Skeleton>
