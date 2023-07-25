@@ -60,6 +60,7 @@ export default function AlbumsPage({ accountAlbums }) {
             <SimpleGrid
               columns={{ sm: 2, md: 3, lg: 4, xl: 5, "2xl": 8 }}
               className="albumsGrid"
+              spacing={4}
             >
               {albums.map((album) => (
                 <AlbumCard key={album.id} data={album} />
