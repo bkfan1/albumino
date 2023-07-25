@@ -1,7 +1,5 @@
 export const passwordSalt = Number.parseInt(process.env.PASSWORDS_SALT);
-export const domain =
-  (process.env.NODE_ENV === "production" && "albumino.app") ||
-  (process.env.NODE_ENV === "development" && `http://localhost:3000`);
+export const domain = process.env.NODE_ENV === "production" ? process.env.NEXTAUTH_URL : "http://localhost:3000";
 
 export const generateInvitationLink = (domain, invitationId) => {
   return `${domain}/invitation/${invitationId}`;
