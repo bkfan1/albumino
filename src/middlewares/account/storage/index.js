@@ -19,10 +19,12 @@ export const sendAccountStorageData = async (req, res) => {
     const session = await getServerSession(req, res, authOptions);
     const existsAccount = await accountExists(session.user.accountId);
 
-    if(!existsAccount){return res.status(404).json({message:"Account not found"})}
+    if (!existsAccount) {
+      return res.status(404).json({ message: "Account not found" });
+    }
 
     const folderSizeInBytes = await getFolderSize(
-      `users/${session.user.accountId}/`
+      `/users/${session.user.accountId}/`
     );
 
     const mb = folderSizeInBytes / 1e6;
@@ -36,13 +38,11 @@ export const sendAccountStorageData = async (req, res) => {
       },
     };
 
-    return res.status(200).json({storage: data})
+    return res.status(200).json({ storage: data });
   } catch (error) {
-    return res
-      .status(500)
-      .json({
-        message:
-          "An error occurred while attempting to send account storage data",
-      });
+    return res.status(500).json({
+      message:
+        "An error occurred while attempting to send account storage data",
+    });
   }
 };
