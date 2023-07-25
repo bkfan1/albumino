@@ -46,7 +46,9 @@ export const updateAccountEmail = async (req, res) => {
     const emailTaken = await Account.find({ email: req.body.newEmail });
 
     if (emailTaken) {
-      return res.status(400).json({ message: "Email taken, please use a different email" });
+      return res
+        .status(400)
+        .json({ message: "Email taken, please use a different email" });
     }
 
     const updatedAccount = await Account.findByIdAndUpdate(
