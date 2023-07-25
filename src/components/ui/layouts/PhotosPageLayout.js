@@ -9,10 +9,20 @@ import MultiRouteUploadPhotosForm from "../forms/upload/MultiRouteUploadPhotosFo
 import UserNavbarMenu from "../navigation/menus/UserNavbarMenu";
 import UndoSelectionButton from "../UndoSelectionButton";
 import { useIsNavbarFixed } from "@/hooks/useIsNavbarFixed";
+import { useIsMounted } from "@/hooks/useIsMounted";
+import LoadingPageLayout from "./LoadingPageLayout";
 
 export default function PhotosPageLayout({ children }) {
   const { selectedPhotos } = useContext(MasonryGridContext);
-  const {isNavbarFixed} = useIsNavbarFixed();
+  const { isMounted } = useIsMounted();
+  const { isNavbarFixed } = useIsNavbarFixed();
+  if (!isMounted) {
+    return (
+      <>
+        <LoadingPageLayout />
+      </>
+    );
+  }
   return (
     <>
       <Flex flexDirection={"column"} minHeight={"100vh"}>
@@ -25,12 +35,12 @@ export default function PhotosPageLayout({ children }) {
           borderBottom={"1px"}
           borderColor={"#edf1f5"}
           position={isNavbarFixed ? "fixed" : "static"}
-      top={0}
-      left={0}
-      right={0}
-      zIndex={10}
-      backgroundColor={"white"}
-      boxShadow={isNavbarFixed ? "md" : "none"}
+          top={0}
+          left={0}
+          right={0}
+          zIndex={10}
+          backgroundColor={"white"}
+          boxShadow={isNavbarFixed ? "md" : "none"}
         >
           <Stack>
             {selectedPhotos.length > 0 ? (

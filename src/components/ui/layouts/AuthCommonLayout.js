@@ -5,9 +5,22 @@ import NavbarBrand from "../navigation/NavbarBrand";
 import UserNavbarMenu from "../navigation/menus/UserNavbarMenu";
 import MultiRouteUploadPhotosForm from "../forms/upload/MultiRouteUploadPhotosForm";
 import { useIsNavbarFixed } from "@/hooks/useIsNavbarFixed";
+import { useIsMounted } from "@/hooks/useIsMounted";
+import LoadingPageLayout from "./LoadingPageLayout";
 
 export default function AuthCommonLayout({ children }) {
+  const {isMounted} = useIsMounted();
   const { isNavbarFixed } = useIsNavbarFixed();
+
+  if(!isMounted){
+    return (
+      <>
+      <LoadingPageLayout/>
+      </>
+    )
+  }
+
+
   return (
     <>
       <Flex
