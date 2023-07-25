@@ -18,7 +18,7 @@ import { BsTrash } from "react-icons/bs";
 import { HiMinusCircle } from "react-icons/hi";
 
 export default function SelectedPhotosActionsMenu({}) {
-  const { masonryPhotos, setMasonryPhotos, selectedPhotos, setSelectedPhotos } =
+  const { masonryPhotos, setMasonryPhotos, selectedPhotos, setSelectedPhotos, setDeletingSelectedPhotos } =
     useContext(MasonryGridContext);
 
   const { data: session, status } = useSession();
@@ -38,10 +38,11 @@ export default function SelectedPhotosActionsMenu({}) {
   const { albumId } = query;
 
   const handleDeleteSelectedPhotos = async () => {
+    setDeletingSelectedPhotos(true);
     toggleDisableButtons();
 
     const promises = selectedPhotos.map(async (photo) => {
-      return axios.delete(`/api/photo/${photo.id}`);
+      return axios.delete(`/api/photos/${photo.id}`);
     });
 
     toast({
@@ -56,6 +57,8 @@ export default function SelectedPhotosActionsMenu({}) {
           title: "Photos removed successfully",
         });
         toggleDisableButtons();
+        setSelectedPhotos([]);
+        setDeletingSelectedPhotos(false);
       })
       .catch((error) => {
         toast({
@@ -64,13 +67,12 @@ export default function SelectedPhotosActionsMenu({}) {
             "An error occurred while trying to remove the selected photos from album",
         });
         toggleDisableButtons();
+        setDeletingSelectedPhotos(false);
       });
 
     let updatedMasonryPhotos = masonryPhotos.filter(
       (photo) => !selectedPhotos.includes(photo)
     );
-
-    setSelectedPhotos([]);
 
     if (inAlbumPage) {
       await fetchAlbumPhotos(albumId)
@@ -89,6 +91,7 @@ export default function SelectedPhotosActionsMenu({}) {
   };
 
   const handleRemoveSelectedPhotosFromAlbum = async () => {
+    setDeletingSelectedPhotos(true);
     toggleDisableButtons();
     const promises = selectedPhotos.map(async (photo) => {
       return axios.delete(`/api/album/${albumId}/photos/${photo.id}`);
@@ -106,6 +109,8 @@ export default function SelectedPhotosActionsMenu({}) {
           title: "Photos removed succesfully from album",
         });
         toggleDisableButtons();
+        setSelectedPhotos([]);
+        setDeletingSelectedPhotos(false);
       })
       .catch((error) => {
         console.log(error);
@@ -114,9 +119,10 @@ export default function SelectedPhotosActionsMenu({}) {
           title: "An error occurred while trying to remove photos from album",
         });
         toggleDisableButtons();
+        setDeletingSelectedPhotos(false);
       });
 
-    setSelectedPhotos([]);
+    
     let updatedMasonryPhotos = [];
 
     await fetchAlbumPhotos(albumId)
@@ -144,7 +150,7 @@ export default function SelectedPhotosActionsMenu({}) {
           >
             {!inAlbumPage ? (
               <>
-                <Tooltip label="Delete selected photos">
+                <Tooltip label={"Undo selection"}>
                   <IconButton
                     onClick={handleDeleteSelectedPhotos}
                     icon={<BsTrash />}
