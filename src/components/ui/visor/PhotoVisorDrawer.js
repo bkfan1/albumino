@@ -11,16 +11,12 @@ import {
 } from "@chakra-ui/react";
 import PhotoDetailBox from "../PhotoDetailBox";
 import { useContext } from "react";
-import { MasonryGridContext } from "@/contexts/MasonryGridContext";
-import {
-  BsCalendar,
-  BsCalendarEvent,
-  BsPersonFill,
-  BsUpload,
-} from "react-icons/bs";
+import { BsCalendarEvent, BsPersonFill, BsUpload } from "react-icons/bs";
 import { AlbumPageContext } from "@/contexts/AlbumPageContext";
 import { MdFitScreen } from "react-icons/md";
 import { RiCameraLensLine } from "react-icons/ri";
+import { nanoid } from "nanoid";
+import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 
 const metadataIcons = {
   device: RiCameraLensLine,
@@ -35,7 +31,13 @@ export default function PhotoVisorDrawer() {
     currentVisorPhoto,
     showCurrentVisorPhotoDetails,
     setShowCurrentVisorPhotoDetails,
-  } = useContext(MasonryGridContext);
+  } = useContext(PhotoVisorContext);
+
+  const filteredMetadata = Object.fromEntries(
+    Object.entries(currentVisorPhoto.metadata).filter(
+      ([key, value]) => value !== null
+    )
+  );
 
   return (
     <>
@@ -58,17 +60,12 @@ export default function PhotoVisorDrawer() {
 
           <DrawerBody>
             <VStack gap={4} width={"100%"}>
-              {Object.entries(currentVisorPhoto.metadata).map((entries) => (
-                <>
-                  {entries[1] ? (
-                    <PhotoDetailBox
-                      icon={metadataIcons[entries[0]]}
-                      headingText={entries[1]}
-                    />
-                  ) : (
-                    ""
-                  )}
-                </>
+              {Object.keys(filteredMetadata).map((key) => (
+                <PhotoDetailBox
+                  key={nanoid()}
+                  icon={metadataIcons[key]}
+                  headingText={filteredMetadata[key]}
+                />
               ))}
 
               {!currentVisorPhoto.metadata.datetime ? (
