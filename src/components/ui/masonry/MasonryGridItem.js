@@ -11,8 +11,13 @@ import { useIsMounted } from "@/hooks/useIsMounted";
 import { useRouter } from "next/router";
 import { MasonryGridContext } from "@/contexts/MasonryGridContext";
 import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
+import { AlbumPageContext } from "@/contexts/AlbumPageContext";
+import { useSession } from "next-auth/react";
 
 export default function MasonryGridItem({ data, masonryType }) {
+  const {data:session, status} = useSession();
+
+  const {inAlbumPage} = useContext(AlbumPageContext);
   const { isMounted } = useIsMounted();
   const { id, url, albums } = data;
 
@@ -51,6 +56,7 @@ export default function MasonryGridItem({ data, masonryType }) {
   const alreadyInAlbum = albums.includes(query.albumId);
 
   const selected = selectedPhotos.some((photo) => photo.id === id);
+  const ownsPhoto = status === "authenticated" ?  (inAlbumPage ? (session.user.accountId === data.author.id) : true ) : false;
   return (
     <>
       {isMounted ? (
@@ -71,14 +77,14 @@ export default function MasonryGridItem({ data, masonryType }) {
             }
             opacity={masonryType === "form" && alreadyInAlbum ? "70%" : ""}
           >
-            <Checkbox
+            {ownsPhoto ? <Checkbox
               onChange={() => handleOnSelect(id)}
               isChecked={selected}
               position={"absolute"}
               m={2}
               isDisabled={masonryType === "form" && alreadyInAlbum}
               display={showCheckbox || selected ? "flex" : "none"}
-            />
+            /> : ""}
 
             <Tooltip
               label={
@@ -94,7 +100,7 @@ export default function MasonryGridItem({ data, masonryType }) {
                 h="auto"
                 rounded="md"
                 onClick={() =>
-                  masonryType === "form" ? null : handleToggleVisor(data)
+                  masonryType === "form" || selected ? null : handleToggleVisor(data)
                 }
               />
             </Tooltip>
