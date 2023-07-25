@@ -9,6 +9,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { accountSchema } from "@/utils/joi/schemas/account";
 import moment from "moment/moment";
 import { passwordSalt } from "@/utils/constants";
+import { compareDates } from "@/utils/date";
 
 export const accountExists = async (accountId) => {
   try {
@@ -73,11 +74,19 @@ export const getAccountPhotos = async (accountId) => {
       author_account_id: accountId,
     });
 
-    const data = photos.map(
-      ({ _id, author_account_id, albums, url, metadata, uploaded_at }) => {
+    const sortedPhotos = photos.sort(compareDates);
+
+    const author = await Account.findById(accountId);
+
+    const data = sortedPhotos.map(
+      ({ _id, albums, url, metadata, uploaded_at }) => {
         const photo = {
           id: _id.toString(),
-          author_account_id: author_account_id.toString(),
+          author: {
+            id: author._id.toString(),
+            firstname: author.firstname,
+            lastname: author.lastname,
+          },
           albums: albums.map((albumId) => albumId.toString()),
           url,
           metadata,
