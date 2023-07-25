@@ -6,7 +6,7 @@ import { MasonryGridContext } from "@/contexts/MasonryGridContext";
 import { AlbumPageContext } from "@/contexts/AlbumPageContext";
 
 export default function UploadPhotosToAlbumForm({ albumId }) {
-  const { fetchAlbumPhotos, uploadingPhotosToAlbum, setUploadingPhotosToAlbum } =
+  const { fetchAlbumPhotos, setUploadingPhotosToAlbum } =
     useContext(AlbumPageContext);
   const { setMasonryPhotos } = useContext(MasonryGridContext);
 
