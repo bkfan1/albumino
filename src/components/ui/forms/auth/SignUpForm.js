@@ -1,3 +1,4 @@
+import { useDisableButtons } from "@/hooks/useDisableButtons";
 import { regex } from "@/utils/regex";
 import {
   Button,
@@ -24,16 +25,28 @@ export default function SignUpForm() {
     formState: { errors },
   } = useForm();
 
+  const { disableButtons, toggleDisableButtons } = useDisableButtons();
+
   const toast = useToast();
 
   const onSubmit = async (data) => {
-    const res = axios.post("/api/signup", data);
+    try {
+      toggleDisableButtons();
+      const res = await axios.post("/api/signup", data);
 
-    toast.promise(res, {
-      loading: { title: "Creating account..." },
-      success: { title: "Account created succesfully" },
-      error: { title: "An error occurred while attempting to sign up" },
-    });
+      toast({
+        status:"success",
+        title: "Account created succesfully",
+      });
+      toggleDisableButtons();
+    } catch (error) {
+      toast({
+        status: "error",
+        title: "Error",
+        description: "An error occurred while attempting to sign up",
+      });
+      toggleDisableButtons();
+    }
   };
 
   const formFields = [
@@ -120,16 +133,18 @@ export default function SignUpForm() {
           </FormControl>
         ))}
 
-        <Button type="submit" colorScheme="green">
+        <Input type="submit" hidden isDisabled={disableButtons} />
+
+        <Button type="submit" colorScheme="green" isDisabled={disableButtons}>
           Sign Up
         </Button>
 
         <Text mt={1} fontSize={"md"}>
-          Already have an account? <Link href={"/signin/"} style={{color:"#468fd3"}}>
-          Sign In</Link>
+          Already have an account?{" "}
+          <Link href={"/signin/"} style={{ color: "#468fd3" }}>
+            Sign In
+          </Link>
         </Text>
-
-
       </Flex>
     </>
   );
