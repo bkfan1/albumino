@@ -46,7 +46,7 @@ export default function PhotoVisorHeader({}) {
 
   const handleDeleteCurrentVisorPhoto = async () => {
     toggleDisableButtons();
-    const res = axios.delete(`/api/photo/${currentVisorPhoto.id}`);
+    const res = axios.delete(`/api/photos/${currentVisorPhoto.id}`);
     toast.promise(res, {
       loading: {
         title: "Deleting photo...",
@@ -119,13 +119,14 @@ export default function PhotoVisorHeader({}) {
   const handleShowAvailableAlbums = async () => {
     try {
       const res = await axios.get(`/api/albums`);
+      const albums = res.data.albums;
 
-      setAvailableAlbums(res.data.albums);
+      setAvailableAlbums(albums);
       setShowAvailableAlbums(true);
     } catch (error) {
       toast({
         status: "error",
-        title: "Error while fetching available albums.",
+        title: "Error while getting available albums.",
       });
     }
   };
