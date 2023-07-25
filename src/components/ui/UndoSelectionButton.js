@@ -4,7 +4,7 @@ import { useContext } from "react";
 import { BsXLg } from "react-icons/bs";
 
 export default function UndoSelectionButton() {
-  const { selectedPhotos, handleUndoSelection } =
+  const { selectedPhotos, handleUndoSelection, deletingSelectedPhotos } =
     useContext(MasonryGridContext);
 
   return (
@@ -16,6 +16,7 @@ export default function UndoSelectionButton() {
             icon={<BsXLg />}
             variant={"ghost"}
             rounded={"full"}
+            isDisabled={deletingSelectedPhotos}
           />
         </Tooltip>
         <Text>{selectedPhotos.length} selected</Text>
