@@ -14,12 +14,14 @@ export const AlbumsProvider = ({ children }) => {
   const toast = useToast();
 
   const handleDeleteAlbum = async (albumId, onCloseModal) => {
-    const deletePromise = axios.delete(`/api/album/${albumId}`);
-    toast.promise(deletePromise, {
+    const res = axios.delete(`/api/album/${albumId}`);
+    toast.promise(res, {
       loading: { title: "Deleting album..." },
       success: { title: "Album deleted successfully" },
       error: { title: "Error while trying to delete album" },
     });
+
+    await res;
 
     const updatedAlbums = [...albums].filter((album) => album.id !== albumId);
 
@@ -36,6 +38,8 @@ export const AlbumsProvider = ({ children }) => {
       success: { title: "You left the album successfully" },
       error: { title: "An error occurred while trying to leave the album" },
     });
+
+    await res;
 
     if (pathname === "/album/[albumId]") {
       return router.push("/photos");
