@@ -4,6 +4,7 @@ import { useToast } from "@chakra-ui/react";
 import axios from "axios";
 import { MasonryGridContext } from "@/contexts/MasonryGridContext";
 import { useContext } from "react";
+import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 
 export default function AvailableAlbumCard({ album }) {
   const {
@@ -11,7 +12,7 @@ export default function AvailableAlbumCard({ album }) {
     setCurrentVisorPhoto,
     setShowAvailableAlbums,
     setAvailableAlbums,
-  } = useContext(MasonryGridContext);
+  } = useContext(PhotoVisorContext);
 
   const isPhotoAlreadyOnAlbum =
     currentVisorPhoto.albums.includes(album.id) ||
@@ -24,11 +25,9 @@ export default function AvailableAlbumCard({ album }) {
   const handleAddToAlbum = async (albumId) => {
     const data = {
       photoId: currentVisorPhoto.id,
-    }
+    };
 
-    const res = axios.post(
-      `/api/album/${albumId}/photos/`, data
-    );
+    const res = axios.post(`/api/album/${albumId}/photos/`, data);
 
     toast.promise(res, {
       loading: { title: "Adding photo to album..." },
