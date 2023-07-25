@@ -10,6 +10,8 @@ export const MasonryGridProvider = ({ children, photos }) => {
 
   const [selectedPhotos, setSelectedPhotos] = useState([]);
 
+  const [deletingSelectedPhotos, setDeletingSelectedPhotos] = useState(false);
+
   const handleUndoSelection = () => {
     setSelectedPhotos([]);
   };
@@ -21,6 +23,9 @@ export const MasonryGridProvider = ({ children, photos }) => {
     selectedPhotos,
     setSelectedPhotos,
     handleUndoSelection,
+
+    deletingSelectedPhotos,
+    setDeletingSelectedPhotos,
   };
 
   return (
