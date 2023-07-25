@@ -11,6 +11,7 @@ import {
   ModalContent,
   ModalHeader,
   ModalOverlay,
+  Tooltip,
   useToast,
 } from "@chakra-ui/react";
 import MasonryGrid from "../../masonry/MasonryGrid";
@@ -18,17 +19,19 @@ import { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { AlbumPageContext } from "@/contexts/AlbumPageContext";
 import { MasonryGridContext } from "@/contexts/MasonryGridContext";
-import { BsX } from "react-icons/bs";
 import { useRouter } from "next/router";
+import { useDisableButtons } from "@/hooks/useDisableButtons";
 
 export default function AddExistentPhotosToAlbumForm({ albumId }) {
-  const { showAddPhotosForm, setShowAddPhotosForm } =
+  const { showAddPhotosForm, setShowAddPhotosForm, setShowSpinner } =
     useContext(AlbumPageContext);
 
   const { selectedPhotos, setSelectedPhotos } = useContext(MasonryGridContext);
+  const {disableButtons, toggleDisableButtons} = useDisableButtons();
 
   const router = useRouter();
   const toast = useToast();
+  const isEmptySelectedPhotos = selectedPhotos.length === 0 ? true : false;
 
   useEffect(() => {
     if (!showAddPhotosForm) {
@@ -37,9 +40,10 @@ export default function AddExistentPhotosToAlbumForm({ albumId }) {
   }, [showAddPhotosForm, setSelectedPhotos]);
 
   const handleOnClickDone = async () => {
-    const promises = selectedPhotos.map(async (selectedPhoto) => {
+    toggleDisableButtons();
+    const promises = selectedPhotos.map(async (photo) => {
       const data = {
-        photoId: selectedPhoto,
+        photoId: photo.id,
       };
       return axios.post(`/api/album/${albumId}/photos`, data);
     });
@@ -56,13 +60,16 @@ export default function AddExistentPhotosToAlbumForm({ albumId }) {
           title: "Photos added succesfully",
         });
         setShowAddPhotosForm(false);
-        router.reload();
+        setShowSpinner(true);
+        return router.reload();
+        
       })
       .catch((error) => {
         toast({
           status: "error",
           title: "An error ocurred while trying to add photos",
         });
+        toggleDisableButtons();
       });
   };
 
@@ -83,6 +90,7 @@ export default function AddExistentPhotosToAlbumForm({ albumId }) {
             left={0}
             ml={4}
             rounded={"full"}
+            isDisabled={disableButtons}
           />
           <ModalHeader>
             <Flex alignItems={"center"} justifyContent={"space-between"} mt={6}>
@@ -90,9 +98,11 @@ export default function AddExistentPhotosToAlbumForm({ albumId }) {
                 <Heading size={"md"}>Add photos to album</Heading>
               </HStack>
 
-              <Button onClick={handleOnClickDone} colorScheme="blue">
+              <Tooltip label={isEmptySelectedPhotos ? "You need to select at least 1 photo to continue" : "Add selected photos"}>
+              <Button onClick={handleOnClickDone} colorScheme="blue" isDisabled={isEmptySelectedPhotos}>
                 Done
               </Button>
+              </Tooltip>
             </Flex>
           </ModalHeader>
 
