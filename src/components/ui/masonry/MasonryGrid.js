@@ -5,7 +5,7 @@ import { MasonryGridContext } from "@/contexts/MasonryGridContext";
 
 export default function MasonryGrid({ masonryType }) {
   const {masonryPhotos} = useContext(MasonryGridContext);
-
+  
   return (
     <>
       <Box width={"100%"}>
