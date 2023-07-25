@@ -21,7 +21,7 @@ export default function SendAlbumInvitationEmailForm() {
   const toast = useToast();
 
   const onSubmit = async (data) => {
-    const res = axios.post(`/api/album/${albumId}/invitation`, {
+    const res = axios.post(`/api/album/${albumId}/invitations`, {
       ...data,
       sendEmail: true,
     });
