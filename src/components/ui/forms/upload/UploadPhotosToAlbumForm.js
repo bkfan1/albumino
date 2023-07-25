@@ -3,8 +3,11 @@ import { createRef, useContext, useState } from "react";
 import { allowedPhotosFileTypes } from "@/utils/constants";
 import axios from "axios";
 import { MasonryGridContext } from "@/contexts/MasonryGridContext";
+import { AlbumPageContext } from "@/contexts/AlbumPageContext";
 
 export default function UploadPhotosToAlbumForm({ albumId }) {
+  const { fetchAlbumPhotos, uploadingPhotosToAlbum, setUploadingPhotosToAlbum } =
+    useContext(AlbumPageContext);
   const { setMasonryPhotos } = useContext(MasonryGridContext);
 
   const inputFileRef = createRef();
@@ -16,6 +19,8 @@ export default function UploadPhotosToAlbumForm({ albumId }) {
   };
 
   const handleOnChangeFileInput = async (e) => {
+    setUploadingPhotosToAlbum(true);
+
     const data = new FormData();
 
     for (const file of e.target.files) {
@@ -42,15 +47,14 @@ export default function UploadPhotosToAlbumForm({ albumId }) {
 
     // Wait for uploading process to update masonryPhotos
     await resPromise;
+    setUploadingPhotosToAlbum(false);
 
-    const req = axios
-      .get(`/api/album/${albumId}/photos`)
-      .then((res2) => {
-        const updatedMasonryPhotos = res2.data.photos;
-
+    fetchAlbumPhotos(albumId)
+      .then((photos) => {
+        const updatedMasonryPhotos = photos;
         setMasonryPhotos(updatedMasonryPhotos);
       })
-      .catch((error) => {
+      .catch((err) => {
         toast({
           status: "error",
           title: "An error occurred while trying to update album photos",
