@@ -9,7 +9,6 @@ import {
   VStack,
   useToast,
   Icon,
-  Image,
   AlertDialog,
   AlertDialogOverlay,
   AlertDialogContent,
@@ -21,7 +20,6 @@ import {
   Tooltip,
   Skeleton,
   SkeletonText,
-  Spinner,
 } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
 import {
@@ -54,10 +52,11 @@ import { useRouter } from "next/router";
 import AddExistentPhotosToAlbumForm from "@/components/ui/forms/upload/AddExistentPhotosToAlbumForm";
 import ChangeAlbumNameForm from "@/components/ui/forms/ChangeAlbumNameForm";
 import Footer from "@/components/ui/Footer";
-import { MdOutlineAddPhotoAlternate } from "react-icons/md";
 import { useIsMounted } from "@/hooks/useIsMounted";
 import { PhotoVisorProvider } from "@/contexts/PhotoVisorContext";
 import LoadingPageLayout from "@/components/ui/layouts/LoadingPageLayout";
+import { useDisableButtons } from "@/hooks/useDisableButtons";
+import Head from "next/head";
 
 export default function AlbumPage({ album, isOwner }) {
   const { data: session, status } = useSession();
@@ -113,6 +112,7 @@ export default function AlbumPage({ album, isOwner }) {
     const res = axios.delete(
       `/api/album/${albumId}/contributors/${contributorId}`
     );
+
     toast.promise(res, {
       loading: { title: "Removing contributor from album..." },
       success: { title: "Contributor removed succesfully" },
@@ -120,6 +120,8 @@ export default function AlbumPage({ album, isOwner }) {
         title: "An error occurred while trying to remove contributor",
       },
     });
+
+    await res;
 
     const updatedAlbumContributors = [...albumData["contributors"]];
 
@@ -170,6 +172,9 @@ export default function AlbumPage({ album, isOwner }) {
 
   return (
     <>
+      <Head>
+        <title>{name} - Albumino</title>
+      </Head>
       <PhotoVisorProvider>
         <MasonryGridProvider photos={photos}>
           <AlbumPageNavbar />
@@ -194,7 +199,9 @@ export default function AlbumPage({ album, isOwner }) {
                         />
                       ) : (
                         <HStack width={"100%"}>
-                          <Heading>{name}</Heading>{" "}
+                          <Tooltip label={name}>
+                            <Heading noOfLines={2}>{name}</Heading>
+                          </Tooltip>
                           <Tooltip label="Change album name">
                             <IconButton
                               onClick={() =>
@@ -211,7 +218,11 @@ export default function AlbumPage({ album, isOwner }) {
                       )}
                     </>
                   ) : (
-                    <Heading width={"100%"}>{name}</Heading>
+                    <Tooltip label={name}>
+                      <Heading width={"100%"} noOfLines={2}>
+                        {name}
+                      </Heading>
+                    </Tooltip>
                   )}
                 </VStack>
               </Skeleton>
@@ -291,24 +302,8 @@ export default function AlbumPage({ album, isOwner }) {
             </VStack>
 
             <Flex as={"section"} width={"100%"}>
-              {photos.length === 0 ? (
-                <VStack width={"100%"}>
-                  <Image src="/empty_state_album.svg" alt="" />
-                  <Heading size={"md"} fontWeight={"normal"}>
-                    Album is empty
-                  </Heading>
-                  <Text maxW={"sm"} textAlign={"center"} fontWeight={"bold"}>
-                    Add or upload photos to album using{" "}
-                    <Icon as={MdOutlineAddPhotoAlternate} boxSize={6} mx={1} />
-                    at the navigation bar.
-                  </Text>
-                </VStack>
-              ) : (
-                <>
-                  <MasonryGrid />
-                  <PhotoVisor />
-                </>
-              )}
+              <MasonryGrid />
+              <PhotoVisor />
             </Flex>
           </Flex>
           <Footer />
