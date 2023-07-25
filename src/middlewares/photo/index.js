@@ -206,7 +206,7 @@ export const uploadPhotos = async (req, res) => {
       const uploadSize = calculateUploadSize(filesToUpload);
       const availableSpace = await getAvailableSpace(session.user.accountId);
 
-      if (!(uploadSize <= availableSpace)) {
+      if (uploadSize >= availableSpace) {
         return res.status(400).json({ message: "Account storage is full" });
       }
 
@@ -223,9 +223,12 @@ export const uploadPhotos = async (req, res) => {
 
           const metadata = {
             resolution: `${tags["Image Width"].value} x ${tags["Image Height"].value}`,
-            device: tags.Make && tags.Model ? `${tags.Make.description} ${tags.Model.description}` : null ,
+            device:
+              tags.Make && tags.Model
+                ? `${tags.Make.description} ${tags.Model.description}`
+                : null,
             datetime: tags.DateTime ? tags.DateTime.description : null,
-          }
+          };
 
           return {
             author_account_id: session.user.accountId,
@@ -252,7 +255,14 @@ export const uploadPhotos = async (req, res) => {
 
       const photos = await Promise.all(
         uploadedPhotos.map(
-          async ({ _id, author_account_id, albums, url, metadata, uploaded_at }) => {
+          async ({
+            _id,
+            author_account_id,
+            albums,
+            url,
+            metadata,
+            uploaded_at,
+          }) => {
             const author = await Account.findById(author_account_id);
 
             const data = {
@@ -277,8 +287,6 @@ export const uploadPhotos = async (req, res) => {
           }
         )
       );
-
-      console.log(photos)
 
       return res.status(200).json({
         photos,
