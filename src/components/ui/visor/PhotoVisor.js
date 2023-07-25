@@ -2,10 +2,10 @@ import { useContext } from "react";
 import { Modal, ModalOverlay } from "@chakra-ui/react";
 import PhotoVisorHeader from "./PhotoVisorHeader";
 import PhotoVisorBody from "./PhotoVisorBody";
-import { MasonryGridContext } from "@/contexts/MasonryGridContext";
+import { PhotoVisorContext } from "@/contexts/PhotoVisorContext";
 
 export default function PhotoVisor({}) {
-  const { isOpen, onClose } = useContext(MasonryGridContext);
+  const { isOpen, onClose } = useContext(PhotoVisorContext);
 
   return (
     <>
