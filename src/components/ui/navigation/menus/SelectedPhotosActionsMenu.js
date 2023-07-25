@@ -1,5 +1,6 @@
 import { AlbumPageContext } from "@/contexts/AlbumPageContext";
 import { MasonryGridContext } from "@/contexts/MasonryGridContext";
+import { useDisableButtons } from "@/hooks/useDisableButtons";
 import { useIsMounted } from "@/hooks/useIsMounted";
 import {
   ButtonGroup,
@@ -12,10 +13,9 @@ import {
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { useContext } from "react";
-import { BsTrash, BsXLg } from "react-icons/bs";
+import { useContext, useState } from "react";
+import { BsTrash } from "react-icons/bs";
 import { HiMinusCircle } from "react-icons/hi";
-import { MdUndo } from "react-icons/md";
 
 export default function SelectedPhotosActionsMenu({}) {
   const { masonryPhotos, setMasonryPhotos, selectedPhotos, setSelectedPhotos } =
@@ -23,8 +23,14 @@ export default function SelectedPhotosActionsMenu({}) {
 
   const { data: session, status } = useSession();
 
-  const { inAlbumPage, isAlbumOwner } = useContext(AlbumPageContext);
+  const { inAlbumPage, isAlbumOwner, fetchAlbumPhotos } =
+    useContext(AlbumPageContext);
+
+  const {disableButtons, toggleDisableButtons} = useDisableButtons();
+
+
   const { isMounted } = useIsMounted();
+
   const toast = useToast();
   const router = useRouter();
 
@@ -32,6 +38,8 @@ export default function SelectedPhotosActionsMenu({}) {
   const { albumId } = query;
 
   const handleDeleteSelectedPhotos = async () => {
+    toggleDisableButtons();
+
     const promises = selectedPhotos.map(async (photo) => {
       return axios.delete(`/api/photo/${photo.id}`);
     });
@@ -47,25 +55,41 @@ export default function SelectedPhotosActionsMenu({}) {
           status: "success",
           title: "Photos removed successfully",
         });
+        toggleDisableButtons();
       })
-      .catch(() => {
+      .catch((error) => {
         toast({
           status: "error",
           title:
             "An error occurred while trying to remove the selected photos from album",
         });
+        toggleDisableButtons();
       });
+
+    let updatedMasonryPhotos = masonryPhotos.filter(
+      (photo) => !selectedPhotos.includes(photo)
+    );
 
     setSelectedPhotos([]);
 
-    const updatedMasonryPhotos = masonryPhotos.filter(
-      (photo) => !selectedPhotos.includes(photo)
-    );
+    if (inAlbumPage) {
+      await fetchAlbumPhotos(albumId)
+        .then((photos) => {
+          updatedMasonryPhotos = photos;
+        })
+        .catch((error) => {
+          toast({
+            status: "warning",
+            title: "An error occurred while fetching album photos",
+          });
+        });
+    }
 
     setMasonryPhotos(updatedMasonryPhotos);
   };
 
   const handleRemoveSelectedPhotosFromAlbum = async () => {
+    toggleDisableButtons();
     const promises = selectedPhotos.map(async (photo) => {
       return axios.delete(`/api/album/${albumId}/photos/${photo.id}`);
     });
@@ -76,19 +100,28 @@ export default function SelectedPhotosActionsMenu({}) {
     });
 
     await Promise.all(promises)
-      .then((res) => {
+      .then(async (res) => {
         toast({
           status: "success",
           title: "Photos removed succesfully from album",
         });
+        toggleDisableButtons();
+      })
+      .catch((error) => {
+        console.log(error);
+        toast({
+          status: "error",
+          title: "An error occurred while trying to remove photos from album",
+        });
+        toggleDisableButtons();
+      });
 
-        setSelectedPhotos([]);
+    setSelectedPhotos([]);
+    let updatedMasonryPhotos = [];
 
-        const updatedMasonryPhotos = masonryPhotos.filter(
-          (photo) => !selectedPhotos.includes(photo)
-        );
-
-        setMasonryPhotos(updatedMasonryPhotos);
+    await fetchAlbumPhotos(albumId)
+      .then((photos) => {
+        updatedMasonryPhotos = photos;
       })
       .catch((error) => {
         toast({
@@ -96,56 +129,60 @@ export default function SelectedPhotosActionsMenu({}) {
           title: "An error occurred while trying to remove photos from album",
         });
       });
+
+    setMasonryPhotos(updatedMasonryPhotos);
   };
 
   return (
     <>
       <Skeleton isLoaded={isMounted}>
         <HStack>
-          <ButtonGroup colorScheme="red" variant={"ghost"}>
-          {!inAlbumPage ? (
-            <>
-              
+          <ButtonGroup
+            colorScheme="red"
+            variant={"ghost"}
+            isDisabled={disableButtons}
+          >
+            {!inAlbumPage ? (
+              <>
                 <Tooltip label="Delete selected photos">
                   <IconButton
                     onClick={handleDeleteSelectedPhotos}
                     icon={<BsTrash />}
                   />
                 </Tooltip>
-    
-            </>
-          ) : (
-            <>
-              {selectedPhotos.every(
-                (photo) => photo.author.id === session.user.accountId
-              ) ? (
-                <>
+              </>
+            ) : (
+              <>
+                {selectedPhotos.every(
+                  (photo) => photo.author.id === session.user.accountId
+                ) ? (
+                  <>
+                    <Tooltip label="Remove selected photos">
+                      <IconButton
+                        onClick={handleRemoveSelectedPhotosFromAlbum}
+                        icon={<HiMinusCircle />}
+                      />
+                    </Tooltip>
+
+                    <Tooltip label="Delete selected photos">
+                      <IconButton
+                        onClick={handleDeleteSelectedPhotos}
+                        icon={<BsTrash />}
+                      />
+                    </Tooltip>
+                  </>
+                ) : isAlbumOwner ? (
                   <Tooltip label="Remove selected photos">
                     <IconButton
                       onClick={handleRemoveSelectedPhotosFromAlbum}
                       icon={<HiMinusCircle />}
                     />
                   </Tooltip>
-
-                  <Tooltip label="Delete selected photos">
-                    <IconButton
-                      onClick={handleDeleteSelectedPhotos}
-                      icon={<BsTrash />}
-                    />
-                  </Tooltip>
-                </>
-              ) : isAlbumOwner ? (
-                <Tooltip label="Remove selected photos">
-                  <IconButton
-                    onClick={handleRemoveSelectedPhotosFromAlbum}
-                    icon={<HiMinusCircle />}
-                  />
-                </Tooltip>
-              ) : (
-                ""
-              )}
-            </>
-          )}
+                ) : (
+                  ""
+                )}
+              </>
+            )}
           </ButtonGroup>
         </HStack>
       </Skeleton>
