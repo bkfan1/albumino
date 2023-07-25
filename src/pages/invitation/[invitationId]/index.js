@@ -2,7 +2,7 @@ import connection from "@/database/connection";
 import AlbumInvitation from "@/database/models/AlbumInvitation";
 import Account from "@/database/models/Account";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { Flex, Heading } from "@chakra-ui/react";
+import { Flex } from "@chakra-ui/react";
 import { getServerSession } from "next-auth";
 
 import { invitationExists, isInvitationAuthor } from "@/middlewares/invitation";
@@ -10,6 +10,7 @@ import { getAlbum, isAlbumContributor } from "@/middlewares/album";
 import AlbumInvitationForm from "@/components/ui/forms/invitation/AlbumInvitationForm";
 import NavbarBrand from "@/components/ui/navigation/NavbarBrand";
 import Footer from "@/components/ui/Footer";
+import InvalidInvitationFigure from "@/components/ui/figures/InvalidInvitationFigure";
 
 export default function InvitationPage({ details }) {
   const { invitation } = details;
@@ -26,9 +27,7 @@ export default function InvitationPage({ details }) {
         {invitation.status === "pending" && (
           <AlbumInvitationForm details={details} />
         )}
-        {invitation.status === "accepted" && (
-          <Heading>Invitation expired</Heading>
-        )}
+        {invitation.status === "accepted" && <InvalidInvitationFigure />}
       </Flex>
       <Footer />
     </>
