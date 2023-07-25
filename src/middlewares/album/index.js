@@ -8,6 +8,7 @@ import Account from "@/database/models/Account";
 import { getFirstPhotoInAlbum } from "../photo";
 import moment from "moment/moment";
 import Joi from "joi";
+import { compareDates } from "@/utils/date";
 
 export const albumExists = async (albumId) => {
   try {
@@ -89,6 +90,8 @@ export const getAlbum = async (albumId) => {
       _id: { $in: album.contributors },
     });
 
+    const sortedAlbumPhotos = albumPhotos.sort(compareDates);
+
     const cover = await getFirstPhotoInAlbum(albumId);
 
     const data = {
@@ -106,7 +109,7 @@ export const getAlbum = async (albumId) => {
       })),
 
       photos: await Promise.all(
-        albumPhotos.map(
+        sortedAlbumPhotos.map(
           async ({
             _id,
             author_account_id,
