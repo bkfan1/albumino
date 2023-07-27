@@ -194,3 +194,17 @@ export const sendAccountPhotos = async (req, res) => {
     });
   }
 };
+
+export const findAccountByEmail = async (email) => {
+  try {
+    const db = await connection();
+
+    const account = await Account.findOne({ email });
+    const found = account ? true : false;
+
+    return found;
+  } catch (error) {
+    console.log(error)
+    throw Error("An error occurred while searching account");
+  }
+};
