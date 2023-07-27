@@ -1,17 +1,14 @@
 import {
-  Button,
   Flex,
   HStack,
   IconButton,
   Skeleton,
   SkeletonCircle,
-  Text,
-  Tooltip,
 } from "@chakra-ui/react";
 import { BsArrowLeft } from "react-icons/bs";
 
 import { MasonryGridContext } from "@/contexts/MasonryGridContext";
-import { useContext, useEffect, useState } from "react";
+import { useContext} from "react";
 import { useRouter } from "next/router";
 import SelectedPhotosActionsMenu from "./menus/SelectedPhotosActionsMenu";
 import AlbumUploadPhotosMenu from "./menus/AlbumUploadPhotosMenu";
@@ -19,10 +16,8 @@ import AlbumOptionsMenu from "./menus/AlbumOptionsMenu";
 import { useIsMounted } from "@/hooks/useIsMounted";
 import UndoSelectionButton from "../UndoSelectionButton";
 import { useIsNavbarFixed } from "@/hooks/useIsNavbarFixed";
-import { AlbumPageContext } from "@/contexts/AlbumPageContext";
 
 export default function AlbumPageNavbar() {
-  const {uploadingPhotosToAlbum} = useContext(AlbumPageContext);
 
   const { selectedPhotos } = useContext(MasonryGridContext);
   const { isMounted } = useIsMounted();
