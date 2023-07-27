@@ -14,7 +14,7 @@ import {
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useContext } from "react";
-import { BsGearFill, BsThreeDots, BsTrash, BsTrashFill } from "react-icons/bs";
+import { BsGearFill, BsThreeDots, BsTrashFill } from "react-icons/bs";
 
 export default function AlbumOptionsMenu({}) {
   const { data: session, status } = useSession();
