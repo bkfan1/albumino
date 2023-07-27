@@ -8,7 +8,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import MasonryGridItem from "./MasonryGridItem";
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { MasonryGridContext } from "@/contexts/MasonryGridContext";
 import { AlbumPageContext } from "@/contexts/AlbumPageContext";
 import { MdOutlineAddPhotoAlternate } from "react-icons/md";
