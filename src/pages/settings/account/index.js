@@ -2,7 +2,6 @@ import ChangeAccountEmailForm from "@/components/ui/forms/settings/ChangeAccount
 import ChangeAccountPasswordForm from "@/components/ui/forms/settings/ChangeAccountPasswordForm";
 import AuthCommonLayout from "@/components/ui/layouts/AuthCommonLayout";
 import {
-  Box,
   Flex,
   Heading,
   Icon,
