@@ -55,7 +55,6 @@ import Footer from "@/components/ui/Footer";
 import { useIsMounted } from "@/hooks/useIsMounted";
 import { PhotoVisorProvider } from "@/contexts/PhotoVisorContext";
 import LoadingPageLayout from "@/components/ui/layouts/LoadingPageLayout";
-import { useDisableButtons } from "@/hooks/useDisableButtons";
 import Head from "next/head";
 
 export default function AlbumPage({ album, isOwner }) {
