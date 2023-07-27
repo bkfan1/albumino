@@ -48,7 +48,6 @@ export default function Panel() {
   const router = useRouter();
   const { pathname } = router;
   const { isMounted } = useIsMounted();
-  // const {data: session, status} = useSession();
 
   const [storage, setStorage] = useState(null);
 
