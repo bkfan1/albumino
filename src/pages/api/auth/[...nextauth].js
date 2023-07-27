@@ -1,21 +1,9 @@
 import connection from "@/database/connection";
 import Account from "@/database/models/Account";
+import { findAccountByEmail } from "@/middlewares/account";
 import { compare } from "bcrypt";
 import NextAuth from "next-auth/next";
 import Credentials from "next-auth/providers/credentials";
-
-export const findAccountByEmail = async (email) => {
-  try {
-    const db = await connection();
-
-    const account = await Account.findOne({ email });
-    const found = account ? true : false;
-
-    return found;
-  } catch (error) {
-    throw Error("An error occurred while searching account");
-  }
-};
 
 export const authOptions = {
   providers: [
@@ -25,8 +13,9 @@ export const authOptions = {
           const found = await findAccountByEmail(credentials.email);
 
           if (!found) {
-            return null;
+            throw Error("Accout not found");
           }
+
           const db = await connection();
 
           const account = await Account.findOne({ email: credentials.email });
@@ -34,7 +23,7 @@ export const authOptions = {
           const match = await compare(credentials.password, account.password);
 
           if (!match) {
-            return null;
+            throw Error("Passwords don't match");
           }
 
           const user = {
@@ -44,9 +33,10 @@ export const authOptions = {
           };
 
           return user;
+          
         } catch (error) {
           console.log(error);
-          return null;
+          throw Error("An error ocurred while trying to sign in");
         }
       },
     }),
