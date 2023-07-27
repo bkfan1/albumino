@@ -1,11 +1,9 @@
 import {
   Box,
   Button,
-  HStack,
   Heading,
   Image,
   Skeleton,
-  Text,
   VStack,
   useToast,
 } from "@chakra-ui/react";
@@ -16,39 +14,39 @@ import { useForm } from "react-hook-form";
 import { useDisableButtons } from "@/hooks/useDisableButtons";
 
 export default function AlbumInvitationForm({ details }) {
-  const { invitation, author, album } = details;
+  const { invitation, album } = details;
 
   const { isMounted } = useIsMounted();
 
-  const {disableButtons, toggleDisableButtons} = useDisableButtons();
-  const {handleSubmit} = useForm();
+  const { disableButtons, toggleDisableButtons } = useDisableButtons();
+  const { handleSubmit } = useForm();
   const router = useRouter();
 
   const toast = useToast();
 
   const onSubmit = async () => {
-
     toggleDisableButtons();
-    const res = axios.put(`/api/album/${album.id}/invitations/${invitation.id}`);
+    const res = axios.put(
+      `/api/album/${album.id}/invitations/${invitation.id}`
+    );
 
     toast.promise(res, {
       loading: {
-        title:"Joining to album...",
+        title: "Joining to album...",
       },
       success: {
-        title:"Joined to album successfully",
-        description:"Redirecting to album..."
+        title: "Joined to album successfully",
+        description: "Redirecting to album...",
       },
       error: {
-        title:"Error",
-        description:"An error occurred while trying to accept the invitation"
+        title: "Error",
+        description: "An error occurred while trying to accept the invitation",
       },
     });
 
     await res;
 
     await router.push(`/album/${album.id}/`);
-
   };
 
   return (
@@ -93,7 +91,12 @@ export default function AlbumInvitationForm({ details }) {
               </Heading>
             </VStack>
           </VStack>
-          <Button type="submit" width={"100%"} colorScheme="blue" isDisabled={disableButtons}>
+          <Button
+            type="submit"
+            width={"100%"}
+            colorScheme="blue"
+            isDisabled={disableButtons}
+          >
             Join album
           </Button>
         </VStack>

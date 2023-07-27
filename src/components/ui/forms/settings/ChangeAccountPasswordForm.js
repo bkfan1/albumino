@@ -1,3 +1,4 @@
+import { useDisableButtons } from "@/hooks/useDisableButtons";
 import {
   Button,
   FormControl,
@@ -10,17 +11,21 @@ import axios from "axios";
 import { useForm } from "react-hook-form";
 
 export default function ChangeAccountPasswordForm() {
+  const {disableButtons, toggleDisableButtons} = useDisableButtons();
   const { register, handleSubmit } = useForm();
 
   const toast = useToast();
 
   const onSubmit = async (data) => {
+    toggleDisableButtons();
     const res = axios.put("/api/account/password", data);
     toast.promise(res, {
       loading: { title: "Changing password..." },
       success: { title: "Password updated successfully" },
       error: { title: "An error occurred while trying to update password" },
     });
+    await res;
+    toggleDisableButtons();
   };
   return (
     <>
@@ -71,7 +76,7 @@ export default function ChangeAccountPasswordForm() {
           />
         </FormControl>
 
-        <Button type="submit" width={"100%"} colorScheme={"blue"}>
+        <Button type="submit" width={"100%"} colorScheme={"blue"} isDisabled={disableButtons}>
           Change
         </Button>
       </VStack>

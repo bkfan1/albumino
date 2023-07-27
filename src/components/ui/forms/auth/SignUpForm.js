@@ -6,7 +6,6 @@ import {
   Flex,
   FormControl,
   FormErrorMessage,
-  FormHelperText,
   Heading,
   Input,
   Text,
@@ -38,6 +37,7 @@ export default function SignUpForm() {
         status:"success",
         title: "Account created succesfully",
       });
+
       toggleDisableButtons();
     } catch (error) {
       toast({

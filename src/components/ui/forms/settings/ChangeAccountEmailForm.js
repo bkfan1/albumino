@@ -1,3 +1,4 @@
+import { useDisableButtons } from "@/hooks/useDisableButtons";
 import { regex } from "@/utils/regex";
 import {
   Button,
@@ -11,17 +12,23 @@ import axios from "axios";
 import { useForm } from "react-hook-form";
 
 export default function ChangeAccountEmailForm() {
+  const { disableButtons, toggleDisableButtons } = useDisableButtons();
   const { register, handleSubmit } = useForm();
 
   const toast = useToast();
 
   const onSubmit = async (data) => {
+    toggleDisableButtons();
     const res = axios.put("/api/account/email", data);
     toast.promise(res, {
       loading: { title: "Changing email..." },
       success: { title: "Email updated successfully" },
       error: { title: "An error occurred while trying to update email" },
     });
+
+    await res;
+
+    toggleDisableButtons();
   };
   return (
     <>
@@ -79,7 +86,7 @@ export default function ChangeAccountEmailForm() {
           />
         </FormControl>
 
-        <Button type="submit" width={"100%"} colorScheme={"blue"}>
+        <Button type="submit" width={"100%"} colorScheme={"blue"} isDisabled={disableButtons}>
           Change
         </Button>
       </VStack>

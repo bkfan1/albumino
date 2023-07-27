@@ -1,5 +1,5 @@
 import { Input, MenuItem, useToast } from "@chakra-ui/react";
-import { createRef, useContext, useState } from "react";
+import { createRef, useContext } from "react";
 import { allowedPhotosFileTypes } from "@/utils/constants";
 import axios from "axios";
 import { MasonryGridContext } from "@/contexts/MasonryGridContext";

@@ -3,8 +3,6 @@ import {
   Flex,
   HStack,
   Heading,
-  Icon,
-  IconButton,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -15,7 +13,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import MasonryGrid from "../../masonry/MasonryGrid";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import axios from "axios";
 import { AlbumPageContext } from "@/contexts/AlbumPageContext";
 import { MasonryGridContext } from "@/contexts/MasonryGridContext";
@@ -99,7 +97,7 @@ export default function AddExistentPhotosToAlbumForm({ albumId }) {
               </HStack>
 
               <Tooltip label={isEmptySelectedPhotos ? "You need to select at least 1 photo to continue" : "Add selected photos"}>
-              <Button onClick={handleOnClickDone} colorScheme="blue" isDisabled={isEmptySelectedPhotos}>
+              <Button onClick={handleOnClickDone} colorScheme="blue" isDisabled={isEmptySelectedPhotos || disableButtons}>
                 Done
               </Button>
               </Tooltip>

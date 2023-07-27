@@ -1,4 +1,5 @@
 import { AlbumPageContext } from "@/contexts/AlbumPageContext";
+import { useDisableButtons } from "@/hooks/useDisableButtons";
 import {
   ButtonGroup,
   HStack,
@@ -8,7 +9,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import axios from "axios";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { useForm } from "react-hook-form";
 import { BsCheck, BsX } from "react-icons/bs";
 
@@ -18,6 +19,7 @@ export default function ChangeAlbumNameForm({
   albumId,
 }) {
   const { setShowChangeAlbumNameForm } = useContext(AlbumPageContext);
+  const {disableButtons, toggleDisableButtons} = useDisableButtons();
   const { register, handleSubmit } = useForm({
     defaultValues: {
       newName: currentAlbumName,
@@ -27,6 +29,7 @@ export default function ChangeAlbumNameForm({
   const toast = useToast();
 
   const onSubmit = async (data) => {
+    toggleDisableButtons();
     const res = axios.put(`/api/album/${albumId}`, data);
     toast.promise(res, {
       loading: { title: "Changing album name..." },
@@ -59,7 +62,7 @@ export default function ChangeAlbumNameForm({
         />
 
         <Input type="submit" hidden />
-        <ButtonGroup>
+        <ButtonGroup isDisabled={disableButtons}>
           <Tooltip label="Cancel">
             <IconButton
               onClick={() => setShowChangeAlbumNameForm(false)}

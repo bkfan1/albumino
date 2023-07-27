@@ -1,3 +1,4 @@
+import { useDisableButtons } from "@/hooks/useDisableButtons";
 import { useIsMounted } from "@/hooks/useIsMounted";
 import {
   Button,
@@ -13,9 +14,12 @@ import { MdOutlineAddBox } from "react-icons/md";
 
 export default function CreateAlbumForm() {
   const { isMounted } = useIsMounted();
+  const {disableButtons, toggleDisableButtons} = useDisableButtons();
+
   const router = useRouter();
   const toast = useToast();
   const handleCreateAlbum = async () => {
+    toggleDisableButtons();
     const data = {
       name: "Untitled album",
     };
@@ -39,7 +43,7 @@ export default function CreateAlbumForm() {
     <>
       <Tooltip label="Create album">
         <Skeleton isLoaded={isMounted} rounded={"md"}>
-          <ButtonGroup variant={"ghost"}>
+          <ButtonGroup variant={"ghost"} isDisabled={disableButtons}>
             <Button
               onClick={handleCreateAlbum}
               leftIcon={<MdOutlineAddBox />}
