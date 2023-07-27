@@ -13,21 +13,25 @@ import {
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { BsTrash } from "react-icons/bs";
 import { HiMinusCircle } from "react-icons/hi";
 
 export default function SelectedPhotosActionsMenu({}) {
-  const { masonryPhotos, setMasonryPhotos, selectedPhotos, setSelectedPhotos, setDeletingSelectedPhotos } =
-    useContext(MasonryGridContext);
+  const {
+    masonryPhotos,
+    setMasonryPhotos,
+    selectedPhotos,
+    setSelectedPhotos,
+    setDeletingSelectedPhotos,
+  } = useContext(MasonryGridContext);
 
   const { data: session, status } = useSession();
 
   const { inAlbumPage, isAlbumOwner, fetchAlbumPhotos } =
     useContext(AlbumPageContext);
 
-  const {disableButtons, toggleDisableButtons} = useDisableButtons();
-
+  const { disableButtons, toggleDisableButtons } = useDisableButtons();
 
   const { isMounted } = useIsMounted();
 
@@ -122,7 +126,6 @@ export default function SelectedPhotosActionsMenu({}) {
         setDeletingSelectedPhotos(false);
       });
 
-    
     let updatedMasonryPhotos = [];
 
     await fetchAlbumPhotos(albumId)
@@ -150,7 +153,7 @@ export default function SelectedPhotosActionsMenu({}) {
           >
             {!inAlbumPage ? (
               <>
-                <Tooltip label={"Undo selection"}>
+                <Tooltip label={"Delete selected photos"}>
                   <IconButton
                     onClick={handleDeleteSelectedPhotos}
                     icon={<BsTrash />}
