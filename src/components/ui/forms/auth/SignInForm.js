@@ -35,7 +35,6 @@ export default function SignInForm() {
         callbackUrl: "/photos",
       });
     } catch (error) {
-      console.log(error);
       toast({
         status: "error",
         title: "Error",
