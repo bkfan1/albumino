@@ -31,10 +31,10 @@ export default function SignUpForm() {
   const onSubmit = async (data) => {
     try {
       toggleDisableButtons();
-      const res = await axios.post("/api/signup", data);
+      await axios.post(`/api/signup`, data);
 
       toast({
-        status:"success",
+        status: "success",
         title: "Account created succesfully",
       });
 
