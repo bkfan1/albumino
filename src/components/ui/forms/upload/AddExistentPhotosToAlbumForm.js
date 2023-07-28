@@ -79,6 +79,7 @@ export default function AddExistentPhotosToAlbumForm({ albumId }) {
           setShowAddPhotosForm(false);
         }}
         size={"8xl"}
+        
       >
         <ModalOverlay />
         <ModalContent>
@@ -104,7 +105,7 @@ export default function AddExistentPhotosToAlbumForm({ albumId }) {
             </Flex>
           </ModalHeader>
 
-          <ModalBody>
+          <ModalBody minHeight={"xl"}>
             <MasonryGrid masonryType={"form"} />
           </ModalBody>
         </ModalContent>
