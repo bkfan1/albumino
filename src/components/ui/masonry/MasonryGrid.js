@@ -20,7 +20,7 @@ export default function MasonryGrid({ masonryType }) {
 
   return (
     <>
-      {inAlbumPage && masonryPhotos.length === 0 ? (
+      {inAlbumPage && masonryPhotos.length === 0 && !masonryType ? (
         <VStack width={"100%"}>
           <Image src="/empty_state_album.svg" alt="" />
           <Heading size={"md"} fontWeight={"normal"}>
