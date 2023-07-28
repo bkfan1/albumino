@@ -72,7 +72,7 @@ export default function Panel() {
     <>
       <VStack
         as={"aside"}
-        flex={{ base: 0.5, sm: 0.5, md: 1 }}
+        flex={{ base: 0.5, md: 1 }}
         minHeight={"100%"}
         borderRight={"1px"}
         borderColor={"#edf1f5"}
@@ -119,7 +119,7 @@ export default function Panel() {
                 <HStack>
                   <Icon as={BsCloud} />
 
-                  <Heading size={"sm"} display={{ sm: "none", md: "flex" }}>
+                  <Heading size={"sm"} display={{ base: "none", md: "flex" }}>
                     Storage
                   </Heading>
                 </HStack>
@@ -135,7 +135,7 @@ export default function Panel() {
                       isIndeterminate={!storageValueLoaded}
                       colorScheme={"blue"}
                       rounded={"full"}
-                      display={{ sm: "none", md: "flex" }}
+                      display={{ base: "none", md: "flex" }}
                     />
                   </Tooltip>
                   <Heading
@@ -154,7 +154,7 @@ export default function Panel() {
               <Skeleton isLoaded={isMounted}>
                 <Text
                   textAlign={"center"}
-                  display={{ sm: "none", md: "initial" }}
+                  display={{ base: "none", md: "initial" }}
                   fontSize={"sm"}
                 >
                   {storage.used.mb.toFixed(1)} MB of 100 MB used
